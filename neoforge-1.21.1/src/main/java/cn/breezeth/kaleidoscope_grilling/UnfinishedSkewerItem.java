@@ -35,10 +35,8 @@ public final class UnfinishedSkewerItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (!player.isShiftKeyDown()) return InteractionResultHolder.pass(stack);
         if (!level.isClientSide) {
-            for (String id : SkeweringHandler.readIngredients(stack)) {
-                Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
-                player.getInventory().placeItemBackInInventory(new ItemStack(item));
-            }
+            for (ItemStack ingredient : SkeweringHandler.readIngredientStacks(stack, level.registryAccess()))
+                player.getInventory().placeItemBackInInventory(ingredient.copy());
             player.getInventory().placeItemBackInInventory(new ItemStack(Items.STICK));
             player.setItemInHand(hand, ItemStack.EMPTY);
         }

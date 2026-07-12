@@ -4,6 +4,6 @@
   "package": "cn.breezeth.kaleidoscope_grilling.mixin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "kaleidoscope_grilling.refmap.json",
-  "mixins": ["OilPotBlockEntityMixin", "OilPotBlockMixin"],
+  "mixins": ["OilPotBlockEntityMixin", "OilPotBlockMixin", "FoodDataAccessor"],
   "injectors": { "defaultRequire": 1 }
 }

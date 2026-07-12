@@ -3,6 +3,6 @@
   "minVersion": "0.8",
   "package": "cn.breezeth.kaleidoscope_grilling.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["OilPotBlockEntityMixin", "OilPotBlockMixin"],
+  "mixins": ["OilPotBlockEntityMixin", "OilPotBlockMixin", "FoodDataAccessor"],
   "injectors": { "defaultRequire": 1 }
 }

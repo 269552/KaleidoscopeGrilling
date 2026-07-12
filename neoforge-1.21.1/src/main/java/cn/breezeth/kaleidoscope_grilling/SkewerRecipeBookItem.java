@@ -73,7 +73,7 @@ public final class SkewerRecipeBookItem extends Item {
         if (level.isClientSide) return InteractionResultHolder.success(book);
 
         // Scan inventory for ingredients
-        Map<Integer, Integer> slotMap = new HashMap<>();
+        Map<Integer, Integer> consumption = new HashMap<>();
         for (int slot = 0; slot < ingredients.size(); slot++) {
             List<String> acceptable = ingredients.get(slot);
             boolean found = false;
@@ -83,8 +83,9 @@ public final class SkewerRecipeBookItem extends Item {
                 ItemStack invStack = player.getInventory().getItem(invSlot);
                 if (invStack.isEmpty()) continue;
                 ResourceLocation invId = BuiltInRegistries.ITEM.getKey(invStack.getItem());
-                if (invId != null && acceptable.contains(invId.toString())) {
-                    slotMap.put(slot, invSlot);
+                int reserved = consumption.getOrDefault(invSlot, 0);
+                if (invId != null && acceptable.contains(invId.toString()) && invStack.getCount() > reserved) {
+                    consumption.put(invSlot, reserved + 1);
                     found = true;
                     break;
                 }
@@ -106,9 +107,7 @@ public final class SkewerRecipeBookItem extends Item {
 
         // All ingredients found, consume and produce
         if (!player.getAbilities().instabuild) {
-            for (int slot : slotMap.values()) {
-                player.getInventory().getItem(slot).shrink(1);
-            }
+            consumption.forEach((slot, count) -> player.getInventory().getItem(slot).shrink(count));
             offhand.shrink(1);
         }
 

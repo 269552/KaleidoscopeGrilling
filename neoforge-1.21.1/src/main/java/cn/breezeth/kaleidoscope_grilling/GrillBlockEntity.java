@@ -84,9 +84,9 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
             else if (failed) output = new ItemStack(ModItems.MYSTERIOUS_SKEWER.get());
             else if (input.is(ModItems.SECRET_SKEWER.get())) {
                 output = input.copy();
-                SecretSkewerItem.setCooked(output, true);
                 CustomData data = input.get(DataComponents.CUSTOM_DATA);
                 if (data != null) output.set(DataComponents.CUSTOM_DATA, data);
+                SecretSkewerItem.setCooked(output, true);
                 SeasoningData.set(output, seasoningIngredients);
                 if (level != null) FoodState.setHot(output, level.getGameTime() + heatDurationTicks);
             } else {

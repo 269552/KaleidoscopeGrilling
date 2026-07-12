@@ -1,6 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling;
 
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -18,6 +19,7 @@ import java.util.List;
 
 public final class SkeweringHandler {
     private static final String INGREDIENTS_TAG = "SkewerIngredients";
+    private static final String INGREDIENT_STACKS_TAG = "SkewerIngredientStacks";
     private static final String VARIANTS_TAG = "SkewerModelVariants";
 
     public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
@@ -26,31 +28,33 @@ public final class SkeweringHandler {
         ItemStack offhand = event.getEntity().getOffhandItem();
         if (!offhand.is(Items.STICK) && !offhand.is(ModItems.UNFINISHED_SKEWER.get())) return;
 
-        List<String> inserted = read(offhand);
+        List<ItemStack> insertedStacks = readIngredientStacks(offhand, event.getLevel().registryAccess());
+        List<String> inserted = ids(insertedStacks);
         ResourceLocation foodId = BuiltInRegistries.ITEM.getKey(food.getItem());
         if (foodId == null) return;
-        boolean matchesRecipe = SkewerRecipes.canAppend(inserted, foodId.toString());
-        if (!matchesRecipe && (inserted.isEmpty() || inserted.size() >= 3)) return;
+        if (food.getItem().getFoodProperties(food, event.getEntity()) == null) return;
+        if (inserted.size() >= 3) return;
 
         event.setCancellationResult(InteractionResult.SUCCESS);
         event.setCanceled(true);
         if (event.getLevel().isClientSide) return;
 
         inserted.add(foodId.toString());
+        insertedStacks.add(food.copyWithCount(1));
         List<Integer> variants = readVariants(offhand);
         variants.add(event.getEntity().getRandom().nextInt(3) + 1);
         String resultId = SkewerRecipes.completedResult(inserted);
         ItemStack next;
         if (resultId != null) {
             next = new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, resultId)));
-            write(next, inserted, variants);
+            write(next, insertedStacks, variants, event.getLevel().registryAccess());
         } else if (inserted.size() >= 3) {
             next = new ItemStack(ModItems.SECRET_SKEWER.get());
-            write(next, inserted, variants);
+            write(next, insertedStacks, variants, event.getLevel().registryAccess());
             SecretSkewerItem.setCreator(next, event.getEntity().getScoreboardName());
         } else {
             next = new ItemStack(ModItems.UNFINISHED_SKEWER.get());
-            write(next, inserted, variants);
+            write(next, insertedStacks, variants, event.getLevel().registryAccess());
         }
         if (!event.getEntity().getAbilities().instabuild) food.shrink(1);
         event.getEntity().setItemInHand(InteractionHand.OFF_HAND, next);
@@ -58,11 +62,31 @@ public final class SkeweringHandler {
 
     private static List<String> read(ItemStack stack) {
         List<String> result = new ArrayList<>();
-        if (!stack.is(ModItems.UNFINISHED_SKEWER.get())) return result;
         CustomData data = stack.get(DataComponents.CUSTOM_DATA);
         if (data == null) return result;
         ListTag list = data.copyTag().getList(INGREDIENTS_TAG, 8);
         for (int i = 0; i < list.size(); i++) result.add(list.getString(i));
+        return result;
+    }
+
+    static List<ItemStack> readIngredientStacks(ItemStack stack, HolderLookup.Provider registries) {
+        List<ItemStack> result = new ArrayList<>();
+        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+        if (data == null) return result;
+        CompoundTag tag = data.copyTag();
+        ListTag stacks = tag.getList(INGREDIENT_STACKS_TAG, 10);
+        for (int i = 0; i < stacks.size(); i++)
+            result.add(ItemStack.parseOptional(registries, stacks.getCompound(i)));
+        if (!result.isEmpty()) return result;
+        for (String id : read(stack))
+            result.add(new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse(id))));
+        return result;
+    }
+
+    private static List<String> ids(List<ItemStack> stacks) {
+        List<String> result = new ArrayList<>();
+        for (ItemStack ingredient : stacks)
+            result.add(BuiltInRegistries.ITEM.getKey(ingredient.getItem()).toString());
         return result;
     }
 
@@ -87,11 +111,17 @@ public final class SkeweringHandler {
         return first * 16 + second * 4 + third;
     }
 
-    private static void write(ItemStack stack, List<String> ingredients, List<Integer> variants) {
+    private static void write(ItemStack stack, List<ItemStack> ingredients, List<Integer> variants,
+                              HolderLookup.Provider registries) {
         ListTag list = new ListTag();
-        ingredients.forEach(id -> list.add(StringTag.valueOf(id)));
+        ListTag stackList = new ListTag();
+        for (ItemStack ingredient : ingredients) {
+            list.add(StringTag.valueOf(BuiltInRegistries.ITEM.getKey(ingredient.getItem()).toString()));
+            stackList.add(ingredient.copyWithCount(1).saveOptional(registries));
+        }
         CompoundTag tag = new CompoundTag();
         tag.put(INGREDIENTS_TAG, list);
+        tag.put(INGREDIENT_STACKS_TAG, stackList);
         tag.putIntArray(VARIANTS_TAG, variants);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
