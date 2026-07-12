@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "cn.breezeth.kaleidoscope_grilling.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "kaleidoscope_grilling.refmap.json",
+  "mixins": ["OilPotBlockEntityMixin", "OilPotBlockMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

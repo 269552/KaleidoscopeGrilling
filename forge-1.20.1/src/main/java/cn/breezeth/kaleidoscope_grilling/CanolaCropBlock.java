@@ -1,0 +1,16 @@
+package cn.breezeth.kaleidoscope_grilling;
+
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+
+public final class CanolaCropBlock extends CropBlock {
+    public static final IntegerProperty AGE=net.minecraft.world.level.block.state.properties.BlockStateProperties.AGE_3;
+    public CanolaCropBlock(Properties properties){super(properties);registerDefaultState(stateDefinition.any().setValue(AGE,0));}
+    @Override public IntegerProperty getAgeProperty(){return AGE;}
+    @Override public int getMaxAge(){return 3;}
+    @Override protected Item getBaseSeedId(){return ModItems.CANOLA_SEEDS.get();}
+    @Override protected void createBlockStateDefinition(StateDefinition.Builder<net.minecraft.world.level.block.Block,BlockState> builder){builder.add(AGE);}
+}

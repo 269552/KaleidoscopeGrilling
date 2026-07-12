@@ -1,0 +1,41 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.134'
+}
+
+def props = new Properties()
+file('gradle.properties').withInputStream { props.load(it) }
+
+version = props.getProperty('mod_version')
+group = props.getProperty('maven_group')
+
+base { archivesName = props.getProperty('archives_base_name') }
+
+sourceSets.main.resources.srcDir rootProject.file('common/src/main/resources')
+
+neoForge {
+    version = props.getProperty('neo_version')
+    runs {
+        client { client(); gameDirectory = project.file('runs/client') }
+        server { server(); gameDirectory = project.file('runs/server'); programArgument('--nogui') }
+    }
+    mods {
+        kaleidoscope_grilling { sourceSet sourceSets.main }
+    }
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property 'version', project.version
+    filesMatching('META-INF/neoforge.mods.toml') { expand version: inputs.properties.version }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+}
+
+java { toolchain.languageVersion = JavaLanguageVersion.of(21) }
+
+tasks.withType(Jar).configureEach {
+    archiveFileName = "kaleidoscope_grilling-${project.version}-neoforge1.21.1.jar"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["T", "B"],
+  "key": {
+    "T": { "tag": "minecraft:wooden_trapdoors" },
+    "B": { "item": "minecraft:barrel" }
+  },
+  "result": { "item": "kaleidoscope_grilling:empty_seasoning_bottle", "count": 1 }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["III", "BCB", "I I"],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "B": { "item": "minecraft:brick" },
+    "C": { "tag": "minecraft:coals" }
+  },
+  "result": { "id": "kaleidoscope_grilling:grill", "count": 1 }
+}

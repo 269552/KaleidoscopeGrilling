@@ -1,0 +1,31 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+license = "All Rights Reserved"
+
+[[mods]]
+modId = "kaleidoscope_grilling"
+version = "${version}"
+displayName = "Kaleidoscope Grilling"
+authors = "breezeth"
+description = '''An expansion for Kaleidoscope Cookery focused on grilling and skewers.'''
+
+[[dependencies.kaleidoscope_grilling]]
+modId = "forge"
+mandatory = true
+versionRange = "[47.4.0,48)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.kaleidoscope_grilling]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.20.1,1.20.2)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.kaleidoscope_grilling]]
+modId = "kaleidoscope_cookery"
+mandatory = true
+versionRange = "[1.4.1,)"
+ordering = "AFTER"
+side = "BOTH"

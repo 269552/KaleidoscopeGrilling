@@ -1,0 +1,3 @@
+package cn.breezeth.kaleidoscope_grilling;
+import net.minecraft.world.item.BlockItem; import net.minecraft.world.item.ItemStack; import net.minecraft.world.item.TooltipFlag; import net.minecraft.network.chat.Component; import net.minecraft.world.level.Level; import net.minecraft.world.level.block.Block; import org.jetbrains.annotations.Nullable; import java.util.List;
+public final class SeasoningBottleBlockItem extends BlockItem { public SeasoningBottleBlockItem(Block b,Properties p){super(b,p);}@Override public void appendHoverText(ItemStack s,@Nullable Level l,List<Component> t,TooltipFlag f){if(!SeasoningData.get(s).isEmpty())SeasoningTooltip.append(s,t);}}

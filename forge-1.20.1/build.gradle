@@ -1,0 +1,61 @@
+plugins {
+    id 'net.minecraftforge.gradle' version '6.0.53'
+}
+
+def props = new Properties()
+file('gradle.properties').withInputStream { props.load(it) }
+
+version = props.getProperty('mod_version')
+group = props.getProperty('maven_group')
+
+base { archivesName = props.getProperty('archives_base_name') }
+
+repositories {
+    maven { url = 'https://maven.minecraftforge.net/' }
+    mavenCentral()
+    flatDir { dirs '../.breezeth/KaleidoscopeCookery-main/build/libs' }
+}
+
+sourceSets.main.resources.srcDir file('../common/src/main/resources')
+
+minecraft {
+    mappings channel: 'official', version: props.getProperty('minecraft_version')
+    runs {
+        configureEach {
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+        }
+        client {
+            workingDirectory project.file('runs/client')
+            mods { kaleidoscope_grilling { source sourceSets.main } }
+        }
+        server {
+            workingDirectory project.file('runs/server')
+            args '--nogui'
+            mods { kaleidoscope_grilling { source sourceSets.main } }
+        }
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${props.getProperty('minecraft_version')}-${props.getProperty('forge_version')}"
+    implementation fg.deobf('local:kaleidoscopecookery:1.4.1-forge+mc1.20.1')
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property 'version', project.version
+    filesMatching('META-INF/mods.toml') { expand version: inputs.properties.version }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+
+java { toolchain.languageVersion = JavaLanguageVersion.of(17) }
+
+tasks.withType(Jar).configureEach {
+    archiveFileName = "kaleidoscope_grilling-${project.version}-forge1.20.1.jar"
+    manifest { attributes 'MixinConfigs': 'kaleidoscope_grilling.mixins.json' }
+}
