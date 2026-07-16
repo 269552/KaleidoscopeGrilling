@@ -14,7 +14,9 @@ public final class OilPotCompat {
     public static boolean consume(ItemStack stack, int amount) {
         int count = getCount(stack);
         if (amount <= 0 || count < amount) return false;
-        stack.getOrCreateTag().putInt(OIL_COUNT, count - amount);
+        int remaining = count - amount;
+        stack.getOrCreateTag().putInt(OIL_COUNT, remaining);
+        if (remaining == 0) stack.getOrCreateTag().remove(OIL_TYPE);
         return true;
     }
     public static String getType(ItemStack stack) { return stack.hasTag() ? stack.getTag().getString(OIL_TYPE) : ""; }

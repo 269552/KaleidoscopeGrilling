@@ -1,55 +1,105 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
 import java.util.List;
+import java.util.Map;
 
 public final class SkewerRecipes {
-    private record Recipe(String result, List<List<String>> ingredients) {}
-    private static List<String> any(String... ids) { return List.of(ids); }
-    private static final List<Recipe> RECIPES = List.of(
-            recipe("raw_beef_skewer", any("kaleidoscope_grilling:beef_chunks"), any("kaleidoscope_cookery:red_chili"), any("kaleidoscope_grilling:beef_chunks")),
-            recipe("raw_pork_belly_skewer", any("kaleidoscope_cookery:raw_pork_belly"), any("kaleidoscope_cookery:green_chili"), any("kaleidoscope_cookery:raw_pork_belly")),
-            recipe("raw_chicken_skin_skewer", any("kaleidoscope_grilling:chicken_skin"), any("kaleidoscope_grilling:chicken_skin")),
-            recipe("raw_mid_wing_skewer", any("kaleidoscope_grilling:chicken_wing"), any("kaleidoscope_cookery:red_chili"), any("kaleidoscope_grilling:chicken_wing")),
-            recipe("raw_squid_tentacle_skewer", any("kaleidoscope_grilling:squid_tentacle"), any("kaleidoscope_grilling:squid_tentacle"), any("kaleidoscope_grilling:squid_tentacle")),
-            recipe("raw_fish_skewer", any("minecraft:cod", "minecraft:salmon", "minecraft:tropical_fish", "minecraft:pufferfish")),
-            recipe("raw_sweet_potato_sheet_skewer", any("kaleidoscope_grilling:raw_sweet_potato_sheet"), any("kaleidoscope_grilling:minced_houttuynia"), any("kaleidoscope_grilling:minced_houttuynia")),
-            recipe("raw_potato_slice_skewer", any("kaleidoscope_grilling:potato_slice"), any("kaleidoscope_grilling:potato_slice"), any("kaleidoscope_grilling:potato_slice")),
-            recipe("raw_caterpillar_skewer", any("kaleidoscope_cookery:caterpillar")),
-            recipe("raw_mushroom_skewer", any("minecraft:brown_mushroom", "minecraft:red_mushroom"), any("kaleidoscope_grilling:carrot_dice"), any("minecraft:brown_mushroom", "minecraft:red_mushroom")),
-            recipe("raw_bun_slice_skewer", any("kaleidoscope_grilling:raw_mantou_slice"), any("kaleidoscope_grilling:raw_mantou_slice"), any("kaleidoscope_grilling:raw_mantou_slice")),
-            recipe("raw_ender_pearl_skewer", any("minecraft:ender_pearl"), any("minecraft:beetroot"), any("minecraft:ender_pearl")),
-            recipe("raw_meatball_skewer", any("kaleidoscope_cookery:raw_meatball"), any("kaleidoscope_cookery:raw_meatball"), any("kaleidoscope_cookery:raw_meatball")),
-            recipe("raw_slime_skewer", any("minecraft:slime_ball"), any("kaleidoscope_grilling:houttuynia"), any("minecraft:slime_ball")),
-            recipe("raw_meat_and_bone_skewer", any("kaleidoscope_cookery:raw_cut_small_meats"), any("minecraft:bone"), any("kaleidoscope_cookery:raw_cut_small_meats")),
-            recipe("raw_fried_egg_skewer", any("kaleidoscope_cookery:fried_egg"), any("kaleidoscope_cookery:fried_egg"))
-    );
+    private record Recipe(ResourceLocation rawResult, ResourceLocation cookedResult, List<List<String>> ingredients) {}
 
-    private static Recipe recipe(String result, List<String>... ingredients) { return new Recipe(result, List.of(ingredients)); }
-
-    public static boolean canAppend(List<String> inserted, String next) {
-        int index = inserted.size();
-        return RECIPES.stream().anyMatch(recipe -> index < recipe.ingredients.size()
-                && matchesPrefix(recipe, inserted) && recipe.ingredients.get(index).contains(next));
+    private static List<Recipe> recipes() {
+        return GrillingDataManager.skewers().entrySet().stream()
+                .filter(entry -> !entry.getValue().ingredients().isEmpty())
+                .map(SkewerRecipes::recipe)
+                .filter(java.util.Objects::nonNull)
+                .toList();
     }
 
-    public static String completedResult(List<String> inserted) {
-        return RECIPES.stream().filter(recipe -> recipe.ingredients.size() == inserted.size()
-                && matchesPrefix(recipe, inserted)).map(Recipe::result).findFirst().orElse(null);
+    private static Recipe recipe(Map.Entry<String, GrillingDataManager.Skewer> entry) {
+        ResourceLocation raw = ResourceLocation.tryParse(entry.getKey());
+        if (raw == null) return null;
+        String configured = entry.getValue().cookedResult();
+        ResourceLocation cooked = configured.isEmpty() ? inferCooked(raw) : ResourceLocation.tryParse(configured);
+        return cooked == null ? null : new Recipe(raw, cooked, entry.getValue().ingredients());
     }
 
-    public static int expectedSize(List<String> inserted) {
-        return RECIPES.stream().filter(recipe -> matchesPrefix(recipe, inserted))
-                .mapToInt(recipe -> recipe.ingredients.size()).max().orElse(3);
+    private static ResourceLocation inferCooked(ResourceLocation raw) {
+        String path = raw.getPath();
+        if (!path.startsWith("raw_")) return null;
+        return ResourceLocation.tryParse(raw.getNamespace() + ":grilled_" + path.substring(4));
     }
 
-    private static boolean matchesPrefix(Recipe recipe, List<String> inserted) {
-        for (int i = 0; i < inserted.size(); i++) if (!recipe.ingredients.get(i).contains(inserted.get(i))) return false;
-        return true;
+    public static boolean canAppend(List<ItemStack> inserted, ItemStack next) {
+        int slot = inserted.size();
+        return recipes().stream().anyMatch(recipe -> slot < recipe.ingredients().size()
+                && prefix(recipe, inserted) && matchesAny(next, recipe.ingredients().get(slot)));
     }
 
-    public static List<List<String>> getIngredients(String resultId) {
-        return RECIPES.stream().filter(r -> r.result.equals(resultId))
+    public static boolean isConfiguredIngredient(ItemStack stack) {
+        return recipes().stream().flatMap(recipe -> recipe.ingredients().stream())
+                .anyMatch(selectors -> matchesAny(stack, selectors));
+    }
+
+    public static ResourceLocation completedResult(List<ItemStack> inserted) {
+        return recipes().stream()
+                .filter(recipe -> recipe.ingredients().size() == inserted.size() && prefix(recipe, inserted))
+                .map(Recipe::rawResult)
+                .findFirst().orElse(null);
+    }
+
+    public static int expectedSize(List<ItemStack> inserted) {
+        return recipes().stream().filter(recipe -> prefix(recipe, inserted))
+                .mapToInt(recipe -> recipe.ingredients().size()).max().orElse(3);
+    }
+
+    public static boolean isRawSkewer(ItemStack stack) {
+        if (stack.is(SkewerCompatApi.RAW_SKEWERS)) return true;
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return recipes().stream().anyMatch(recipe -> recipe.rawResult().equals(id));
+    }
+
+    public static ItemStack cookedResult(ItemStack rawStack) {
+        ItemStack custom = SkewerCompatApi.customCookedResult(rawStack);
+        if (!custom.isEmpty()) return custom;
+        ResourceLocation rawId = BuiltInRegistries.ITEM.getKey(rawStack.getItem());
+        ResourceLocation cookedId = recipes().stream()
+                .filter(recipe -> recipe.rawResult().equals(rawId))
+                .map(Recipe::cookedResult).findFirst().orElse(null);
+        if (cookedId == null || !BuiltInRegistries.ITEM.containsKey(cookedId)) return ItemStack.EMPTY;
+        return new ItemStack(BuiltInRegistries.ITEM.get(cookedId));
+    }
+
+    public static List<List<String>> getIngredients(String id) {
+        ResourceLocation full = ResourceLocation.tryParse(id.contains(":") ? id : KaleidoscopeGrilling.MOD_ID + ":" + id);
+        if (full == null) return null;
+        return recipes().stream().filter(recipe -> recipe.rawResult().equals(full))
                 .findFirst().map(Recipe::ingredients).orElse(null);
+    }
+
+    public static boolean matchesSelector(ItemStack stack, String selector) {
+        if (selector.startsWith("#")) {
+            ResourceLocation tagId = ResourceLocation.tryParse(selector.substring(1));
+            return tagId != null && stack.is(TagKey.create(Registries.ITEM, tagId));
+        }
+        ResourceLocation itemId = ResourceLocation.tryParse(selector);
+        return itemId != null && itemId.equals(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+    }
+
+    private static boolean matchesAny(ItemStack stack, List<String> selectors) {
+        return selectors.stream().anyMatch(selector -> matchesSelector(stack, selector));
+    }
+
+    private static boolean prefix(Recipe recipe, List<ItemStack> inserted) {
+        if (inserted.size() > recipe.ingredients().size()) return false;
+        for (int i = 0; i < inserted.size(); i++)
+            if (!matchesAny(inserted.get(i), recipe.ingredients().get(i))) return false;
+        return true;
     }
 
     private SkewerRecipes() {}

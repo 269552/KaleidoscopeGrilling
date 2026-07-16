@@ -2,7 +2,6 @@ package cn.breezeth.kaleidoscope_grilling;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -11,8 +10,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
@@ -24,13 +23,14 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
 import cn.breezeth.kaleidoscope_grilling.mixin.FoodDataAccessor;
 
 public final class SecretSkewerItem extends Item {
     private static final String COOKED_TAG = "Cooked";
     private static final String CREATOR_TAG = "Creator";
+    private static final String CREATOR_NAME_TAG = "CreatorName";
+    private static final String CREATOR_UUID_TAG = "CreatorUuid";
+    private static final String VISUAL_STAGE_TAG = "ClientVisualStage";
 
     public SecretSkewerItem(Properties properties) {
         super(properties);
@@ -41,15 +41,33 @@ public final class SecretSkewerItem extends Item {
         return data != null && data.copyTag().getBoolean(COOKED_TAG);
     }
 
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        return isCooked(stack) ? super.use(level, player, hand) : InteractionResultHolder.pass(stack);
+    }
+
     public static void setCooked(ItemStack stack, boolean cooked) {
         CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
         tag.putBoolean(COOKED_TAG, cooked);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
-    public static void setCreator(ItemStack stack, String name) {
+    static void setVisualStage(ItemStack stack, int stage) {
         CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        tag.putString(CREATOR_TAG, name);
+        tag.putInt(VISUAL_STAGE_TAG, stage);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+    }
+
+    static int getVisualStage(ItemStack stack) {
+        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+        return data == null ? 0 : data.copyTag().getInt(VISUAL_STAGE_TAG);
+    }
+
+    public static void setCreator(ItemStack stack, Player player) {
+        CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        tag.putString(CREATOR_NAME_TAG, player.getScoreboardName());
+        tag.putUUID(CREATOR_UUID_TAG, player.getUUID());
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
@@ -57,6 +75,7 @@ public final class SecretSkewerItem extends Item {
         CustomData data = stack.get(DataComponents.CUSTOM_DATA);
         if (data != null) {
             CompoundTag tag = data.copyTag();
+            if (tag.contains(CREATOR_NAME_TAG)) return tag.getString(CREATOR_NAME_TAG);
             if (tag.contains(CREATOR_TAG)) return tag.getString(CREATOR_TAG);
         }
         return "";
@@ -73,14 +92,11 @@ public final class SecretSkewerItem extends Item {
         List<ItemStack> ingredients = SkeweringHandler.readIngredientStacks(consumed, level.registryAccess());
         ItemStack result = super.finishUsingItem(stack, level, entity);
         if (!level.isClientSide) {
-            boolean hot = FoodState.isHot(consumed, level);
             for (ItemStack ingredient : ingredients) {
                 if (ingredient.getItem().getFoodProperties(ingredient, entity) == null) continue;
-                Map<Holder<MobEffect>, Integer> beforeEffects = effectDurations(entity);
                 FoodSnapshot food = FoodSnapshot.capture(entity);
                 ItemStack remainder = ingredient.copyWithCount(1).finishUsingItem(level, entity);
                 food.restore(entity);
-                if (hot) doubleNewEffectDurations(entity, beforeEffects);
                 if (entity instanceof Player player && !remainder.isEmpty()
                         && !ItemStack.isSameItemSameComponents(remainder, ingredient))
                     player.getInventory().placeItemBackInInventory(remainder);
@@ -150,30 +166,13 @@ public final class SecretSkewerItem extends Item {
                     .withStyle(ChatFormatting.GRAY));
         }
         String creator = getCreator(stack);
-        if (!creator.isEmpty()) {
-            tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.secret_skewer.creator", creator)
-                    .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
-        }
+        tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.secret_skewer.creator_story",
+                        creator.isEmpty() ? Component.translatable("tooltip.kaleidoscope_grilling.secret_skewer.someone") : Component.literal(creator))
+                .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
         Level level = context != null ? context.level() : null;
         if (level != null && FoodState.isHot(stack, level)) {
             tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.hot")
                     .withStyle(ChatFormatting.GOLD));
-        }
-    }
-
-    private static Map<Holder<MobEffect>, Integer> effectDurations(LivingEntity entity) {
-        Map<Holder<MobEffect>, Integer> result = new HashMap<>();
-        for (MobEffectInstance effect : entity.getActiveEffects()) result.put(effect.getEffect(), effect.getDuration());
-        return result;
-    }
-
-    private static void doubleNewEffectDurations(LivingEntity entity, Map<Holder<MobEffect>, Integer> before) {
-        for (MobEffectInstance effect : List.copyOf(entity.getActiveEffects())) {
-            int oldDuration = before.getOrDefault(effect.getEffect(), 0);
-            if (effect.getDuration() <= oldDuration) continue;
-            int duration = oldDuration + (effect.getDuration() - oldDuration) * 2;
-            entity.addEffect(new MobEffectInstance(effect.getEffect(), duration, effect.getAmplifier(),
-                    effect.isAmbient(), effect.isVisible(), effect.showIcon()));
         }
     }
 

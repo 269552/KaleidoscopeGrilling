@@ -2,7 +2,6 @@ package cn.breezeth.kaleidoscope_grilling;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -24,17 +23,16 @@ public final class SeasoningBottleHud {
     private static final List<String> REQUIRED = List.of(
             "kaleidoscope_grilling:green_chili_powder",
             "kaleidoscope_grilling:sichuan_pepper",
-            "kaleidoscope_grilling:onion_powder"
-    );
+            "kaleidoscope_grilling:onion_powder");
 
     @SubscribeEvent
     public static void render(RenderGuiLayerEvent.Post event) {
+        if (!HudControl.isEnabled()) return;
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.options.hideGui || minecraft.level == null || !(minecraft.hitResult instanceof BlockHitResult hit)) return;
-        BlockPos pos = hit.getBlockPos();
-        if (!(minecraft.level.getBlockEntity(pos) instanceof SeasoningBottleBlockEntity bottle)) return;
-        List<String> values = bottle.ingredients();
-        draw(event.getGuiGraphics(), values);
+        if (minecraft.options.hideGui || minecraft.level == null
+                || !(minecraft.hitResult instanceof BlockHitResult hit)
+                || !(minecraft.level.getBlockEntity(hit.getBlockPos()) instanceof SeasoningBottleBlockEntity bottle)) return;
+        draw(event.getGuiGraphics(), bottle.ingredients());
     }
 
     private static void draw(GuiGraphics graphics, List<String> values) {
@@ -42,33 +40,29 @@ public final class SeasoningBottleHud {
         Map<String, Integer> counts = new LinkedHashMap<>();
         REQUIRED.forEach(id -> counts.put(id, 0));
         values.forEach(id -> counts.merge(id, 1, Integer::sum));
-        List<Component> effects = effects(values);
+        List<Component> effects = SeasoningEffects.describe(values);
         int height = 49 + counts.size() * 18 + Math.max(1, effects.size()) * 10 + 10;
-        int x = minecraft.getWindow().getGuiScaledWidth() / 2 + 24;
+        int x = OilPotHud.panelX(minecraft, WIDTH);
         int y = Math.max(12, minecraft.getWindow().getGuiScaledHeight() / 2 - height / 2);
-        if (x + WIDTH > minecraft.getWindow().getGuiScaledWidth() - 8) x = minecraft.getWindow().getGuiScaledWidth() - WIDTH - 8;
+        OilPotHud.panel(graphics, x, y, WIDTH, height, 0xFFE0A83B);
 
-        graphics.fill(x + 3, y + 3, x + WIDTH + 3, y + height + 3, 0x55000000);
-        graphics.fill(x, y, x + WIDTH, y + height, 0xE6121718);
-        graphics.fill(x, y, x + 3, y + height, 0xFFE0A83B);
-        graphics.fill(x + 3, y + 29, x + WIDTH, y + 30, 0x554F6265);
         graphics.drawString(minecraft.font, Component.translatable("hud.kaleidoscope_grilling.seasoning.title"), x + 12, y + 9, 0xFFF3E9D2, false);
-        graphics.drawString(minecraft.font, Component.translatable("hud.kaleidoscope_grilling.seasoning.capacity", values.size(), SeasoningBottleBlockEntity.CAPACITY, SeasoningBottleBlockEntity.CAPACITY - values.size()), x + 12, y + 20, 0xFFAAB7B8, false);
-        int barX = x + 12;
-        int barY = y + 34;
-        graphics.fill(barX, barY, x + WIDTH - 12, barY + 4, 0xFF303B3D);
-        graphics.fill(barX, barY, barX + (WIDTH - 24) * values.size() / SeasoningBottleBlockEntity.CAPACITY, barY + 4, 0xFFE0A83B);
+        graphics.renderItem(new ItemStack(ModItems.EMPTY_SEASONING_BOTTLE.get()), x + WIDTH - 27, y + 6);
+        graphics.drawString(minecraft.font, Component.translatable("hud.kaleidoscope_grilling.seasoning.capacity",
+                values.size(), SeasoningBottleBlockEntity.CAPACITY, SeasoningBottleBlockEntity.CAPACITY - values.size()), x + 12, y + 20, 0xFFAAB7B8, false);
+        graphics.fill(x + 12, y + 34, x + WIDTH - 12, y + 38, 0xFF303B3D);
+        graphics.fill(x + 12, y + 34, x + 12 + (WIDTH - 24) * values.size() / SeasoningBottleBlockEntity.CAPACITY, y + 38, 0xFFE0A83B);
 
         int rowY = y + 44;
         for (Map.Entry<String, Integer> entry : counts.entrySet()) {
             Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(entry.getKey()));
             graphics.renderItem(new ItemStack(item), x + 12, rowY - 3);
             graphics.drawString(minecraft.font, item.getDescription(), x + 34, rowY, 0xFFE5E8E8, false);
-            if (entry.getValue() == 0) {
-                graphics.drawString(minecraft.font, Component.translatable("hud.kaleidoscope_grilling.seasoning.missing"), x + WIDTH - 35, rowY, 0xFFE68B73, false);
-            } else {
-                graphics.drawString(minecraft.font, "x" + entry.getValue(), x + WIDTH - 25, rowY, 0xFFAAB7B8, false);
-            }
+            Component value = entry.getValue() == 0
+                    ? Component.translatable("hud.kaleidoscope_grilling.seasoning.missing")
+                    : Component.literal("x" + entry.getValue());
+            graphics.drawString(minecraft.font, value, x + WIDTH - minecraft.font.width(value) - 12, rowY,
+                    entry.getValue() == 0 ? 0xFFE68B73 : 0xFFAAB7B8, false);
             rowY += 18;
         }
         graphics.drawString(minecraft.font, Component.translatable("hud.kaleidoscope_grilling.seasoning.effects"), x + 12, rowY + 1, 0xFFE0A83B, false);
@@ -78,21 +72,6 @@ public final class SeasoningBottleHud {
             graphics.drawString(minecraft.font, effect, x + 12, rowY, 0xFFB8D8CD, false);
             rowY += 10;
         }
-    }
-
-    private static List<Component> effects(List<String> values) {
-        java.util.ArrayList<Component> result = new java.util.ArrayList<>();
-        addEffect(result, values, "minecraft:redstone", "hud.kaleidoscope_grilling.seasoning.speed");
-        addEffect(result, values, "minecraft:gunpowder", "hud.kaleidoscope_grilling.seasoning.strength");
-        addEffect(result, values, "kaleidoscope_grilling:houttuynia_powder", "hud.kaleidoscope_grilling.seasoning.duration");
-        addEffect(result, values, "kaleidoscope_grilling:totem_powder", "hud.kaleidoscope_grilling.seasoning.totem");
-        addEffect(result, values, "kaleidoscope_grilling:dragon_egg_powder", "hud.kaleidoscope_grilling.seasoning.vitality");
-        return result;
-    }
-
-    private static void addEffect(List<Component> result, List<String> values, String id, String key) {
-        long count = values.stream().filter(id::equals).count();
-        if (count > 0) result.add(Component.translatable(key, count));
     }
 
     private SeasoningBottleHud() {}

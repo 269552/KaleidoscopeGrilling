@@ -42,9 +42,10 @@ public final class SkewerItem extends Item {
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         ItemStack result = super.finishUsingItem(stack, level, entity);
         if (!level.isClientSide) {
-            if (effectId != null) {
-                BuiltInRegistries.MOB_EFFECT.getHolder(ResourceKey.create(Registries.MOB_EFFECT, effectId))
-                        .ifPresent(effect -> entity.addEffect(new MobEffectInstance(effect, FoodState.isHot(stack, level) ? effectDuration * 2 : effectDuration)));
+            ResourceLocation itemId=BuiltInRegistries.ITEM.getKey(stack.getItem());var data=GrillingDataManager.skewer(itemId.toString());ResourceLocation resolved=data!=null&&!data.effect().isEmpty()?ResourceLocation.parse(data.effect()):effectId;int duration=data!=null?data.effectSeconds()*20:effectDuration;
+            if (resolved != null) {
+                BuiltInRegistries.MOB_EFFECT.getHolder(ResourceKey.create(Registries.MOB_EFFECT, resolved))
+                        .ifPresent(effect -> entity.addEffect(new MobEffectInstance(effect, duration)));
             }
             FoodState.applySeasoning(stack, level, entity);
             level.playSound(null, entity.blockPosition(), SoundEvents.PLAYER_BURP,
@@ -56,6 +57,6 @@ public final class SkewerItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         FoodTooltip.appendMaxim(tooltip,tooltipKey);
-        FoodTooltip.appendEffect(tooltip,context,effectId,effectDuration);
+        ResourceLocation itemId=BuiltInRegistries.ITEM.getKey(stack.getItem());var data=GrillingDataManager.skewer(itemId.toString());ResourceLocation resolved=data!=null&&!data.effect().isEmpty()?ResourceLocation.parse(data.effect()):effectId;int duration=data!=null?data.effectSeconds()*20:effectDuration;FoodTooltip.appendEffect(tooltip,context,resolved,duration);
     }
 }

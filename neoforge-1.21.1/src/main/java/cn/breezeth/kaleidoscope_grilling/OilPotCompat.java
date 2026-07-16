@@ -26,7 +26,9 @@ public final class OilPotCompat {
     public static boolean consume(ItemStack stack, int amount) {
         int count = getCount(stack);
         if (amount <= 0 || count < amount) return false;
-        stack.set(countType(), count - amount);
+        int remaining = count - amount;
+        stack.set(countType(), remaining);
+        if (remaining == 0) setType(stack, "");
         return true;
     }
     public static String getType(ItemStack stack){CustomData d=stack.get(DataComponents.CUSTOM_DATA);return d==null?"":d.copyTag().getString("grilling_oil_type");}

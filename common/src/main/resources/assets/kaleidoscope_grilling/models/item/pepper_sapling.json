@@ -1,1 +1,1 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "minecraft:block/mangrove_propagule" } }
+{ "parent": "minecraft:item/generated", "textures": { "layer0": "kaleidoscope_grilling:block/pepper_sapling" } }

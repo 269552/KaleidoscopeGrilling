@@ -59,10 +59,13 @@ public final class PepperSaplingBlock extends BushBlock implements BonemealableB
         if (state.getValue(STAGE) == 0) {
             level.setBlock(pos, state.cycle(STAGE), 4);
         } else {
-            // Place the tree using PepperTreeFeature directly
-            ModFeatures.PEPPER_TREE.get().place(new FeaturePlaceContext<>(
+            level.removeBlock(pos, false);
+            boolean placed = ModFeatures.PEPPER_TREE.get().place(new FeaturePlaceContext<>(
                     Optional.empty(), level, level.getChunkSource().getGenerator(),
                     random, pos, NoneFeatureConfiguration.INSTANCE));
+            if (!placed) {
+                level.setBlock(pos, state, 4);
+            }
         }
     }
 }

@@ -1,1 +1,1 @@
-{"type":"minecraft:crafting_shaped","category":"misc","pattern":["PPP","PPP","PPP"],"key":{"P":{"item":"kaleidoscope_grilling:canola_powder"}},"result":{"id":"kaleidoscope_grilling:oil_cake","count":1}}
+{"type":"minecraft:crafting_shaped","category":"misc","pattern":["PPP","PWP","PPP"],"key":{"P":{"item":"kaleidoscope_grilling:canola_powder"},"W":{"item":"minecraft:wheat"}},"result":{"id":"kaleidoscope_grilling:oil_cake","count":1}}

@@ -15,7 +15,7 @@
       "rolls": 1,
       "entries": [{"type": "minecraft:item", "name": "kaleidoscope_grilling:pepper_sapling"}],
       "conditions": [
-        {"condition": "minecraft:inverted", "term": {"condition": "minecraft:alternative", "terms": [
+        {"condition": "minecraft:inverted", "term": {"condition": "minecraft:any_of", "terms": [
           {"condition": "minecraft:match_tool", "predicate": {"items": ["minecraft:shears"]}},
           {"condition": "minecraft:match_tool", "predicate": {"enchantments": [{"enchantment": "minecraft:silk_touch", "levels": {"min": 1}}]}}
         ]}},
@@ -26,7 +26,7 @@
       "rolls": 1,
       "entries": [{"type": "minecraft:item", "name": "minecraft:stick"}],
       "conditions": [
-        {"condition": "minecraft:inverted", "term": {"condition": "minecraft:alternative", "terms": [
+        {"condition": "minecraft:inverted", "term": {"condition": "minecraft:any_of", "terms": [
           {"condition": "minecraft:match_tool", "predicate": {"items": ["minecraft:shears"]}},
           {"condition": "minecraft:match_tool", "predicate": {"enchantments": [{"enchantment": "minecraft:silk_touch", "levels": {"min": 1}}]}}
         ]}},

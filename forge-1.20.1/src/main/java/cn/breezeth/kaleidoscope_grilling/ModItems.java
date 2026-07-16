@@ -23,7 +23,8 @@ public final class ModItems {
     public static final List<RegistryObject<Item>> INGREDIENTS = new ArrayList<>();
     public static final RegistryObject<Item> UNFINISHED_SKEWER = ITEMS.register("unfinished_skewer", () -> new UnfinishedSkewerItem(new Item.Properties()));
     public static final RegistryObject<Item> SKEWER_RECIPE_BOOK = ITEMS.register("skewer_recipe_book", () -> new SkewerRecipeBookItem(new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<Item> SECRET_SKEWER = ITEMS.register("secret_skewer", () -> new SecretSkewerItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> SECRET_SKEWER = ITEMS.register("secret_skewer", () -> new SecretSkewerItem(
+            new Item.Properties().stacksTo(1).food(new FoodProperties.Builder().nutrition(1).saturationMod(0).build())));
 
     public static final RegistryObject<Item> BEEF_CHUNKS = ingredient("beef_chunks");
     public static final RegistryObject<Item> CHICKEN_SKIN = ingredient("chicken_skin");
@@ -32,7 +33,7 @@ public final class ModItems {
     public static final RegistryObject<Item> HOUTTUYNIA = ingredient("houttuynia",()->new ItemNameBlockItem(ModBlocks.HOUTTUYNIA_CROP.get(),new Item.Properties().food(new FoodProperties.Builder().nutrition(2).saturationMod(0.2F).build())));
     public static final RegistryObject<Item> MINCED_HOUTTUYNIA = ingredient("minced_houttuynia");
     public static final RegistryObject<Item> CARROT_DICE = ingredient("carrot_dice");
-    public static final RegistryObject<Item> RAW_SWEET_POTATO_SHEET = ingredient("raw_sweet_potato_sheet");
+    public static final RegistryObject<Item> RAW_SWEET_POTATO_SHEET = ingredient("raw_sweet_potato_sheet", () -> new RawSweetPotatoSheetItem(new Item.Properties()));
     public static final RegistryObject<Item> POTATO_SLICE = ingredient("potato_slice");
     public static final RegistryObject<Item> RAW_MANTOU_SLICE = ingredient("raw_mantou_slice");
     public static final RegistryObject<Item> MYSTERIOUS_SKEWER = ITEMS.register("mysterious_skewer", () -> new SkewerItem(
@@ -42,8 +43,8 @@ public final class ModItems {
             new Item.Properties().food(new FoodProperties.Builder().nutrition(1).saturationMod(0.0F).build()),
             "tooltip.kaleidoscope_grilling.dark_grilling.maxim", new ResourceLocation("minecraft","blindness"), 200));
     public static final RegistryObject<Item> EMPTY_SEASONING_BOTTLE = ITEMS.register("empty_seasoning_bottle", () -> new SeasoningBottleBlockItem(ModBlocks.SEASONING_BOTTLE.get(), new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<Item> PENDING_SEASONING = ITEMS.register("pending_seasoning", () -> new PendingSeasoningItem(new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<Item> SPECIAL_SEASONING = ITEMS.register("special_seasoning", () -> new SeasoningItem(new Item.Properties().stacksTo(1).durability(16)));
+    public static final RegistryObject<Item> PENDING_SEASONING = ITEMS.register("pending_seasoning", () -> new PendingSeasoningItem(ModBlocks.SEASONING_BOTTLE.get(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> SPECIAL_SEASONING = ITEMS.register("special_seasoning", () -> new SeasoningItem(ModBlocks.SEASONING_BOTTLE.get(), new Item.Properties().stacksTo(1).durability(16)));
     public static final RegistryObject<Item> GREEN_CHILI_POWDER = ingredient("green_chili_powder");
     public static final RegistryObject<Item> SICHUAN_PEPPER = ingredient("sichuan_pepper");
     public static final RegistryObject<Item> ONION_POWDER = ingredient("onion_powder");
@@ -53,20 +54,21 @@ public final class ModItems {
     public static final RegistryObject<Item> OIL_CAKE = ingredient("oil_cake");
     public static final RegistryObject<Item> OIL_RESIDUE = ingredient("oil_residue");
     public static final RegistryObject<Item> CANOLA_POWDER = ingredient("canola_powder");
-    public static final RegistryObject<Item> CANOLA_FLOWER = ingredient("canola_flower");
-    public static final RegistryObject<Item> MINCED_RED_CHILI = ingredient("minced_red_chili");
     public static final RegistryObject<Item> RED_CHILI_POWDER = ingredient("red_chili_powder");
-    public static final RegistryObject<Item> ONION = ingredient("onion");
-    public static final RegistryObject<Item> ONION_SEEDS = ITEMS.register("onion_seeds",()->new ItemNameBlockItem(ModBlocks.ONION_CROP.get(),new Item.Properties()));
+    public static final RegistryObject<Item> ONION = ingredient("onion",()->new ItemNameBlockItem(ModBlocks.ONION_CROP.get(),new Item.Properties()));
     public static final RegistryObject<Item> SWEET_POTATO = ITEMS.register("sweet_potato",()->new ItemNameBlockItem(ModBlocks.SWEET_POTATO_CROP.get(),new Item.Properties().food(new FoodProperties.Builder().nutrition(3).saturationMod(0.1F).build())));
     public static final RegistryObject<Item> ROASTED_SWEET_POTATO = ITEMS.register("roasted_sweet_potato",()->new EffectFoodItem(new Item.Properties().food(new FoodProperties.Builder().nutrition(6).saturationMod(0.2F).build()),cookeryEffect("warmth"),600,"tooltip.kaleidoscope_grilling.roasted_sweet_potato.maxim"));
     public static final RegistryObject<Item> SWEET_POTATO_POWDER = ITEMS.register("sweet_potato_powder",()->new SweetPotatoPowderItem(new Item.Properties()));
     public static final RegistryObject<Item> ROASTED_CHICKEN_WING = ITEMS.register("roasted_chicken_wing",()->new FlavorFoodItem(new Item.Properties().food(new FoodProperties.Builder().nutrition(5).saturationMod(0.12F).build()),"tooltip.kaleidoscope_grilling.roasted_chicken_wing.maxim"));
     public static final RegistryObject<Item> COLD_HOUTTUYNIA = ITEMS.register("cold_houttuynia",()->new EffectFoodItem(new Item.Properties().food(new FoodProperties.Builder().nutrition(6).saturationMod(1.0F).build()),new ResourceLocation("minecraft","fire_resistance"),1200,"tooltip.kaleidoscope_grilling.cold_houttuynia.maxim"));
     public static final RegistryObject<Item> SUGARED_TOMATO = ITEMS.register("sugared_tomato",()->new FlavorFoodItem(new Item.Properties().food(new FoodProperties.Builder().nutrition(6).saturationMod(0.65F).build()),"tooltip.kaleidoscope_grilling.sugared_tomato.maxim"));
+    public static final RegistryObject<Item> HOUTTUYNIA_STIR_FRIED_PORK = dish("houttuynia_stir_fried_pork", 9, 0.7F);
+    public static final RegistryObject<Item> GREEN_PEPPER_SQUID_TENTACLES = dish("green_pepper_squid_tentacles", 8, 0.6F);
+    public static final RegistryObject<Item> BRAISED_CHICKEN_WINGS = dish("braised_chicken_wings", 10, 0.8F);
+    public static final RegistryObject<Item> POTATO_BEEF_STEW = dish("potato_beef_stew", 12, 0.9F);
     public static final RegistryObject<Item> CANOLA_SEEDS = ITEMS.register("canola_seeds", () -> new ItemNameBlockItem(ModBlocks.CANOLA_CROP.get(),new Item.Properties()));
-    public static final RegistryObject<Item> CANOLA_OIL_BUCKET = ITEMS.register("canola_oil_bucket", () -> new net.minecraft.world.item.BucketItem(ModFluids.CANOLA_SOURCE, new Item.Properties().stacksTo(1).craftRemainder(net.minecraft.world.item.Items.BUCKET)));
-    public static final RegistryObject<Item> SECRET_CHILI_OIL_BUCKET = ITEMS.register("secret_chili_oil_bucket", () -> new net.minecraft.world.item.BucketItem(ModFluids.SECRET_SOURCE, new Item.Properties().stacksTo(1).craftRemainder(net.minecraft.world.item.Items.BUCKET)));
+    public static final RegistryObject<Item> CANOLA_OIL_BUCKET = ITEMS.register("canola_oil_bucket", () -> new net.minecraft.world.item.BucketItem(ModFluids.CANOLA_SOURCE, new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> SECRET_CHILI_OIL_BUCKET = ITEMS.register("secret_chili_oil_bucket", () -> new net.minecraft.world.item.BucketItem(ModFluids.SECRET_SOURCE, new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> PREMIUM_CHILI_OIL_BUCKET = ITEMS.register("premium_chili_oil_bucket", () -> new net.minecraft.world.item.BucketItem(ModFluids.PREMIUM_SOURCE, new Item.Properties().stacksTo(1).craftRemainder(net.minecraft.world.item.Items.BUCKET)));
 
     static {
@@ -119,6 +121,12 @@ public final class ModItems {
         return item;
     }
 
+    private static RegistryObject<Item> dish(String id, int nutrition, float saturation) {
+        return ITEMS.register(id, () -> new FlavorFoodItem(new Item.Properties().stacksTo(16).food(
+                new FoodProperties.Builder().nutrition(nutrition).saturationMod(saturation).build()),
+                "tooltip.kaleidoscope_grilling." + id + ".maxim"));
+    }
+
     private static void skewer(String id, int nutrition, float saturationModifier,
                                ResourceLocation effectId, int effectSeconds) {
         FIXED_SKEWERS.add(ITEMS.register(id, () -> new SkewerItem(new Item.Properties().food(
@@ -130,30 +138,6 @@ public final class ModItems {
         FoodProperties.Builder food = new FoodProperties.Builder().nutrition(nutrition).saturationMod(saturationModifier);
         RAW_SKEWERS.add(ITEMS.register(id, () -> new SkewerItem(new Item.Properties().food(food.build()), null,
                 nausea ? new ResourceLocation("minecraft","nausea") : null, nausea ? 60 : 0)));
-    }
-
-    public static void addToCreativeTabs(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS) {
-            FIXED_SKEWERS.forEach(item -> event.accept(item.get()));
-            RAW_SKEWERS.forEach(item -> event.accept(item.get()));
-            INGREDIENTS.forEach(item -> event.accept(item.get()));
-            event.accept(UNFINISHED_SKEWER.get());
-            event.accept(SKEWER_RECIPE_BOOK.get());
-            event.accept(SECRET_SKEWER.get());
-            event.accept(ModBlocks.GRILL_ITEM.get());
-            event.accept(ModBlocks.BIG_VAT_ITEM.get());
-            event.accept(ModBlocks.OIL_PRESS_ITEM.get());
-            event.accept(MYSTERIOUS_SKEWER.get());
-            event.accept(DARK_GRILLING.get());
-            event.accept(EMPTY_SEASONING_BOTTLE.get());
-            event.accept(PENDING_SEASONING.get());
-            event.accept(SPECIAL_SEASONING.get());
-            event.accept(CANOLA_OIL_BUCKET.get()); event.accept(SECRET_CHILI_OIL_BUCKET.get()); event.accept(PREMIUM_CHILI_OIL_BUCKET.get());
-            event.accept(CANOLA_SEEDS.get());
-            event.accept(ONION_SEEDS.get());
-            event.accept(SWEET_POTATO.get());
-            event.accept(ROASTED_SWEET_POTATO.get());
-        }
     }
 
     private ModItems() {}

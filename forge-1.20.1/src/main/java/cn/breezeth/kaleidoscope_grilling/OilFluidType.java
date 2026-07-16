@@ -1,3 +1,34 @@
 package cn.breezeth.kaleidoscope_grilling;
-import net.minecraft.resources.ResourceLocation; import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions; import net.minecraftforge.fluids.FluidType; import java.util.function.Consumer;
-public final class OilFluidType extends FluidType {private final int tint;public OilFluidType(Properties p,int tint){super(p);this.tint=tint;}@Override public void initializeClient(Consumer<IClientFluidTypeExtensions> c){c.accept(new IClientFluidTypeExtensions(){private final ResourceLocation STILL=new ResourceLocation("minecraft","block/water_still"),FLOW=new ResourceLocation("minecraft","block/water_flow");@Override public ResourceLocation getStillTexture(){return STILL;}@Override public ResourceLocation getFlowingTexture(){return FLOW;}@Override public int getTintColor(){return tint;}});}}
+
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.minecraftforge.fluids.FluidType;
+
+import java.util.function.Consumer;
+
+public final class OilFluidType extends FluidType {
+    private final int tint;
+    private final boolean lavaTextures;
+
+    public OilFluidType(Properties properties, int tint) {
+        this(properties, tint, false);
+    }
+
+    public OilFluidType(Properties properties, int tint, boolean lavaTextures) {
+        super(properties);
+        this.tint = tint;
+        this.lavaTextures = lavaTextures;
+    }
+
+    @Override
+    public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
+        consumer.accept(new IClientFluidTypeExtensions() {
+            private final ResourceLocation still = new ResourceLocation("minecraft", lavaTextures ? "block/lava_still" : "block/water_still");
+            private final ResourceLocation flowing = new ResourceLocation("minecraft", lavaTextures ? "block/lava_flow" : "block/water_flow");
+
+            @Override public ResourceLocation getStillTexture() { return still; }
+            @Override public ResourceLocation getFlowingTexture() { return flowing; }
+            @Override public int getTintColor() { return tint; }
+        });
+    }
+}

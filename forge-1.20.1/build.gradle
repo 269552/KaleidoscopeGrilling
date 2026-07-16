@@ -13,6 +13,7 @@ base { archivesName = props.getProperty('archives_base_name') }
 repositories {
     maven { url = 'https://maven.minecraftforge.net/' }
     mavenCentral()
+    maven { url = 'https://maven.blamejared.com' }
     flatDir { dirs '../.breezeth/KaleidoscopeCookery-main/build/libs' }
 }
 
@@ -40,6 +41,8 @@ minecraft {
 dependencies {
     minecraft "net.minecraftforge:forge:${props.getProperty('minecraft_version')}-${props.getProperty('forge_version')}"
     implementation fg.deobf('local:kaleidoscopecookery:1.4.1-forge+mc1.20.1')
+    compileOnly fg.deobf('mezz.jei:jei-1.20.1-common-api:15.20.0.105')
+    compileOnly fg.deobf('mezz.jei:jei-1.20.1-forge-api:15.20.0.105')
 }
 
 processResources {

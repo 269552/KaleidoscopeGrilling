@@ -10,6 +10,10 @@ group = props.getProperty('maven_group')
 
 base { archivesName = props.getProperty('archives_base_name') }
 
+repositories {
+    flatDir { dirs rootProject.file('.breezeth/KaleidoscopeCookery-main/build/libs') }
+}
+
 sourceSets.main.resources.srcDir rootProject.file('common/src/main/resources')
 
 neoForge {
@@ -32,6 +36,11 @@ processResources {
 tasks.withType(JavaCompile).configureEach {
     options.release = 21
     options.encoding = 'UTF-8'
+}
+
+dependencies {
+    implementation 'local:kaleidoscopecookery:1.4.1-neoforge+mc1.21.1'
+    compileOnly fileTree(dir: 'runs/client/mods', include: ['*Jade*.jar', '*jei*.jar'])
 }
 
 java { toolchain.languageVersion = JavaLanguageVersion.of(21) }

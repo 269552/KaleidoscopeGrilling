@@ -21,26 +21,26 @@ public final class UnfinishedSkewerItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        List<String> ingredients = SkeweringHandler.readIngredients(stack);
+        List<ItemStack> ingredients = SkeweringHandler.readIngredientStacks(stack);
         tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.skewer_progress",
                 ingredients.size(), SkewerRecipes.expectedSize(ingredients)).withStyle(ChatFormatting.YELLOW));
-        for (String id : ingredients) {
-            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(id));
-            if (item != null) tooltip.add(Component.literal("- ").append(item.getDescription()).withStyle(ChatFormatting.GRAY));
-        }
-        tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.skewer_cancel").withStyle(ChatFormatting.DARK_GRAY));
+        for (ItemStack ingredient : ingredients)
+            tooltip.add(Component.literal("- ").append(ingredient.getHoverName()).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.skewer_finish").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.skewer_remove_last").withStyle(ChatFormatting.DARK_GRAY));
     }
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (!player.isShiftKeyDown()) return InteractionResultHolder.pass(stack);
         if (!level.isClientSide) {
-            for (ItemStack ingredient : SkeweringHandler.readIngredientStacks(stack))
-                player.getInventory().placeItemBackInInventory(ingredient.copy());
-            player.getInventory().placeItemBackInInventory(new ItemStack(Items.STICK));
-            player.setItemInHand(hand, ItemStack.EMPTY);
+            if (player.isShiftKeyDown()) {
+                SkeweringHandler.disassemble(stack, player, hand);
+            } else {
+                ItemStack result = SkeweringHandler.finishAsSecret(stack, player);
+                if (!result.isEmpty()) player.setItemInHand(hand, result);
+            }
         }
-        return InteractionResultHolder.sidedSuccess(level.isClientSide ? stack : ItemStack.EMPTY, level.isClientSide);
+        return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide);
     }
 }

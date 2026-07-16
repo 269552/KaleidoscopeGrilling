@@ -15,5 +15,8 @@ public final class ModBlockEntities {
             () -> BlockEntityType.Builder.of(BigVatBlockEntity::new, ModBlocks.BIG_VAT.get()).build(null));
     public static final RegistryObject<BlockEntityType<OilPressBlockEntity>> OIL_PRESS = BLOCK_ENTITIES.register("oil_press",
             () -> BlockEntityType.Builder.of(OilPressBlockEntity::new, ModBlocks.OIL_PRESS.get()).build(null));
+    public static final RegistryObject<BlockEntityType<AdvancedRackBlockEntity>> ADVANCED_RACK=BLOCK_ENTITIES.register("advanced_rack",()->BlockEntityType.Builder.of(AdvancedRackBlockEntity::new,ModBlocks.ADVANCED_RACK.get()).build(null));
+    public static final RegistryObject<BlockEntityType<SkewerRecipeBlockEntity>> SKEWER_RECIPE = BLOCK_ENTITIES.register("skewer_recipe",
+            () -> BlockEntityType.Builder.of(SkewerRecipeBlockEntity::new, ModBlocks.SKEWER_RECIPE.get()).build(null));
     private ModBlockEntities() {}
 }

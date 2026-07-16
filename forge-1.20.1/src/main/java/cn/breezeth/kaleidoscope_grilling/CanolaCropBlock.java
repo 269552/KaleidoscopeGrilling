@@ -12,5 +12,7 @@ public final class CanolaCropBlock extends CropBlock {
     @Override public IntegerProperty getAgeProperty(){return AGE;}
     @Override public int getMaxAge(){return 3;}
     @Override protected Item getBaseSeedId(){return ModItems.CANOLA_SEEDS.get();}
+    @Override public void randomTick(BlockState state, net.minecraft.server.level.ServerLevel level, net.minecraft.core.BlockPos pos, net.minecraft.util.RandomSource random){if(random.nextInt(7)<3)super.randomTick(state,level,pos,random);}
+    @Override protected int getBonemealAgeIncrease(net.minecraft.world.level.Level level){return 1;}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<net.minecraft.world.level.block.Block,BlockState> builder){builder.add(AGE);}
 }

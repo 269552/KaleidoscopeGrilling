@@ -12,12 +12,15 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.Items;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class GrillBlockEntity extends BlockEntity implements Container {
-    public static final int SLOT_COUNT = 4;
-    private static final int COOK_TICKS = 1200;
+    public static final int SLOT_COUNT = 3;
     private static final int FINISHED_TICKS = 800;
     private static final int BURNT_TICKS = 400;
 
@@ -30,30 +33,29 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     private boolean failed;
     private int heatDurationTicks;
     private final List<String> seasoningIngredients = new ArrayList<>();
+    public final FlipAnimationData flipAnimationData = new FlipAnimationData();
 
     public GrillBlockEntity(BlockPos pos, BlockState state) { super(ModBlockEntities.GRILL.get(), pos, state); }
 
     public static void tick(Level level, BlockPos pos, BlockState state, GrillBlockEntity grill) {
         if (grill.flipCooldown > 0) grill.flipCooldown--;
-        if (grill.phase == 0 || grill.isEmpty()) return;
+        if (!state.getValue(GrillBlock.LIT)) return;
+        if (grill.isEmpty()) return;
         grill.phaseTicks++;
-        if (grill.phase == 1 && grill.phaseTicks >= COOK_TICKS) {
-            grill.failed = grill.flips < 4;
-            grill.phase = 2;
-            grill.phaseTicks = 0;
-            grill.sync();
-        } else if (grill.phase == 2 && grill.phaseTicks >= FINISHED_TICKS) {
+        if (grill.phaseTicks % 20 == 0) grill.sync();
+        if (grill.phase <= 2 && grill.phaseTicks >= FINISHED_TICKS) {
             grill.phase = 3;
             grill.phaseTicks = 0;
             grill.sync();
         } else if (grill.phase == 3 && grill.phaseTicks >= BURNT_TICKS) {
+            Block.popResource(level, pos, new ItemStack(Items.CHARCOAL, 1 + level.random.nextInt(2)));
             grill.clearContent();
             grill.resetProcess();
             grill.sync();
         }
     }
 
-    public boolean canAccept(ItemStack stack) { return phase == 0 && items.stream().anyMatch(ItemStack::isEmpty) && (ModItems.RAW_SKEWERS.stream().anyMatch(i -> stack.is(i.get())) || (stack.is(ModItems.SECRET_SKEWER.get()) && !SecretSkewerItem.isCooked(stack))); }
+    public boolean canAccept(ItemStack stack) { return phase == 0 && items.stream().anyMatch(ItemStack::isEmpty) && (SkewerRecipes.isRawSkewer(stack) || (stack.is(ModItems.SECRET_SKEWER.get()) && !SecretSkewerItem.isCooked(stack))); }
     public void insert(ItemStack held, Player player) {
         for (int i = 0; i < items.size(); i++) if (items.get(i).isEmpty()) {
             items.set(i, held.copyWithCount(1));
@@ -64,7 +66,7 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     }
     public int brushOil(int heatTicks) { if (phase != 0 || isEmpty()) return 0; phase = 1; phaseTicks = 0; heatDurationTicks = heatTicks; sync(); return occupiedSlots(); }
     public boolean canFlip() { return phase == 1 && flipCooldown == 0; }
-    public void flip() { if (!canFlip()) return; flips++; flipCooldown = 20; sync(); }
+    public void flip() { if (!canFlip()) return; flips++; phaseTicks = 0; flipCooldown = 20; if (flips >= 4) { phase = 2; failed = false; } sync(); }
     public int season(ItemStack seasoning) { if (phase != 2 || seasoned) return 0; seasoned = true; seasoningIngredients.clear(); seasoningIngredients.addAll(SeasoningData.get(seasoning)); sync(); return occupiedSlots(); }
     public int seasonableCount() { return phase == 2 && !seasoned ? occupiedSlots() : 0; }
     public boolean canExtractNormally() { return phase == 2 && seasoned && !failed; }
@@ -74,6 +76,31 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
         for (int i = 0; i < items.size(); i++) {
             ItemStack input = items.get(i);
             if (input.isEmpty()) continue;
+            ItemStack output = cookedOutput(input);
+            items.set(i, ItemStack.EMPTY);
+            player.getInventory().placeItemBackInInventory(output);
+            if (isEmpty()) resetProcess();
+            sync();
+            return true;
+        }
+        return false;
+    }
+    public int extractAll(Player player) { int count=0; while(canExtract()&&!isEmpty()&&extractOne(player))count++; return count; }
+    public void dropForBreak() {
+        if(level==null||level.isClientSide)return;
+        for(ItemStack input:items){
+            if(input.isEmpty())continue;
+            ItemStack output;
+            if(phase==0)output=input.copy();
+            else if(phase==2&&seasoned&&!failed)output=cookedOutput(input);
+            else if(phase==3)output=new ItemStack(ModItems.DARK_GRILLING.get());
+            else output=new ItemStack(ModItems.MYSTERIOUS_SKEWER.get());
+            Block.popResource(level,worldPosition,output);
+        }
+        items=NonNullList.withSize(SLOT_COUNT,ItemStack.EMPTY);
+        resetProcess();sync();
+    }
+    private ItemStack cookedOutput(ItemStack input) {
             ItemStack output;
             if (phase == 3) output = new ItemStack(ModItems.DARK_GRILLING.get());
             else if (failed) output = new ItemStack(ModItems.MYSTERIOUS_SKEWER.get());
@@ -84,24 +111,18 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
                 SeasoningData.set(output, seasoningIngredients);
                 if (level != null) FoodState.setHot(output, level.getGameTime() + heatDurationTicks);
             } else {
-                ResourceLocation rawId = ForgeRegistries.ITEMS.getKey(input.getItem());
-                String cookedPath = rawId.getPath().replaceFirst("^raw_", "grilled_");
-                output = new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, cookedPath)));
+                output = SkewerRecipes.cookedResult(input);
+                if (output.isEmpty()) output = new ItemStack(ModItems.MYSTERIOUS_SKEWER.get());
                 if (input.hasTag()) output.setTag(input.getTag().copy());
                 SeasoningData.set(output, seasoningIngredients);
                 if (level != null) FoodState.setHot(output, level.getGameTime() + heatDurationTicks);
             }
-            items.set(i, ItemStack.EMPTY);
-            player.getInventory().placeItemBackInInventory(output);
-            if (isEmpty()) resetProcess();
-            sync();
-            return true;
-        }
-        return false;
+            return output;
     }
     public boolean isFailed() { return failed; }
     public int getPhase() { return phase; }
     public int getFlips() { return flips; }
+    public boolean isSeasoned() { return seasoned; }
     private int occupiedSlots() { return (int) items.stream().filter(s -> !s.isEmpty()).count(); }
     private void resetProcess() { phase = phaseTicks = flips = flipCooldown = heatDurationTicks = 0; seasoned = failed = false; seasoningIngredients.clear(); }
     private void sync() { setChanged(); if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3); }
@@ -116,4 +137,8 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     @Override public void setItem(int slot, ItemStack stack) { if (stack.getCount() > 1) stack.setCount(1); items.set(slot, stack); sync(); }
     @Override public boolean stillValid(Player player) { return Container.stillValidBlockEntity(this, player); }
     @Override public void clearContent() { items.clear(); }
+    @Override public CompoundTag getUpdateTag(){CompoundTag tag=super.getUpdateTag();saveAdditional(tag);return tag;}
+    @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
+    @Override public void onDataPacket(Connection net,ClientboundBlockEntityDataPacket pkt){CompoundTag tag=pkt.getTag();if(tag!=null)load(tag);}
+    public static final class FlipAnimationData { public int observedFlips = -1; public long timestamp = -1L; public final float[] heights = new float[SLOT_COUNT]; }
 }

@@ -1,3 +1,48 @@
 package cn.breezeth.kaleidoscope_grilling;
-import net.minecraft.world.entity.LivingEntity; import net.minecraft.world.entity.ai.attributes.AttributeInstance; import net.minecraft.world.entity.ai.attributes.AttributeModifier; import net.minecraft.world.entity.ai.attributes.Attributes; import net.minecraftforge.event.entity.living.LivingDeathEvent; import net.minecraftforge.event.entity.living.LivingEvent; import java.util.List; import java.util.UUID;
-public final class AdvancedSeasoningHandler {private static final String TOTEM="GrillingSeasoningTotem";private static final String TOTEM_UNTIL="GrillingSeasoningTotemUntil";private static final String DRAGON_UNTIL="GrillingDragonHealthUntil";private static final UUID DRAGON_ID=UUID.fromString("3ca9fb43-40a8-48db-9a52-a98bef86dbe2");public static void apply(LivingEntity e,List<String> v,int duration){long totem=v.stream().filter("kaleidoscope_grilling:totem_powder"::equals).count();long dragon=v.stream().filter("kaleidoscope_grilling:dragon_egg_powder"::equals).count();if(totem>0){e.getPersistentData().putBoolean(TOTEM,true);e.getPersistentData().putLong(TOTEM_UNTIL,e.level().getGameTime()+duration);}if(dragon>0){AttributeInstance a=e.getAttribute(Attributes.MAX_HEALTH);if(a!=null){a.removeModifier(DRAGON_ID);a.addTransientModifier(new AttributeModifier(DRAGON_ID,"Grilling dragon egg vitality",dragon>=4?16.0:10.0,AttributeModifier.Operation.ADDITION));e.getPersistentData().putLong(DRAGON_UNTIL,e.level().getGameTime()+duration);}}}public static void onDeath(LivingDeathEvent event){LivingEntity e=event.getEntity();if(e.getPersistentData().getBoolean(TOTEM)){event.setCanceled(true);e.getPersistentData().remove(TOTEM);e.getPersistentData().remove(TOTEM_UNTIL);e.setHealth(1.0F);}}public static void onLivingTick(LivingEvent.LivingTickEvent event){LivingEntity e=event.getEntity();long now=e.level().getGameTime();long totemUntil=e.getPersistentData().getLong(TOTEM_UNTIL);if(totemUntil>0&&now>=totemUntil){e.getPersistentData().remove(TOTEM);e.getPersistentData().remove(TOTEM_UNTIL);}long until=e.getPersistentData().getLong(DRAGON_UNTIL);if(until>0&&now>=until){AttributeInstance a=e.getAttribute(Attributes.MAX_HEALTH);if(a!=null)a.removeModifier(DRAGON_ID);e.getPersistentData().remove(DRAGON_UNTIL);if(e.getHealth()>e.getMaxHealth())e.setHealth(e.getMaxHealth());}}private AdvancedSeasoningHandler(){}}
+
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
+
+import java.util.List;
+import java.util.UUID;
+
+public final class AdvancedSeasoningHandler {
+    private static final UUID DRAGON_ID = UUID.fromString("3ca9fb43-40a8-48db-9a52-a98bef86dbe2");
+
+    public static void apply(LivingEntity entity, List<String> ingredients, int duration) {
+        long totem = GrillingDataManager.seasoningCount(ingredients, "totem");
+        long dragon = GrillingDataManager.seasoningCount(ingredients, "vitality");
+        if (totem > 0) entity.addEffect(new MobEffectInstance(ModEffects.HEAVY_METAL.get(), duration, totem >= 4 ? 1 : 0));
+        if (dragon > 0) entity.addEffect(new MobEffectInstance(ModEffects.DRAGON_BLOOD.get(), duration, dragon >= 4 ? 1 : 0));
+    }
+
+    public static void onDeath(LivingDeathEvent event) {
+        LivingEntity entity = event.getEntity();
+        if (!entity.hasEffect(ModEffects.HEAVY_METAL.get())) return;
+        event.setCanceled(true);
+        entity.removeEffect(ModEffects.HEAVY_METAL.get());
+        entity.setHealth(1.0F);
+    }
+
+    public static void onLivingTick(LivingEvent.LivingTickEvent event) {
+        LivingEntity entity = event.getEntity();
+        MobEffectInstance dragon = entity.getEffect(ModEffects.DRAGON_BLOOD.get());
+        AttributeInstance health = entity.getAttribute(Attributes.MAX_HEALTH);
+        if (health == null) return;
+        health.removeModifier(DRAGON_ID);
+        if (dragon != null) {
+            double amount = dragon.getAmplifier() > 0 ? 10.0D : 6.0D;
+            health.addTransientModifier(new AttributeModifier(DRAGON_ID, "Grilling dragon blood",
+                    amount, AttributeModifier.Operation.ADDITION));
+        } else if (entity.getHealth() > entity.getMaxHealth()) {
+            entity.setHealth(entity.getMaxHealth());
+        }
+    }
+
+    private AdvancedSeasoningHandler() {}
+}

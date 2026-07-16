@@ -1,0 +1,38 @@
+{
+  "action_success": {
+    "sounds": [{ "name": "kaleidoscope_grilling:action_success", "volume": 0.85 }]
+  },
+  "grill_flip": {
+    "sounds": [
+      "kaleidoscope_grilling:grill_flip_1",
+      "kaleidoscope_grilling:grill_flip_2",
+      "kaleidoscope_grilling:grill_flip_3"
+    ]
+  },
+  "grill_loop": {
+    "sounds": [
+      { "name": "kaleidoscope_grilling:grill_loop", "stream": true }
+    ]
+  },
+  "pickup_item": {
+    "sounds": [{ "name": "kaleidoscope_grilling:pickup_item", "volume": 0.85 }]
+  },
+  "skewer_disassemble": {
+    "sounds": [{ "name": "kaleidoscope_grilling:pickup_item", "volume": 0.85, "pitch": 0.82 }]
+  },
+  "season": {
+    "sounds": ["kaleidoscope_grilling:season"]
+  },
+  "shake_seasoning": {
+    "sounds": [
+      { "name": "kaleidoscope_grilling:shake_seasoning", "stream": true }
+    ]
+  },
+  "bottle_interact": {
+    "sounds": [
+      "kaleidoscope_grilling:bottle_interact_1",
+      "kaleidoscope_grilling:bottle_interact_2",
+      "kaleidoscope_grilling:bottle_interact_3"
+    ]
+  }
+}

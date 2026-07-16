@@ -40,9 +40,9 @@ public final class SkewerItem extends Item {
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         ItemStack result = super.finishUsingItem(stack, level, entity);
         if (!level.isClientSide) {
-            MobEffect effect = effectId == null ? null : ForgeRegistries.MOB_EFFECTS.getValue(effectId);
+            ResourceLocation itemId=ForgeRegistries.ITEMS.getKey(stack.getItem());var data=itemId==null?null:GrillingDataManager.skewer(itemId.toString());ResourceLocation resolved=data!=null&&!data.effect().isEmpty()?new ResourceLocation(data.effect()):effectId;int duration=data!=null?data.effectSeconds()*20:effectDuration;MobEffect effect=resolved==null?null:ForgeRegistries.MOB_EFFECTS.getValue(resolved);
             if (effect != null) {
-                entity.addEffect(new MobEffectInstance(effect, FoodState.isHot(stack, level) ? effectDuration * 2 : effectDuration));
+                entity.addEffect(new MobEffectInstance(effect, duration));
             }
             FoodState.applySeasoning(stack, level, entity);
             level.playSound(null, entity.blockPosition(), SoundEvents.PLAYER_BURP,
@@ -55,6 +55,6 @@ public final class SkewerItem extends Item {
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         FoodTooltip.appendMaxim(tooltip,tooltipKey);
         if (level != null && FoodState.isHot(stack, level)) tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.hot").withStyle(ChatFormatting.GOLD));
-        FoodTooltip.appendEffect(tooltip,effectId,effectDuration);
+        ResourceLocation itemId=ForgeRegistries.ITEMS.getKey(stack.getItem());var data=itemId==null?null:GrillingDataManager.skewer(itemId.toString());ResourceLocation resolved=data!=null&&!data.effect().isEmpty()?new ResourceLocation(data.effect()):effectId;int duration=data!=null?data.effectSeconds()*20:effectDuration;FoodTooltip.appendEffect(tooltip,resolved,duration);
     }
 }

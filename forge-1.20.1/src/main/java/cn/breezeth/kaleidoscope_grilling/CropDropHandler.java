@@ -18,6 +18,7 @@ public final class CropDropHandler {
         int fortune=EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE,event.getPlayer().getMainHandItem());
         tryDrop(event, new ItemStack(ModItems.CANOLA_SEEDS.get(),1+event.getPlayer().getRandom().nextInt(1+fortune)));
         tryDrop(event, new ItemStack(ModItems.SWEET_POTATO.get(),1+event.getPlayer().getRandom().nextInt(1+fortune)));
+        tryDrop(event, new ItemStack(ModItems.ONION.get(),1+event.getPlayer().getRandom().nextInt(1+fortune)));
     }
     private static void tryDrop(BlockEvent.BreakEvent event,ItemStack stack){if(event.getPlayer().getRandom().nextFloat()<0.125F)Block.popResource((net.minecraft.world.level.Level)event.getLevel(),event.getPos(),stack);}
     private CropDropHandler(){}

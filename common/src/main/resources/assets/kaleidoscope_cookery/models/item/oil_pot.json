@@ -1,0 +1,24 @@
+{
+  "overrides": [
+    {
+      "model": "kaleidoscope_cookery:item/pot_no_oil",
+      "predicate": { "kaleidoscope_cookery:has_oil": 0.0 }
+    },
+    {
+      "model": "kaleidoscope_cookery:item/pot_has_oil",
+      "predicate": { "kaleidoscope_cookery:has_oil": 1.0 }
+    },
+    {
+      "model": "kaleidoscope_grilling:item/oil_pot_canola",
+      "predicate": { "kaleidoscope_grilling:oil_type": 1.0 }
+    },
+    {
+      "model": "kaleidoscope_grilling:item/oil_pot_secret_chili",
+      "predicate": { "kaleidoscope_grilling:oil_type": 2.0 }
+    },
+    {
+      "model": "kaleidoscope_grilling:item/oil_pot_premium_chili",
+      "predicate": { "kaleidoscope_grilling:oil_type": 3.0 }
+    }
+  ]
+}

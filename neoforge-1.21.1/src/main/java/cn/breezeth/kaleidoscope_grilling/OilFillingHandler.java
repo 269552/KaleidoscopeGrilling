@@ -1,3 +1,72 @@
 package cn.breezeth.kaleidoscope_grilling;
-import net.minecraft.network.chat.Component; import net.minecraft.world.InteractionHand; import net.minecraft.world.InteractionResult; import net.minecraft.world.item.ItemStack; import net.minecraft.world.item.Items; import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-public final class OilFillingHandler {public static void onRightClickItem(PlayerInteractEvent.RightClickItem e){if(e.getHand()!=InteractionHand.MAIN_HAND)return;ItemStack bucket=e.getEntity().getMainHandItem();ItemStack pot=e.getEntity().getOffhandItem();String type=type(bucket);if(type==null||!OilPotCompat.isOilPot(pot))return;e.setCanceled(true);e.setCancellationResult(InteractionResult.SUCCESS);if(e.getLevel().isClientSide)return;String current=OilPotCompat.getType(pot);if(OilPotCompat.getCount(pot)>56||(!current.isEmpty()&&!current.equals(type))){e.getEntity().displayClientMessage(Component.translatable("message.kaleidoscope_grilling.oil_type_mismatch"),true);return;}OilPotCompat.fill(pot,type,8);consumeBucket(e);}public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock e){if(e.getHand()!=InteractionHand.MAIN_HAND)return;ItemStack bucket=e.getItemStack();String type=type(bucket);var id=net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(e.getLevel().getBlockState(e.getPos()).getBlock());if(type==null||!id.toString().equals("kaleidoscope_cookery:oil_pot")||!(e.getLevel().getBlockEntity(e.getPos())instanceof TypedOilPotAccess pot))return;e.setCanceled(true);e.setCancellationResult(InteractionResult.SUCCESS);if(e.getLevel().isClientSide)return;String current=pot.grilling$getOilType();if(pot.grilling$getOilCount()>56||(!current.isEmpty()&&!current.equals(type))){e.getEntity().displayClientMessage(Component.translatable("message.kaleidoscope_grilling.oil_type_mismatch"),true);return;}pot.grilling$setOilType(type);pot.grilling$setOilCount(pot.grilling$getOilCount()+8);consumeBucket(e);}private static void consumeBucket(PlayerInteractEvent e){if(!e.getEntity().getAbilities().instabuild)e.getEntity().setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Items.BUCKET));}private static String type(ItemStack s){if(s.is(ModItems.CANOLA_OIL_BUCKET.get()))return"canola";if(s.is(ModItems.SECRET_CHILI_OIL_BUCKET.get()))return"secret_chili";if(s.is(ModItems.PREMIUM_CHILI_OIL_BUCKET.get()))return"premium_chili";return null;}private OilFillingHandler(){}}
+
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+
+public final class OilFillingHandler {
+    public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        if (event.getHand() != InteractionHand.MAIN_HAND) return;
+        ItemStack bucket = event.getEntity().getMainHandItem();
+        ItemStack pot = event.getEntity().getOffhandItem();
+        String type = type(bucket);
+        if (type == null || !OilPotCompat.isOilPot(pot)) return;
+        event.setCanceled(true);
+        event.setCancellationResult(InteractionResult.SUCCESS);
+        if (event.getLevel().isClientSide) return;
+        String current = OilPotCompat.getType(pot);
+        if (OilPotCompat.getCount(pot) > 56 || (!current.isEmpty() && !current.equals(type))) {
+            event.getEntity().displayClientMessage(Component.translatable("message.kaleidoscope_grilling.oil_type_mismatch"), true);
+            return;
+        }
+        OilPotCompat.fill(pot, type, 8);
+        playPour(event, event.getEntity().blockPosition(), type, OilPotCompat.getCount(pot));
+        consumeBucket(event);
+    }
+
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getHand() != InteractionHand.MAIN_HAND) return;
+        ItemStack bucket = event.getItemStack();
+        String type = type(bucket);
+        var id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(event.getLevel().getBlockState(event.getPos()).getBlock());
+        if (type == null || !id.toString().equals("kaleidoscope_cookery:oil_pot")
+                || !(event.getLevel().getBlockEntity(event.getPos()) instanceof TypedOilPotAccess pot)) return;
+        event.setCanceled(true);
+        event.setCancellationResult(InteractionResult.SUCCESS);
+        if (event.getLevel().isClientSide) return;
+        String current = pot.grilling$getOilType();
+        if (pot.grilling$getOilCount() > 56 || (!current.isEmpty() && !current.equals(type))) {
+            event.getEntity().displayClientMessage(Component.translatable("message.kaleidoscope_grilling.oil_type_mismatch"), true);
+            return;
+        }
+        pot.grilling$setOilType(type);
+        pot.grilling$setOilCount(pot.grilling$getOilCount() + 8);
+        playPour(event, event.getPos(), type, pot.grilling$getOilCount());
+        consumeBucket(event);
+    }
+
+    private static void playPour(PlayerInteractEvent event, net.minecraft.core.BlockPos pos, String type, int amount) {
+        event.getLevel().playSound(null, pos,
+                "premium_chili".equals(type) ? SoundEvents.BUCKET_EMPTY_LAVA : SoundEvents.BUCKET_EMPTY,
+                SoundSource.PLAYERS, 0.9F, 0.8F + 0.5F * Math.min(64, amount) / 64.0F);
+    }
+
+    private static void consumeBucket(PlayerInteractEvent event) {
+        if (!event.getEntity().getAbilities().instabuild)
+            event.getEntity().setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BUCKET));
+    }
+
+    static String type(ItemStack stack) {
+        if (stack.is(ModItems.CANOLA_OIL_BUCKET.get())) return "canola";
+        if (stack.is(ModItems.SECRET_CHILI_OIL_BUCKET.get())) return "secret_chili";
+        if (stack.is(ModItems.PREMIUM_CHILI_OIL_BUCKET.get())) return "premium_chili";
+        return null;
+    }
+
+    private OilFillingHandler() {}
+}

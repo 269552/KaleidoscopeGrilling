@@ -42,7 +42,7 @@ public final class SeasoningBottleHud {
         Map<String, Integer> counts = new LinkedHashMap<>();
         REQUIRED.forEach(id -> counts.put(id, 0));
         values.forEach(id -> counts.merge(id, 1, Integer::sum));
-        int effectLines = Math.max(1, effects(values).size());
+        int effectLines = Math.max(1, SeasoningEffects.describe(values).size());
         int height = 49 + counts.size() * 18 + effectLines * 10 + 10;
         int x = minecraft.getWindow().getGuiScaledWidth() / 2 + 24;
         int y = Math.max(12, minecraft.getWindow().getGuiScaledHeight() / 2 - height / 2);
@@ -53,6 +53,7 @@ public final class SeasoningBottleHud {
         graphics.fill(x, y, x + 3, y + height, 0xFFE0A83B);
         graphics.fill(x + 3, y + 29, x + WIDTH, y + 30, 0x554F6265);
         graphics.drawString(minecraft.font, Component.translatable("hud.kaleidoscope_grilling.seasoning.title"), x + 12, y + 9, 0xFFF3E9D2, false);
+        graphics.renderItem(new ItemStack(ModItems.EMPTY_SEASONING_BOTTLE.get()),x+WIDTH-27,y+6);
         graphics.drawString(minecraft.font, Component.translatable("hud.kaleidoscope_grilling.seasoning.capacity", values.size(), SeasoningBottleBlockEntity.CAPACITY, SeasoningBottleBlockEntity.CAPACITY - values.size()), x + 12, y + 20, 0xFFAAB7B8, false);
         int barX = x + 12;
         int barY = y + 34;
@@ -75,7 +76,7 @@ public final class SeasoningBottleHud {
         }
         graphics.drawString(minecraft.font, Component.translatable("hud.kaleidoscope_grilling.seasoning.effects"), x + 12, rowY + 1, 0xFFE0A83B, false);
         rowY += 12;
-        List<Component> effects = effects(values);
+        List<Component> effects = SeasoningEffects.describe(values);
         if (effects.isEmpty()) effects = List.of(Component.translatable("hud.kaleidoscope_grilling.seasoning.no_effect"));
         for (Component effect : effects) {
             graphics.drawString(minecraft.font, effect, x + 12, rowY, 0xFFB8D8CD, false);

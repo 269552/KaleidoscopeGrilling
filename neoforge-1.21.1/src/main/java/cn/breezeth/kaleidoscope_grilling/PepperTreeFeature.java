@@ -104,7 +104,7 @@ public final class PepperTreeFeature extends Feature<NoneFeatureConfiguration> {
     private static BlockState leafState(int distance, RandomSource random) {
         BlockState state = ModBlocks.PEPPER_LEAVES.get().defaultBlockState()
                 .setValue(LeavesBlock.DISTANCE, Math.max(1, Math.min(7, distance)));
-        if (random.nextInt(3) == 0) {
+        if (random.nextInt(4) == 0) {
             state = state.setValue(PepperLeavesBlock.HAS_PEPPER, true);
         }
         return state;
