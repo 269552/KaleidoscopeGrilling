@@ -31,10 +31,14 @@ public final class GrillRenderer implements BlockEntityRenderer<GrillBlockEntity
         for(int i=0;i<grill.getContainerSize();i++){
             ItemStack stack=grill.getItem(i);if(stack.isEmpty())continue;
             if(stack.is(ModItems.SECRET_SKEWER.get())){stack=stack.copy();int stage=grill.getPhase()==0?0:grill.getPhase()==1?Math.min(4,1+grill.getFlips()):grill.getPhase()==2?4:5;SecretSkewerItem.setVisualStage(stack,stage);}
+            else if(SkewerRecipes.isRawSkewer(stack)){
+                if(grill.getPhase()==2){ItemStack cooked=SkewerRecipes.cookedResult(stack);if(!cooked.isEmpty())stack=cooked;}
+                else{stack=stack.copy();int stage=grill.getPhase()==0?0:grill.getPhase()==1?Math.min(4,1+grill.getFlips()):5;SecretSkewerItem.setVisualStage(stack,stage);}
+            }
             float lift=animating?animation.heights[i]*Mth.sin(Mth.PI*progress):0F;
             float rotation=(animating?flips-1+progress:flips)*180F;
             pose.pushPose();
-            if(stack.is(ModItems.SECRET_SKEWER.get())){
+            if(stack.is(ModItems.SECRET_SKEWER.get())||SkewerRecipes.isRawSkewer(stack)||SkewerRecipes.isCookedSkewer(stack)){
                 pose.translate((3F+i*5F)/16F,5F/16F+lift,6.25F/16F);
                 pose.mulPose(Axis.ZP.rotationDegrees(rotation));
                 pose.translate(0,7F/16F,1.75F/16F);

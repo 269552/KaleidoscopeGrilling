@@ -18,8 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(targets="com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.PotBlockEntity", remap=false)
-public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAccess {
+public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAccess, PotHudAccess {
     @Shadow private ItemStack result;
+    @Shadow private net.minecraft.core.NonNullList<ItemStack> inputs;
+    @Shadow private int status;
+    @Shadow public abstract boolean hasHeatSource(Level level);
     @Unique private List<String> grilling$seasoning = new ArrayList<>();
     @Unique private String grilling$oilType = "";
     @Unique private String grilling$pendingOilType = "default";
@@ -27,6 +30,9 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
     @Override public void grilling$setSeasoning(List<String> values) { grilling$seasoning = new ArrayList<>(values); }
     @Override public List<String> grilling$getSeasoning() { return List.copyOf(grilling$seasoning); }
     @Override public String grilling$getOilType() { return grilling$oilType; }
+    @Override public int grilling$getStatus() { return status; }
+    @Override public List<ItemStack> grilling$getInputs() { return inputs.stream().map(ItemStack::copy).toList(); }
+    @Override public boolean grilling$hasHeatSource(Level level) { return hasHeatSource(level); }
 
     @Inject(method="addIngredient", at=@At("HEAD"), cancellable=true)
     private void grilling$acceptSeasoning(Level level, LivingEntity user, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
@@ -44,6 +50,7 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
     private void grilling$captureOilBeforeConsumption(Level level, LivingEntity entity, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         String stored = OilPotCompat.getType(stack);
         if (!stored.isEmpty()) grilling$pendingOilType = stored;
+        else if (stack.is(ModItems.CANOLA_OIL_BUCKET.get())) grilling$pendingOilType = "canola";
         else if (stack.is(ModItems.SECRET_CHILI_OIL_BUCKET.get())) grilling$pendingOilType = "secret_chili";
         else if (stack.is(ModItems.PREMIUM_CHILI_OIL_BUCKET.get())) grilling$pendingOilType = "premium_chili";
         else grilling$pendingOilType = "default";
@@ -51,7 +58,9 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
 
     @Inject(method="onPlaceOil", at=@At("RETURN"))
     private void grilling$captureOilType(Level level, LivingEntity entity, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        if (cir.getReturnValueZ()) grilling$oilType = grilling$pendingOilType;
+        if (cir.getReturnValueZ()) {
+            grilling$oilType = grilling$pendingOilType;
+        }
         grilling$pendingOilType = "default";
     }
 

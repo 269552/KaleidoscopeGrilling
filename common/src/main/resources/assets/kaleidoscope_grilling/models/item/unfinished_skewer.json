@@ -1,5 +1,6 @@
 {
     "ambientocclusion":  false,
+    "gui_light":  "front",
     "textures":  {
                      "stick":  "kaleidoscope_grilling:item/secret_skewer_stick",
                      "food":  "minecraft:block/white_concrete",
@@ -9,13 +10,13 @@
                      {
                          "name":  "wood",
                          "from":  [
-                                      7.5,
-                                      0.5,
+                                      7.75,
+                                      0.75,
                                       0
                                   ],
                          "to":  [
-                                    8.5,
-                                    1.5,
+                                    8.25,
+                                    1.25,
                                     12.5
                                 ],
                          "rotation":  {
@@ -30,10 +31,10 @@
                          "faces":  {
                                        "north":  {
                                                      "uv":  [
-                                                                2,
-                                                                2,
-                                                                3,
-                                                                3
+                                                                9,
+                                                                7,
+                                                                10,
+                                                                8
                                                             ],
                                                      "texture":  "#stick"
                                                  },
@@ -48,10 +49,10 @@
                                                 },
                                        "south":  {
                                                      "uv":  [
-                                                                2,
-                                                                3,
-                                                                3,
-                                                                4
+                                                                10,
+                                                                7,
+                                                                11,
+                                                                8
                                                             ],
                                                      "texture":  "#stick"
                                                  },
@@ -122,36 +123,36 @@
                                              },
                     "firstperson_righthand":  {
                                                   "rotation":  [
-                                                                   -144.25,
-                                                                   6.75,
-                                                                   -180
+                                                                   -95,
+                                                                   -7,
+                                                                   -163
                                                                ],
                                                   "translation":  [
-                                                                      0,
-                                                                      6.25,
-                                                                      0
+                                                                      -1,
+                                                                      7.75,
+                                                                      7.25
                                                                   ],
                                                   "scale":  [
-                                                                0.6,
-                                                                0.6,
-                                                                0.6
+                                                                0.8,
+                                                                0.8,
+                                                                0.8
                                                             ]
                                               },
                     "firstperson_lefthand":  {
                                                  "rotation":  [
-                                                                  -144.25,
-                                                                  6.75,
-                                                                  -180
+                                                                  -94,
+                                                                  0,
+                                                                  -165
                                                               ],
                                                  "translation":  [
-                                                                     0,
-                                                                     6.25,
-                                                                     0
+                                                                     -1.5,
+                                                                     7.25,
+                                                                     7
                                                                  ],
                                                  "scale":  [
-                                                               0.6,
-                                                               0.6,
-                                                               0.6
+                                                               0.8,
+                                                               0.8,
+                                                               0.8
                                                            ]
                                              },
                     "ground":  {
@@ -173,14 +174,14 @@
                                                  0
                                              ],
                                 "translation":  [
-                                                    0.75,
-                                                    0.75,
+                                                    1.75,
+                                                    1.75,
                                                     0
                                                 ],
                                 "scale":  [
-                                              1.1,
-                                              1.1,
-                                              1.1
+                                              1.5,
+                                              1.5,
+                                              1.5
                                           ]
                             },
                     "head":  {
@@ -203,9 +204,14 @@
                                                ],
                                   "translation":  [
                                                       0,
-                                                      1.75,
-                                                      7
-                                                  ]
+                                                      2.25,
+                                                      9.75
+                                                  ],
+                                  "scale":  [
+                                                1.5,
+                                                1.5,
+                                                1.5
+                                            ]
                               },
                     "on_shelf":  {
                                      "rotation":  [
@@ -215,8 +221,8 @@
                                                   ],
                                      "translation":  [
                                                          0,
-                                                         10.25,
-                                                         7.5
+                                                         14.25,
+                                                         6.5
                                                      ],
                                      "scale":  [
                                                    1.5,
@@ -459,6 +465,279 @@
                                             "kaleidoscope_grilling:skewer_state":  0.984375
                                         },
                           "model":  "kaleidoscope_grilling:item/skewer_states/state_63"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.25,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_16"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.3125,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_20"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.328125,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_21"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.34375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_22"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.359375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_23"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_24"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.390625,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_25"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.40625,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_26"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.421875,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_27"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.4375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_28"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.453125,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_29"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.46875,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_30"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.484375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_31"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.5,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_32"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.5625,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_36"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.578125,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_37"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.59375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_38"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.609375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_39"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.625,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_40"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.640625,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_41"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.65625,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_42"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.671875,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_43"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.6875,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_44"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.703125,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_45"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.71875,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_46"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.734375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_47"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.75,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_48"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.8125,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_52"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.828125,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_53"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.84375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_54"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.859375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_55"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.875,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_56"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.890625,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_57"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.90625,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_58"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.921875,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_59"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.9375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_60"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.953125,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_61"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.96875,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_62"
+                      },
+                      {
+                          "predicate":  {
+                                            "kaleidoscope_grilling:skewer_state":  0.984375,
+                                            "kaleidoscope_grilling:skewer_outline":  1
+                                        },
+                          "model":  "kaleidoscope_grilling:item/skewer_states/outline_state_63"
                       }
                   ]
 }

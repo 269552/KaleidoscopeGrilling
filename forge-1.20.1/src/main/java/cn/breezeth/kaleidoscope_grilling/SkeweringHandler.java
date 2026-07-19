@@ -22,21 +22,19 @@ public final class SkeweringHandler {
     private static final String VARIANTS_TAG = "SkewerModelVariants";
 
     public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
-        if (event.getHand() != InteractionHand.MAIN_HAND) return;
-        ItemStack food = event.getEntity().getMainHandItem();
         ItemStack offhand = event.getEntity().getOffhandItem();
         if (event.getEntity().isShiftKeyDown()) {
-            InteractionHand skewerHand = canDisassemble(food) ? InteractionHand.MAIN_HAND
-                    : canDisassemble(offhand) ? InteractionHand.OFF_HAND : null;
-            if (skewerHand == null) return;
+            if (!canDisassemble(offhand)) return;
             event.setCancellationResult(InteractionResult.SUCCESS);
             event.setCanceled(true);
             if (!event.getLevel().isClientSide
-                    && disassemble(event.getEntity().getItemInHand(skewerHand), event.getEntity(), skewerHand))
+                    && disassemble(offhand, event.getEntity(), InteractionHand.OFF_HAND))
                 event.getLevel().playSound(null, event.getEntity().blockPosition(), ModSounds.SKEWER_DISASSEMBLE.get(),
                         SoundSource.PLAYERS, 0.8F, 1.0F);
             return;
         }
+        if (event.getHand() != InteractionHand.MAIN_HAND) return;
+        ItemStack food = event.getEntity().getMainHandItem();
         if (!offhand.is(Items.STICK) && !offhand.is(ModItems.UNFINISHED_SKEWER.get())
                 && !(offhand.is(ModItems.SECRET_SKEWER.get()) && !SecretSkewerItem.isCooked(offhand))) return;
 
@@ -74,6 +72,7 @@ public final class SkeweringHandler {
         }
         if (!event.getEntity().getAbilities().instabuild) food.shrink(1);
         event.getEntity().setItemInHand(InteractionHand.OFF_HAND, next);
+        if (resultId != null || insertedStacks.size() >= 3) ModAdvancements.skewerCompleted(event.getEntity());
         event.getLevel().playSound(null, event.getEntity().blockPosition(), ModSounds.ACTION_SUCCESS.get(),
                 SoundSource.PLAYERS, 0.7F, 1.0F);
     }
@@ -82,7 +81,7 @@ public final class SkeweringHandler {
         return ids(readIngredientStacks(stack));
     }
 
-    static List<ItemStack> readIngredientStacks(ItemStack stack) {
+    public static List<ItemStack> readIngredientStacks(ItemStack stack) {
         List<ItemStack> result = new ArrayList<>();
         if (!stack.hasTag()) return result;
         ListTag stacks = stack.getTag().getList(INGREDIENT_STACKS_TAG, 10);
@@ -119,6 +118,11 @@ public final class SkeweringHandler {
 
     static int modelState(ItemStack stack) {
         List<Integer> variants = readVariants(stack);
+        if (variants.isEmpty()) {
+            List<ItemStack> fixed = SkewerRecipes.displayIngredients(stack);
+            int hash = ForgeRegistries.ITEMS.getKey(stack.getItem()).hashCode();
+            for (int i = 0; i < fixed.size(); i++) variants.add(1 + Math.floorMod(hash + i * 31, 3));
+        }
         int first = variants.size() > 0 ? variants.get(0) : 0;
         int second = variants.size() > 1 ? variants.get(1) : 0;
         int third = variants.size() > 2 ? variants.get(2) : 0;
@@ -135,7 +139,7 @@ public final class SkeweringHandler {
         return removed;
     }
 
-    static boolean disassemble(ItemStack stack, net.minecraft.world.entity.player.Player player, InteractionHand hand) {
+    public static boolean disassemble(ItemStack stack, net.minecraft.world.entity.player.Player player, InteractionHand hand) {
         List<ItemStack> ingredients = readIngredientStacks(stack);
         if (ingredients.isEmpty()) return false;
         for (ItemStack ingredient : ingredients)
@@ -146,7 +150,7 @@ public final class SkeweringHandler {
         return true;
     }
 
-    private static boolean canDisassemble(ItemStack stack) {
+    public static boolean canDisassemble(ItemStack stack) {
         return stack.is(ModItems.UNFINISHED_SKEWER.get()) || SkewerRecipes.isRawSkewer(stack)
                 || stack.is(ModItems.SECRET_SKEWER.get()) && !SecretSkewerItem.isCooked(stack);
     }

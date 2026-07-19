@@ -24,16 +24,7 @@ public abstract class StockpotBlockUseMixin {
         if (!held.is(ModItems.SPECIAL_SEASONING.get())) return;
         BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof SeasonedPotAccess access)) return;
-        if (!level.isClientSide) {
-            if (!player.getAbilities().instabuild) {
-                int next = held.getDamageValue() + 1;
-                if (next >= held.getMaxDamage()) {
-                    held.setCount(0);
-                    player.setItemInHand(hand, new ItemStack(ModItems.EMPTY_SEASONING_BOTTLE.get()));
-                } else { held.setDamageValue(next); }
-            }
-            access.grilling$setSeasoning(SeasoningData.get(held));
-        }
+        if (!level.isClientSide) SeasoningUse.apply(player, hand, held, access);
         cir.setReturnValue(InteractionResult.SUCCESS);
     }
 }

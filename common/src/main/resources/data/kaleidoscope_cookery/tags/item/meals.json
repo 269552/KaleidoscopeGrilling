@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    "kaleidoscope_grilling:chicken_wing",
+    "kaleidoscope_grilling:houttuynia",
+    "kaleidoscope_grilling:sweet_potato",
+    "kaleidoscope_grilling:roasted_sweet_potato",
+    "kaleidoscope_grilling:roasted_chicken_wing",
+    "kaleidoscope_grilling:cold_houttuynia",
+    "kaleidoscope_grilling:sugared_tomato",
+    "kaleidoscope_grilling:houttuynia_stir_fried_pork",
+    "kaleidoscope_grilling:green_pepper_squid_tentacles",
+    "kaleidoscope_grilling:braised_chicken_wings",
+    "kaleidoscope_grilling:potato_beef_stew",
+    "kaleidoscope_grilling:red_sweet_potato_porridge",
+    "kaleidoscope_grilling:secret_skewer",
+    "kaleidoscope_grilling:mysterious_skewer",
+    "kaleidoscope_grilling:dark_grilling",
+    "#kaleidoscope_grilling:raw_skewers",
+    "#kaleidoscope_grilling:grilled_skewers"
+  ]
+}

@@ -24,9 +24,14 @@ public final class FortressWartReplacementHandler {
                     pos.set(x, y, z);
                     var state = chunk.getBlockState(pos);
                     if (!state.is(Blocks.NETHER_WART) || Math.floorMod(coordinateHash(x, y, z), 100) >= REPLACEMENT_PERCENT) continue;
-                    int age = Math.min(2, state.getValue(NetherWartBlock.AGE));
+                    int age = switch (state.getValue(NetherWartBlock.AGE)) {
+                        case 0 -> 0;
+                        case 1 -> 3;
+                        default -> 7;
+                    };
                     level.setBlock(pos, ModBlocks.HOUTTUYNIA_CROP.get().defaultBlockState()
-                            .setValue(HouttuyniaCropBlock.AGE, age), 2);
+                            .setValue(HouttuyniaCropBlock.AGE, age)
+                            .setValue(HouttuyniaCropBlock.RED_VARIANT, true), 2);
                 }
             }
         }

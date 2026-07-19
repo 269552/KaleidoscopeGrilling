@@ -51,7 +51,8 @@ public final class RackShortcutScreen extends AbstractContainerScreen<RackShortc
             if (i == hovered) outline(graphics, x, y, 18, 18, 0xFFF0B957);
             else if (menu.rememberedSlot() == i) outline(graphics, x, y, 18, 18, 0xFF9A7135);
             if (menu.slots.get(i).getItem().isEmpty() && !menu.getFilter(i).isEmpty()) {
-                graphics.renderItem(menu.getFilter(i), x + 1, y + 1);
+                SkewerOutlineRender.renderItem(graphics, menu.getFilter(i), x + 1, y + 1,
+                        SkewerGuiDecorator.colorFor(menu.getFilter(i)));
                 graphics.fill(x + 1, y + 1, x + 17, y + 17, 0x77101418);
             }
         }
@@ -100,6 +101,6 @@ public final class RackShortcutScreen extends AbstractContainerScreen<RackShortc
     private boolean isDepositAt(double mouseX,double mouseY){return mouseX>=leftPos+89&&mouseX<leftPos+105&&mouseY>=topPos+64&&mouseY<topPos+80;}
     private void drawCount(GuiGraphics g,int slot,int count){if(menu.getFilter(slot).isEmpty()&&menu.slots.get(slot).getItem().isEmpty())return;String text=Integer.toString(count);int x=leftPos+menu.slots.get(slot).x+16-font.width(text),y=topPos+menu.slots.get(slot).y+8;g.drawString(font,text,x,y,0xFFFFFFFF,true);}
     private void drawDeposit(GuiGraphics graphics){int x=leftPos+89,y=topPos+64;graphics.blit(depositHovered?DEPOSIT_SELECTED_TEXTURE:DEPOSIT_TEXTURE,x,y,0,0,16,16,16,16);}
-    private void renderSlotItems(GuiGraphics graphics){for(int i=0;i<9;i++){var slot=menu.slots.get(i);if(!slot.getItem().isEmpty())graphics.renderItem(slot.getItem(),leftPos+slot.x,topPos+slot.y);}}
+    private void renderSlotItems(GuiGraphics graphics){for(int i=0;i<9;i++){var slot=menu.slots.get(i);if(!slot.getItem().isEmpty())SkewerOutlineRender.renderItem(graphics,slot.getItem(),leftPos+slot.x,topPos+slot.y,SkewerGuiDecorator.colorFor(slot.getItem()));}}
     private static void outline(GuiGraphics g,int x,int y,int w,int h,int c){g.fill(x,y,x+w,y+1,c);g.fill(x,y+h-1,x+w,y+h,c);g.fill(x,y,x+1,y+h,c);g.fill(x+w-1,y,x+w,y+h,c);}
 }

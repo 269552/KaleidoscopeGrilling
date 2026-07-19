@@ -15,7 +15,8 @@ public final class ModSounds {
     public static final RegistryObject<SoundEvent> SKEWER_DISASSEMBLE = register("skewer_disassemble");
     public static final RegistryObject<SoundEvent> SEASON = register("season");
     public static final RegistryObject<SoundEvent> SHAKE_SEASONING = register("shake_seasoning");
-    public static final RegistryObject<SoundEvent> BOTTLE_INTERACT = register("bottle_interact");
+    public static final RegistryObject<SoundEvent> SEASONING_BOTTLE_PLACE = register("seasoning_bottle_place");
+    public static final RegistryObject<SoundEvent> SEASONING_BOTTLE_STACK = register("seasoning_bottle_stack");
 
     private static RegistryObject<SoundEvent> register(String name) {
         ResourceLocation id = new ResourceLocation(KaleidoscopeGrilling.MOD_ID, name);

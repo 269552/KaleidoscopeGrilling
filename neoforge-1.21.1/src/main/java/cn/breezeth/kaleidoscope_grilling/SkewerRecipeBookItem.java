@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.item.context.UseOnContext;
@@ -50,16 +51,47 @@ public final class SkewerRecipeBookItem extends Item {
     }
 
     public static void setRecipeResult(ItemStack stack, String resultId) {
-        CompoundTag tag = new CompoundTag();
+        CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
         tag.putString(RECIPE_RESULT_TAG, resultId);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+    }
+
+    public static void setRecipeStack(ItemStack book, ItemStack recipe) {
+        setRecipeResult(book, BuiltInRegistries.ITEM.getKey(recipe.getItem()).toString());
+        book.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(List.of(recipe.copyWithCount(1))));
+    }
+
+    public static ItemStack readRecipeStack(ItemStack book) {
+        List<ItemStack> stored = new ArrayList<>();
+        book.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).nonEmptyItems()
+                .forEach(stack -> stored.add(stack.copyWithCount(1)));
+        if (!stored.isEmpty()) return stored.get(0);
+        ResourceLocation id = ResourceLocation.tryParse(readRecipeResult(book));
+        return id == null ? ItemStack.EMPTY
+                : BuiltInRegistries.ITEM.getOptional(id).map(ItemStack::new).orElse(ItemStack.EMPTY);
     }
 
     @Override
     public Component getName(ItemStack stack) {
         ItemStack result = resultStack(stack);
         return result.isEmpty() ? super.getName(stack)
-                : Component.translatable("item.kaleidoscope_grilling.skewer_recipe_book.recorded", result.getHoverName());
+                : Component.translatable("item.kaleidoscope_grilling.skewer_recipe_book.recorded",
+                recipeDisplayName(result));
+    }
+
+    private static Component recipeDisplayName(ItemStack result) {
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(result.getItem());
+        if (id.getNamespace().equals(KaleidoscopeGrilling.MOD_ID)
+                && id.getPath().startsWith("raw_") && id.getPath().endsWith("_skewer")) {
+            String type = id.getPath().substring(4, id.getPath().length() - 7);
+            return Component.translatable("item.kaleidoscope_grilling.skewer_recipe_name." + type);
+        }
+        if (result.is(ModItems.SECRET_SKEWER.get())) {
+            String creator = SecretSkewerItem.getCreator(result);
+            return creator.isEmpty() ? result.getHoverName()
+                    : Component.translatable("item.kaleidoscope_grilling.skewer_recipe_name.custom", creator);
+        }
+        return result.getHoverName();
     }
 
     @Override
@@ -81,8 +113,15 @@ public final class SkewerRecipeBookItem extends Item {
     @Override
     public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
         String resultId = readRecipeResult(stack);
+        ItemStack recorded = readRecipeStack(stack);
+        List<ItemStack> custom = recorded.is(ModItems.SECRET_SKEWER.get())
+                ? SkeweringHandler.readIngredients(recorded).stream()
+                .map(ResourceLocation::tryParse).filter(java.util.Objects::nonNull)
+                .map(BuiltInRegistries.ITEM::get).map(ItemStack::new).toList() : List.of();
         List<List<String>> recipe = SkewerRecipes.getIngredients(resultId);
         ItemStack output = resultStack(stack);
+        if (!custom.isEmpty()) return Optional.of(new RecipeItemTooltip(
+                new RecipeItem.RecipeRecord(custom, output, RecipeItem.POT, false), null));
         if (recipe == null || recipe.isEmpty() || output.isEmpty()) return Optional.empty();
         List<ItemStack> inputs = new ArrayList<>();
         for (List<String> selectors : recipe) {
@@ -97,9 +136,7 @@ public final class SkewerRecipeBookItem extends Item {
     }
 
     private static ItemStack resultStack(ItemStack stack) {
-        ResourceLocation id = ResourceLocation.tryParse(readRecipeResult(stack));
-        if (id == null) return ItemStack.EMPTY;
-        return BuiltInRegistries.ITEM.getOptional(id).map(ItemStack::new).orElse(ItemStack.EMPTY);
+        return readRecipeStack(stack);
     }
 
     @Override
@@ -111,15 +148,26 @@ public final class SkewerRecipeBookItem extends Item {
         String resultId = readRecipeResult(book);
         if (resultId.isEmpty()) return InteractionResultHolder.pass(book);
 
-        InteractionResult result = craft(level, player, offhand, resultId);
+        InteractionResult result = craft(level, player, offhand, book);
         return result == InteractionResult.FAIL ? InteractionResultHolder.fail(book)
                 : result.consumesAction() ? InteractionResultHolder.success(book) : InteractionResultHolder.pass(book);
     }
 
     public static InteractionResult craft(Level level, Player player, ItemStack stick, String resultId) {
-        if (!stick.is(Items.STICK)) return InteractionResult.PASS;
+        ItemStack book = new ItemStack(ModItems.SKEWER_RECIPE_BOOK.get());
+        setRecipeResult(book, resultId);
+        return craft(level, player, stick, book);
+    }
 
-        List<List<String>> ingredients = SkewerRecipes.getIngredients(resultId);
+    public static InteractionResult craft(Level level, Player player, ItemStack stick, ItemStack book) {
+        if (!stick.is(Items.STICK)) return InteractionResult.PASS;
+        String resultId = readRecipeResult(book);
+        ItemStack recorded = readRecipeStack(book);
+        List<ItemStack> customIngredients = recorded.is(ModItems.SECRET_SKEWER.get())
+                ? SkeweringHandler.readIngredientStacks(recorded, level.registryAccess()) : List.of();
+        List<List<String>> ingredients = !customIngredients.isEmpty()
+                ? customIngredients.stream().map(s -> List.of(BuiltInRegistries.ITEM.getKey(s.getItem()).toString())).toList()
+                : SkewerRecipes.getIngredients(resultId);
         if (ingredients == null) return InteractionResult.PASS;
 
         if (level.isClientSide) return InteractionResult.SUCCESS;
@@ -168,12 +216,16 @@ public final class SkewerRecipeBookItem extends Item {
             stick.shrink(1);
         }
 
-        Item resultItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(resultId));
-        if (resultItem != null) {
-            if (!player.getInventory().add(new ItemStack(resultItem))) {
-                player.drop(new ItemStack(resultItem), false);
-            }
+        ItemStack output;
+        if (!customIngredients.isEmpty()) {
+            output = recorded.copyWithCount(1);
+            SecretSkewerItem.setCooked(output, false);
+            SecretSkewerItem.setCreator(output, player);
+        } else {
+            Item resultItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(resultId));
+            output = resultItem == null ? ItemStack.EMPTY : new ItemStack(resultItem);
         }
+        if (!output.isEmpty() && !player.getInventory().add(output)) player.drop(output, false);
         level.playSound(null, player.blockPosition(), ModSounds.ACTION_SUCCESS.get(), SoundSource.PLAYERS, 0.7F, 1.0F);
         return InteractionResult.SUCCESS;
     }
@@ -182,16 +234,15 @@ public final class SkewerRecipeBookItem extends Item {
         Direction face = context.getClickedFace();
         if (!face.getAxis().isHorizontal()) return InteractionResult.PASS;
         ItemStack book = context.getItemInHand();
-        String id = readRecipeResult(book);
-        if (id.isEmpty() || ResourceLocation.tryParse(id) == null) return InteractionResult.PASS;
         Level level = context.getLevel();
+        if (!level.isClientSide && readRecipeStack(book).isEmpty()) return InteractionResult.FAIL;
         BlockPos target = context.getClickedPos().relative(face);
         if (!level.getBlockState(target).canBeReplaced()) return InteractionResult.FAIL;
         BlockState state = ModBlocks.SKEWER_RECIPE.get().defaultBlockState().setValue(SkewerRecipeBlock.FACING, face);
         if (!state.canSurvive(level, target)) return InteractionResult.FAIL;
         if (!level.isClientSide) {
             level.setBlock(target, state, 3);
-            if (level.getBlockEntity(target) instanceof SkewerRecipeBlockEntity recipe) recipe.setRecipeResult(id);
+            if (level.getBlockEntity(target) instanceof SkewerRecipeBlockEntity recipe) recipe.setRecipeBook(book);
             level.playSound(null, target, SoundEvents.ITEM_FRAME_PLACE, SoundSource.BLOCKS, 0.8F, 1.0F);
             if (context.getPlayer() != null && !context.getPlayer().getAbilities().instabuild) book.shrink(1);
         }

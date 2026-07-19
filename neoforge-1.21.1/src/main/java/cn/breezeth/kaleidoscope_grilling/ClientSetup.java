@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.resources.ResourceLocation;
@@ -12,6 +13,9 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
+import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -21,7 +25,9 @@ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 @EventBusSubscriber(modid = KaleidoscopeGrilling.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class ClientSetup {
     private static final ResourceLocation SKEWER_STATE = ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "skewer_state");
+    private static final ResourceLocation SKEWER_OUTLINE = ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "skewer_outline");
     private static final ResourceLocation OIL_TYPE = ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "oil_type");
+    private static final ResourceLocation OIL_BRUSHING = ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "oil_brushing");
     private static final ResourceLocation SEASONING_FILL = ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "seasoning_fill");
     private static final ResourceLocation SEASONING_REMAINING = ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "seasoning_remaining");
     private static final ResourceLocation SEASONING_VARIANT = ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "seasoning_variant");
@@ -34,15 +40,18 @@ public final class ClientSetup {
             BlockEntityRenderers.register(ModBlockEntities.BIG_VAT.get(), BigVatRenderer::new);
             BlockEntityRenderers.register(ModBlockEntities.ADVANCED_RACK.get(), AdvancedRackRenderer::new);
             BlockEntityRenderers.register(ModBlockEntities.SKEWER_RECIPE.get(), SkewerRecipeBlockRenderer::new);
+            BlockEntityRenderers.register(ModBlockEntities.SKEWER_PLATE.get(), SkewerPlateRenderer::new);
             register(ModItems.UNFINISHED_SKEWER.get());
             register(ModItems.SECRET_SKEWER.get());
-            ModItems.RAW_SKEWERS.forEach(item -> register(item.get()));
-            ModItems.FIXED_SKEWERS.forEach(item -> register(item.get()));
+            ModItems.RAW_SKEWERS.forEach(item -> registerFixed(item.get()));
+            ModItems.FIXED_SKEWERS.forEach(item -> registerFixed(item.get()));
             Item oilPot = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
                     ResourceLocation.fromNamespaceAndPath("kaleidoscope_cookery", "oil_pot"));
             ItemProperties.register(oilPot, OIL_TYPE,
                     (stack, level, entity, seed) -> OilPotCompat.getCount(stack) > 0
                             ? oilTypeModelValue(OilPotCompat.getType(stack)) : 0F);
+            ItemProperties.register(oilPot, OIL_BRUSHING,
+                    (stack, level, entity, seed) -> oilBrushModelValue(stack, entity));
             Block oilPotBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(
                     ResourceLocation.fromNamespaceAndPath("kaleidoscope_cookery", "oil_pot"));
             ItemBlockRenderTypes.setRenderLayer(oilPotBlock, RenderType.cutout());
@@ -50,6 +59,7 @@ public final class ClientSetup {
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.BIG_VAT.get(), RenderType.translucent());
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.ADVANCED_RACK.get(), RenderType.cutout());
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.SKEWER_RECIPE.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(ModBlocks.SKEWER_PLATE.get(), RenderType.cutout());
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.PEPPER_LEAVES.get(), RenderType.cutout());
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.PEPPER_SAPLING.get(), RenderType.cutout());
             ItemProperties.register(ModItems.EMPTY_SEASONING_BOTTLE.get(), SEASONING_FILL,
@@ -73,7 +83,32 @@ public final class ClientSetup {
     @SubscribeEvent
     public static void registerItemColors(RegisterColorHandlersEvent.Item event) {
         event.register(SkewerColorProvider::color, ModItems.UNFINISHED_SKEWER.get(), ModItems.SECRET_SKEWER.get());
+        ModItems.RAW_SKEWERS.forEach(item -> event.register(SkewerColorProvider::color, item.get()));
+        ModItems.FIXED_SKEWERS.forEach(item -> event.register(SkewerColorProvider::color, item.get()));
         event.register(SeasoningColorProvider::color, ModItems.EMPTY_SEASONING_BOTTLE.get(), ModItems.PENDING_SEASONING.get());
+    }
+
+    @SubscribeEvent
+    public static void registerItemDecorations(RegisterItemDecorationsEvent event) {
+        SkewerGuiDecorator decorator = new SkewerGuiDecorator();
+        event.register(ModItems.UNFINISHED_SKEWER.get(), decorator);
+        event.register(ModItems.SECRET_SKEWER.get(), decorator);
+        ModItems.RAW_SKEWERS.forEach(item -> event.register(item.get(), decorator));
+        ModItems.FIXED_SKEWERS.forEach(item -> event.register(item.get(), decorator));
+    }
+
+    @SubscribeEvent
+    public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
+        event.register(ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(
+                KaleidoscopeGrilling.MOD_ID, "item/skewer_plate_base")));
+        event.register(ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(
+                KaleidoscopeGrilling.MOD_ID, "block/pot_oil_default")));
+        event.register(ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(
+                KaleidoscopeGrilling.MOD_ID, "block/pot_oil_canola")));
+        event.register(ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(
+                KaleidoscopeGrilling.MOD_ID, "block/pot_oil_secret_chili")));
+        event.register(ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(
+                KaleidoscopeGrilling.MOD_ID, "block/pot_oil_premium_chili")));
     }
 
     @SubscribeEvent
@@ -92,6 +127,12 @@ public final class ClientSetup {
     private static void register(Item item) {
         ItemProperties.register(item, SKEWER_STATE,
                 (stack, level, entity, seed) -> SkeweringHandler.modelState(stack) / 64.0F);
+        registerFixed(item);
+    }
+
+    private static void registerFixed(Item item) {
+        ItemProperties.register(item, SKEWER_OUTLINE,
+                (stack, level, entity, seed) -> SkewerOutlineRender.isActive() ? 1.0F : 0.0F);
     }
 
     private static float oilTypeModelValue(String type) {
@@ -101,6 +142,14 @@ public final class ClientSetup {
             case "premium_chili" -> 3F;
             default -> 0F;
         };
+    }
+
+    private static float oilBrushModelValue(net.minecraft.world.item.ItemStack stack, net.minecraft.world.entity.LivingEntity entity) {
+        if (!(entity instanceof net.minecraft.world.entity.player.Player player)) return 0F;
+        AnvilPressAnimationAccess animation = (AnvilPressAnimationAccess) player;
+        if (animation.grilling$getOilBrushProgress(Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true)) < 0.0F
+                || player.getItemInHand(animation.grilling$getOilBrushHand()) != stack) return 0F;
+        return animation.grilling$getOilBrushType() + 1.0F;
     }
 
     private static IClientFluidTypeExtensions fluid(String stillPath, String flowingPath, int tint) {

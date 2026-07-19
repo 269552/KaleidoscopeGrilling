@@ -1,0 +1,26 @@
+{
+  "parent": "kaleidoscope_grilling:looking_the_part",
+  "display": {
+    "icon": {
+      "id": "kaleidoscope_grilling:skewer_recipe_book"
+    },
+    "title": {
+      "translate": "advancement.kaleidoscope_grilling.better_write_it_down.title"
+    },
+    "description": {
+      "translate": "advancement.kaleidoscope_grilling.better_write_it_down.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "event": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 10
+  }
+}

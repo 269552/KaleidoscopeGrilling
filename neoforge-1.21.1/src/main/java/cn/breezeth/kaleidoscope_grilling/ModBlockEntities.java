@@ -17,5 +17,7 @@ public final class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>,BlockEntityType<AdvancedRackBlockEntity>> ADVANCED_RACK=BLOCK_ENTITIES.register("advanced_rack",()->BlockEntityType.Builder.of(AdvancedRackBlockEntity::new,ModBlocks.ADVANCED_RACK.get()).build(null));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SkewerRecipeBlockEntity>> SKEWER_RECIPE = BLOCK_ENTITIES.register("skewer_recipe",
             () -> BlockEntityType.Builder.of(SkewerRecipeBlockEntity::new, ModBlocks.SKEWER_RECIPE.get()).build(null));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SkewerPlateBlockEntity>> SKEWER_PLATE = BLOCK_ENTITIES.register("skewer_plate",
+            () -> BlockEntityType.Builder.of(SkewerPlateBlockEntity::new, ModBlocks.SKEWER_PLATE.get()).build(null));
     private ModBlockEntities() {}
 }

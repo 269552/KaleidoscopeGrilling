@@ -1,1 +1,1 @@
-{"type":"kaleidoscope_cookery:millstone","ingredient":{"item":"kaleidoscope_grilling:sweet_potato"},"result":{"item":"kaleidoscope_grilling:sweet_potato_powder"}}
+{"type":"kaleidoscope_cookery:millstone","ingredient":{"tag":"kaleidoscope_grilling:ingredients/sweet_potatoes"},"result":{"item":"kaleidoscope_grilling:sweet_potato_powder"}}

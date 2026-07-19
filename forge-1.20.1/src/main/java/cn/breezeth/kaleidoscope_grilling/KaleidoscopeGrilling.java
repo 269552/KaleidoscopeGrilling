@@ -20,13 +20,14 @@ public final class KaleidoscopeGrilling {
         ModBlocks.BLOCKS.register(modBus);
         ModBlockEntities.BLOCK_ENTITIES.register(modBus);
         ModMenus.MENUS.register(modBus);
+        ModRecipeSerializers.SERIALIZERS.register(modBus);
         ModFeatures.FEATURES.register(modBus);
         ModFluids.FLUID_TYPES.register(modBus);
         ModFluids.FLUIDS.register(modBus);
         ModCreativeTabs.TABS.register(modBus);
         modBus.addListener(CommonSetup::onSetup);
         MinecraftForge.EVENT_BUS.addListener(SkeweringHandler::onRightClickItem);
-        MinecraftForge.EVENT_BUS.addListener(SkewerRecipeBookHandler::onItemCrafted);
+        MinecraftForge.EVENT_BUS.addListener(SkewerPlatePlacement::onRightClickBlock);
         MinecraftForge.EVENT_BUS.addListener(AdvancedSeasoningHandler::onDeath);
         MinecraftForge.EVENT_BUS.addListener(AdvancedSeasoningHandler::onLivingTick);
         MinecraftForge.EVENT_BUS.addListener(OilFillingHandler::onRightClickItem);
@@ -48,5 +49,9 @@ public final class KaleidoscopeGrilling {
         MinecraftForge.EVENT_BUS.addListener(RecipeDisplayHandler::attack);
         MinecraftForge.EVENT_BUS.addListener(RecipeDisplayHandler::interact);
         MinecraftForge.EVENT_BUS.addListener(GrillingDataManager::register);
+        MinecraftForge.EVENT_BUS.addListener(ModAdvancements::onPlayerTick);
+        MinecraftForge.EVENT_BUS.addListener(ModAdvancements::onBlockPlaced);
+        MinecraftForge.EVENT_BUS.addListener(ModAdvancements::onFoodFinished);
+        MinecraftForge.EVENT_BUS.addListener(ModAdvancements::onPlayerClone);
     }
 }

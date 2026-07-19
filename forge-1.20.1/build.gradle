@@ -14,6 +14,7 @@ repositories {
     maven { url = 'https://maven.minecraftforge.net/' }
     mavenCentral()
     maven { url = 'https://maven.blamejared.com' }
+    maven { url = 'https://api.modrinth.com/maven' }
     flatDir { dirs '../.breezeth/KaleidoscopeCookery-main/build/libs' }
 }
 
@@ -25,6 +26,7 @@ minecraft {
         configureEach {
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            args '--mixin', 'kaleidoscope_grilling.mixins.json'
         }
         client {
             workingDirectory project.file('runs/client')
@@ -43,6 +45,8 @@ dependencies {
     implementation fg.deobf('local:kaleidoscopecookery:1.4.1-forge+mc1.20.1')
     compileOnly fg.deobf('mezz.jei:jei-1.20.1-common-api:15.20.0.105')
     compileOnly fg.deobf('mezz.jei:jei-1.20.1-forge-api:15.20.0.105')
+    compileOnly fg.deobf('maven.modrinth:jade:11.13.1+forge')
+    runtimeOnly fg.deobf('maven.modrinth:jade:11.13.1+forge')
 }
 
 processResources {

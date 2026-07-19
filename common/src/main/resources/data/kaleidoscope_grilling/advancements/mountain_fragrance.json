@@ -1,0 +1,26 @@
+{
+  "parent": "kaleidoscope_grilling:human_fireworks",
+  "display": {
+    "icon": {
+      "item": "kaleidoscope_grilling:sichuan_pepper"
+    },
+    "title": {
+      "translate": "advancement.kaleidoscope_grilling.mountain_fragrance.title"
+    },
+    "description": {
+      "translate": "advancement.kaleidoscope_grilling.mountain_fragrance.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "event": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 25
+  }
+}

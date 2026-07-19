@@ -1,0 +1,26 @@
+{
+  "parent": "kaleidoscope_grilling:human_fireworks",
+  "display": {
+    "icon": {
+      "item": "kaleidoscope_grilling:raw_beef_skewer"
+    },
+    "title": {
+      "translate": "advancement.kaleidoscope_grilling.looking_the_part.title"
+    },
+    "description": {
+      "translate": "advancement.kaleidoscope_grilling.looking_the_part.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "event": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 10
+  }
+}

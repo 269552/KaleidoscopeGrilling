@@ -99,6 +99,7 @@ public final class AdvancedRackBlockEntity extends BlockEntity implements Contai
     @Override public void load(CompoundTag tag){super.load(tag);items=NonNullList.withSize(COMPARTMENT_COUNT,ItemStack.EMPTY);ContainerHelper.loadAllItems(tag,items);filters=NonNullList.withSize(COMPARTMENT_COUNT,ItemStack.EMPTY);if(tag.contains("Filters"))ContainerHelper.loadAllItems(tag.getCompound("Filters"),filters);for(int i=0;i<COMPARTMENT_COUNT;i++)if(filters.get(i).isEmpty()&&!items.get(i).isEmpty()){ItemStack filter=items.get(i).copy();filter.setCount(1);filters.set(i,filter);}}
     @Override public CompoundTag getUpdateTag(){return saveWithoutMetadata();}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
+    public void restoreFromItem(CompoundTag tag){load(tag.copy());sync();}
     private static boolean canShareCategory(ItemStack a,ItemStack b){if(!a.isStackable()&&!b.isStackable()&&a.isDamageableItem()&&b.isDamageableItem())return a.getItem()==b.getItem();return ItemStack.isSameItemSameTags(a,b);}
     private record RackBinding(BlockPos pos,int slot){}
 }

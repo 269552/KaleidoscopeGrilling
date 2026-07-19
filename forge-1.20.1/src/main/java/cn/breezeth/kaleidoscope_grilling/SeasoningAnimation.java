@@ -6,7 +6,7 @@ public final class SeasoningAnimation {
     public static final byte EVENT_ID = 69;
     public static final int DURATION_TICKS = 10;
     public static void start(Player player) {
-        ((AnvilPressAnimationAccess) player).grilling$startSeasoning();
+        if (player instanceof AnvilPressAnimationAccess animation) animation.grilling$startSeasoning();
         player.level().broadcastEntityEvent(player, EVENT_ID);
     }
     public static float arc(float progress) {

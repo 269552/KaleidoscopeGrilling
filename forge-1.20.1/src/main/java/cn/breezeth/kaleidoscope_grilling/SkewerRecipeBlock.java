@@ -67,10 +67,10 @@ public final class SkewerRecipeBlock extends BaseEntityBlock {
                                            InteractionHand hand, BlockHitResult hit) {
         ItemStack held = player.getItemInHand(hand);
         if (held.is(Items.STICK) && level.getBlockEntity(pos) instanceof SkewerRecipeBlockEntity recipe)
-            return SkewerRecipeBookItem.craft(level, player, held, recipe.recipeResult());
+            return SkewerRecipeBookItem.craft(level, player, held, recipe.recipeBook());
         if (!held.isEmpty()) return InteractionResult.PASS;
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof SkewerRecipeBlockEntity recipe) {
-            ItemStack book = createBook(recipe.recipeResult());
+            ItemStack book = recipe.recipeBook();
             level.removeBlock(pos, false);
             if (!player.addItem(book)) player.drop(book, false);
             level.playSound(null, pos, SoundEvents.ITEM_FRAME_REMOVE_ITEM, SoundSource.BLOCKS, 0.8F, 1.0F);
@@ -80,12 +80,7 @@ public final class SkewerRecipeBlock extends BaseEntityBlock {
     @Override public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
         BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
         return blockEntity instanceof SkewerRecipeBlockEntity recipe
-                ? List.of(createBook(recipe.recipeResult())) : List.of();
-    }
-    private static ItemStack createBook(String result) {
-        ItemStack stack = new ItemStack(ModItems.SKEWER_RECIPE_BOOK.get());
-        if (!result.isEmpty()) SkewerRecipeBookItem.setRecipeResult(stack, result);
-        return stack;
+                ? List.of(recipe.recipeBook()) : List.of();
     }
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) { builder.add(FACING); }
 }

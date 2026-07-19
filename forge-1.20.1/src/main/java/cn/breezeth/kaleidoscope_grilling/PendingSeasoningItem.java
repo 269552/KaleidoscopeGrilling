@@ -40,12 +40,13 @@ public final class PendingSeasoningItem extends BlockItem {
             level.playSound(null, entity.blockPosition(), ModSounds.ACTION_SUCCESS.get(), SoundSource.PLAYERS, 0.8F, 1.0F);
         }
         ItemStack result = new ItemStack(ModItems.SPECIAL_SEASONING.get());
-        SeasoningData.set(result, SeasoningData.get(stack));
+        List<String> ingredients = SeasoningData.get(stack);
+        SeasoningData.set(result, ingredients);
+        ModAdvancements.seasoningFinished(entity, ingredients);
         SeasoningData.setRandomVariant(result);
         return result;
     }
     @Override public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         SeasoningTooltip.append(stack, tooltip);
-        tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.shake_required").withStyle(ChatFormatting.YELLOW));
     }
 }

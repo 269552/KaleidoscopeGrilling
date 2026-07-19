@@ -18,6 +18,7 @@ public final class KaleidoscopeGrilling {
         ModBlocks.BLOCKS.register(modBus);
         ModBlockEntities.BLOCK_ENTITIES.register(modBus);
         ModMenus.MENUS.register(modBus);
+        ModRecipeSerializers.SERIALIZERS.register(modBus);
         ModFeatures.FEATURES.register(modBus);
         ModFluids.FLUID_TYPES.register(modBus);
         ModFluids.FLUIDS.register(modBus);
@@ -25,7 +26,7 @@ public final class KaleidoscopeGrilling {
         modBus.addListener(CommonSetup::onSetup);
         modBus.addListener(BigVatCapabilities::register);
         NeoForge.EVENT_BUS.addListener(SkeweringHandler::onRightClickItem);
-        NeoForge.EVENT_BUS.addListener(SkewerRecipeBookHandler::onItemCrafted);
+        NeoForge.EVENT_BUS.addListener(SkewerPlatePlacement::onRightClickBlock);
         NeoForge.EVENT_BUS.addListener(AdvancedSeasoningHandler::onDeath);
         NeoForge.EVENT_BUS.addListener(AdvancedSeasoningHandler::onEntityTick);
         NeoForge.EVENT_BUS.addListener(OilFillingHandler::onRightClickItem);
@@ -47,5 +48,9 @@ public final class KaleidoscopeGrilling {
         NeoForge.EVENT_BUS.addListener(RecipeDisplayHandler::attack);
         NeoForge.EVENT_BUS.addListener(RecipeDisplayHandler::interact);
         NeoForge.EVENT_BUS.addListener(GrillingDataManager::register);
+        NeoForge.EVENT_BUS.addListener(ModAdvancements::onPlayerTick);
+        NeoForge.EVENT_BUS.addListener(ModAdvancements::onBlockPlaced);
+        NeoForge.EVENT_BUS.addListener(ModAdvancements::onFoodFinished);
+        NeoForge.EVENT_BUS.addListener(ModAdvancements::onPlayerClone);
     }
 }

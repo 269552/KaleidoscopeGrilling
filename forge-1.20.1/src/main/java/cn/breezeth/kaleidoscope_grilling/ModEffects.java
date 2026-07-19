@@ -11,6 +11,8 @@ public final class ModEffects {
             DeferredRegister.create(ForgeRegistries.MOB_EFFECTS, KaleidoscopeGrilling.MOD_ID);
     public static final RegistryObject<MobEffect> HEAVY_METAL = EFFECTS.register("heavy_metal",
             () -> new GrillingMobEffect(MobEffectCategory.BENEFICIAL, 0x70757D));
+    public static final RegistryObject<MobEffect> HEAVY_METAL_POISONING = EFFECTS.register("heavy_metal_poisoning",
+            () -> new GrillingMobEffect(MobEffectCategory.HARMFUL, 0x4F555D));
     public static final RegistryObject<MobEffect> DRAGON_BLOOD = EFFECTS.register("dragon_blood",
             () -> new GrillingMobEffect(MobEffectCategory.BENEFICIAL, 0x7D1738));
 

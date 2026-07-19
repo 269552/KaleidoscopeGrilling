@@ -64,6 +64,25 @@ public final class SkewerRecipes {
         return recipes().stream().anyMatch(recipe -> recipe.rawResult().equals(id));
     }
 
+    public static boolean isCookedSkewer(ItemStack stack) {
+        if (ModItems.FIXED_SKEWERS.stream().anyMatch(item -> stack.is(item.get()))) return true;
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return recipes().stream().anyMatch(recipe -> recipe.cookedResult().equals(id));
+    }
+
+    public static List<ItemStack> displayIngredients(ItemStack stack) {
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Recipe recipe = recipes().stream()
+                .filter(candidate -> candidate.rawResult().equals(id) || candidate.cookedResult().equals(id))
+                .findFirst().orElse(null);
+        if (recipe != null) {
+            List<ItemStack> configured = recipe.ingredients().stream().map(SkewerRecipes::representative)
+                    .filter(item -> !item.isEmpty()).limit(3).toList();
+            if (configured.size() == recipe.ingredients().size()) return configured;
+        }
+        return defaultDisplayIngredients(id);
+    }
+
     public static ItemStack cookedResult(ItemStack rawStack) {
         ItemStack custom = SkewerCompatApi.customCookedResult(rawStack);
         if (!custom.isEmpty()) return custom;
@@ -71,8 +90,40 @@ public final class SkewerRecipes {
         ResourceLocation cookedId = recipes().stream()
                 .filter(recipe -> recipe.rawResult().equals(rawId))
                 .map(Recipe::cookedResult).findFirst().orElse(null);
+        if (cookedId == null) cookedId = inferCooked(rawId);
         if (cookedId == null || !BuiltInRegistries.ITEM.containsKey(cookedId)) return ItemStack.EMPTY;
         return new ItemStack(BuiltInRegistries.ITEM.get(cookedId));
+    }
+
+    private static List<ItemStack> defaultDisplayIngredients(ResourceLocation id) {
+        String path = id.getPath();
+        if (path.startsWith("grilled_")) path = "raw_" + path.substring(8);
+        List<String> ingredients = defaultIngredientIds(path);
+        return ingredients.stream().map(ResourceLocation::tryParse).filter(java.util.Objects::nonNull)
+                .filter(BuiltInRegistries.ITEM::containsKey)
+                .map(itemId -> new ItemStack(BuiltInRegistries.ITEM.get(itemId))).toList();
+    }
+
+    private static List<String> defaultIngredientIds(String path) {
+        return switch (path) {
+            case "raw_beef_skewer" -> List.of("kaleidoscope_grilling:beef_chunks", "kaleidoscope_cookery:red_chili", "kaleidoscope_grilling:beef_chunks");
+            case "raw_pork_belly_skewer" -> List.of("kaleidoscope_cookery:raw_pork_belly", "kaleidoscope_cookery:green_chili", "kaleidoscope_cookery:raw_pork_belly");
+            case "raw_chicken_skin_skewer" -> List.of("kaleidoscope_grilling:chicken_skin", "kaleidoscope_grilling:chicken_skin");
+            case "raw_mid_wing_skewer" -> List.of("kaleidoscope_grilling:chicken_wing", "kaleidoscope_cookery:red_chili", "kaleidoscope_grilling:chicken_wing");
+            case "raw_squid_tentacle_skewer" -> List.of("kaleidoscope_grilling:squid_tentacle", "kaleidoscope_grilling:squid_tentacle", "kaleidoscope_grilling:squid_tentacle");
+            case "raw_fish_skewer" -> List.of("minecraft:cod");
+            case "raw_sweet_potato_sheet_skewer" -> List.of("kaleidoscope_grilling:raw_sweet_potato_sheet", "kaleidoscope_grilling:minced_houttuynia", "kaleidoscope_grilling:minced_houttuynia");
+            case "raw_potato_slice_skewer" -> List.of("kaleidoscope_grilling:potato_slice", "kaleidoscope_grilling:potato_slice", "kaleidoscope_grilling:potato_slice");
+            case "raw_caterpillar_skewer" -> List.of("kaleidoscope_cookery:caterpillar");
+            case "raw_mushroom_skewer" -> List.of("minecraft:brown_mushroom", "kaleidoscope_grilling:carrot_dice", "minecraft:brown_mushroom");
+            case "raw_bun_slice_skewer" -> List.of("kaleidoscope_grilling:raw_mantou_slice", "kaleidoscope_grilling:raw_mantou_slice", "kaleidoscope_grilling:raw_mantou_slice");
+            case "raw_ender_pearl_skewer" -> List.of("minecraft:ender_pearl", "minecraft:beetroot", "minecraft:ender_pearl");
+            case "raw_meatball_skewer" -> List.of("kaleidoscope_cookery:raw_meatball", "kaleidoscope_cookery:raw_meatball", "kaleidoscope_cookery:raw_meatball");
+            case "raw_slime_skewer" -> List.of("minecraft:slime_ball", "kaleidoscope_grilling:houttuynia", "minecraft:slime_ball");
+            case "raw_meat_and_bone_skewer" -> List.of("kaleidoscope_cookery:raw_cut_small_meats", "minecraft:bone", "kaleidoscope_cookery:raw_cut_small_meats");
+            case "raw_fried_egg_skewer" -> List.of("kaleidoscope_cookery:fried_egg", "kaleidoscope_cookery:fried_egg");
+            default -> List.of();
+        };
     }
 
     public static List<List<String>> getIngredients(String id) {
@@ -93,6 +144,26 @@ public final class SkewerRecipes {
 
     private static boolean matchesAny(ItemStack stack, List<String> selectors) {
         return selectors.stream().anyMatch(selector -> matchesSelector(stack, selector));
+    }
+
+    private static ItemStack representative(List<String> selectors) {
+        for (String selector : selectors) {
+            if (selector.startsWith("#")) {
+                ResourceLocation tagId = ResourceLocation.tryParse(selector.substring(1));
+                if (tagId == null) continue;
+                var tag = BuiltInRegistries.ITEM.getTag(TagKey.create(Registries.ITEM, tagId));
+                if (tag.isPresent()) {
+                    var first = tag.get().stream().findFirst();
+                    if (first.isPresent()) return new ItemStack(first.get().value());
+                }
+            } else {
+                ResourceLocation itemId = ResourceLocation.tryParse(selector);
+                if (itemId != null && BuiltInRegistries.ITEM.containsKey(itemId)) {
+                    return new ItemStack(BuiltInRegistries.ITEM.get(itemId));
+                }
+            }
+        }
+        return ItemStack.EMPTY;
     }
 
     private static boolean prefix(Recipe recipe, List<ItemStack> inserted) {

@@ -1,1 +1,1 @@
-{"type":"minecraft:campfire_cooking","category":"food","cookingtime":600,"experience":0.35,"ingredient":{"item":"kaleidoscope_grilling:sweet_potato"},"result":{"id":"kaleidoscope_grilling:roasted_sweet_potato"}}
+{"type":"minecraft:campfire_cooking","category":"food","cookingtime":600,"experience":0.35,"ingredient":{"tag":"kaleidoscope_grilling:ingredients/sweet_potatoes"},"result":{"id":"kaleidoscope_grilling:roasted_sweet_potato"}}

@@ -1,0 +1,26 @@
+{
+  "parent": "kaleidoscope_grilling:three_flavors_base",
+  "display": {
+    "icon": {
+      "item": "kaleidoscope_grilling:special_seasoning"
+    },
+    "title": {
+      "translate": "advancement.kaleidoscope_grilling.world_in_a_bottle.title"
+    },
+    "description": {
+      "translate": "advancement.kaleidoscope_grilling.world_in_a_bottle.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "event": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 25
+  }
+}

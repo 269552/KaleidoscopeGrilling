@@ -1,1 +1,1 @@
-{"type":"minecraft:smelting","category":"food","cookingtime":200,"experience":0.35,"ingredient":{"item":"kaleidoscope_grilling:sweet_potato"},"result":"kaleidoscope_grilling:roasted_sweet_potato"}
+{"type":"minecraft:smelting","category":"food","cookingtime":200,"experience":0.35,"ingredient":{"tag":"kaleidoscope_grilling:ingredients/sweet_potatoes"},"result":"kaleidoscope_grilling:roasted_sweet_potato"}

@@ -1,0 +1,26 @@
+{
+  "parent": "kaleidoscope_grilling:eat_it_hot",
+  "display": {
+    "icon": {
+      "id": "kaleidoscope_grilling:red_sweet_potato_porridge"
+    },
+    "title": {
+      "translate": "advancement.kaleidoscope_grilling.fireworks_feast.title"
+    },
+    "description": {
+      "translate": "advancement.kaleidoscope_grilling.fireworks_feast.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "event": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 100
+  }
+}

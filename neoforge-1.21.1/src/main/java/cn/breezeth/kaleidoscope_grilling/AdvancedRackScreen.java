@@ -39,7 +39,8 @@ public final class AdvancedRackScreen extends AbstractContainerScreen<AdvancedRa
             int y = topPos + menu.slots.get(i).y;
             graphics.fill(x, y, x + 16, y + 16, COMPARTMENT_BACKGROUND);
             if (!menu.slots.get(i).getItem().isEmpty() || menu.getFilter(i).isEmpty()) continue;
-            graphics.renderItem(menu.getFilter(i), x, y);
+            SkewerOutlineRender.renderItem(graphics, menu.getFilter(i), x, y,
+                    SkewerGuiDecorator.colorFor(menu.getFilter(i)));
             graphics.fill(x, y, x + 16, y + 16, 0x66101418);
         }
     }

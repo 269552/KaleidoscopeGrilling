@@ -20,11 +20,12 @@ public final class SeasoningFirstPersonAnimation {
     public static void render(RenderHandEvent event) {
         Minecraft minecraft = Minecraft.getInstance();
         var player = minecraft.player;
-        if (player == null || event.getHand() != InteractionHand.MAIN_HAND) return;
+        if (!(player instanceof AnvilPressAnimationAccess animation)
+                || event.getHand() != InteractionHand.MAIN_HAND) return;
         ItemStack stack = player.getMainHandItem();
         boolean shaking = player.isUsingItem() && player.getUsedItemHand() == InteractionHand.MAIN_HAND
                 && player.getUseItem().is(ModItems.PENDING_SEASONING.get());
-        float progress = ((AnvilPressAnimationAccess) player).grilling$getSeasoningProgress(event.getPartialTick());
+        float progress = animation.grilling$getSeasoningProgress(event.getPartialTick());
         if (!shaking && (progress < 0.0F || !stack.is(ModItems.SPECIAL_SEASONING.get()))) return;
         event.setCanceled(true);
 

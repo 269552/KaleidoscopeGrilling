@@ -19,6 +19,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.List;
+
 public final class AdvancedRackBlockEntity extends BaseContainerBlockEntity {
     public static final int COMPARTMENT_COUNT = 9;
     private static final String MEMORY_TAG = "KaleidoscopeGrillingRackMemory";
@@ -88,6 +90,10 @@ public final class AdvancedRackBlockEntity extends BaseContainerBlockEntity {
 
     public ItemStack getFilter(int slot) {
         return filters.get(slot);
+    }
+
+    public List<ItemStack> copyStoredItems() {
+        return items.stream().map(ItemStack::copy).toList();
     }
 
     public void clearFilter(int slot) {
@@ -380,6 +386,10 @@ public final class AdvancedRackBlockEntity extends BaseContainerBlockEntity {
 
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider provider) { return saveWithoutMetadata(provider); }
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this); }
+
+    public void refreshAfterPlacement() {
+        sync();
+    }
 
     private static boolean canShareCategory(ItemStack first, ItemStack second) {
         if (!first.isStackable() && !second.isStackable() && first.isDamageableItem() && second.isDamageableItem()) {

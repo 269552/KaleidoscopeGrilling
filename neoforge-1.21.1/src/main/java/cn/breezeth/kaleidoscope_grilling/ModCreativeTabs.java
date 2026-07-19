@@ -59,9 +59,14 @@ public final class ModCreativeTabs {
         // Remaining registered content keeps a stable registration order.
         Item unfinished = ModItems.UNFINISHED_SKEWER.get();
         Item secret = ModItems.SECRET_SKEWER.get();
+        Item skewerPlate = ModItems.SKEWER_PLATE.get();
+        Item canolaBrush = ModItems.CANOLA_OIL_BRUSH.get();
+        Item secretBrush = ModItems.SECRET_CHILI_OIL_BRUSH.get();
+        Item premiumBrush = ModItems.PREMIUM_CHILI_OIL_BRUSH.get();
         ModItems.ITEMS.getEntries().forEach(entry -> {
             Item item = entry.get();
-            if (item != unfinished && item != secret && added.add(item)) output.accept(item);
+            if (item != unfinished && item != secret && item != skewerPlate
+                    && item != canolaBrush && item != secretBrush && item != premiumBrush && added.add(item)) output.accept(item);
         });
     }
 

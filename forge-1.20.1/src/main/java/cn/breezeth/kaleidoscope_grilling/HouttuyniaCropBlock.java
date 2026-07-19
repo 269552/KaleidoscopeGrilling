@@ -1,3 +1,94 @@
 package cn.breezeth.kaleidoscope_grilling;
-import net.minecraft.core.BlockPos;import net.minecraft.world.item.Item;import net.minecraft.world.level.BlockGetter;import net.minecraft.world.level.LevelReader;import net.minecraft.world.level.block.Blocks;import net.minecraft.world.level.block.CropBlock;import net.minecraft.world.level.block.state.BlockState;import net.minecraft.world.level.block.state.StateDefinition;import net.minecraft.world.level.block.state.properties.BlockStateProperties;import net.minecraft.world.level.block.state.properties.IntegerProperty;
-public final class HouttuyniaCropBlock extends CropBlock{public static final IntegerProperty AGE=BlockStateProperties.AGE_2;public HouttuyniaCropBlock(Properties p){super(p);registerDefaultState(stateDefinition.any().setValue(AGE,0));}@Override public IntegerProperty getAgeProperty(){return AGE;}@Override public int getMaxAge(){return 2;}@Override protected Item getBaseSeedId(){return ModItems.HOUTTUYNIA.get();}@Override public void randomTick(BlockState s,net.minecraft.server.level.ServerLevel l,BlockPos p,net.minecraft.util.RandomSource r){if(r.nextInt(7)<2)super.randomTick(s,l,p,r);}@Override protected int getBonemealAgeIncrease(net.minecraft.world.level.Level l){return 1;}@Override public boolean canSurvive(BlockState s,LevelReader l,BlockPos p){BlockState ground=l.getBlockState(p.below());return ground.is(Blocks.SOUL_SAND)||(ground.is(Blocks.FARMLAND)&&l.getRawBrightness(p,0)>=8);}@Override protected boolean mayPlaceOn(BlockState s,BlockGetter l,BlockPos p){return s.is(Blocks.FARMLAND)||s.is(Blocks.SOUL_SAND);}@Override protected void createBlockStateDefinition(StateDefinition.Builder<net.minecraft.world.level.block.Block,BlockState>b){b.add(AGE);}}
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+
+public final class HouttuyniaCropBlock extends CropBlock {
+    public static final IntegerProperty AGE = BlockStateProperties.AGE_7;
+    public static final BooleanProperty RED_VARIANT = BooleanProperty.create("red_variant");
+
+    public HouttuyniaCropBlock(Properties properties) {
+        super(properties);
+        registerDefaultState(stateDefinition.any().setValue(AGE, 0).setValue(RED_VARIANT, false));
+    }
+
+    @Override
+    public IntegerProperty getAgeProperty() {
+        return AGE;
+    }
+
+    @Override
+    public int getMaxAge() {
+        return 7;
+    }
+
+    @Override
+    protected Item getBaseSeedId() {
+        return ModItems.HOUTTUYNIA.get();
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        BlockState state = super.getStateForPlacement(context);
+        if (state == null) return null;
+        boolean soulSand = context.getLevel().getBlockState(context.getClickedPos().below()).is(Blocks.SOUL_SAND);
+        return state.setValue(RED_VARIANT, soulSand || context.getLevel().random.nextFloat() < 0.3F);
+    }
+
+    @Override
+    public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        super.randomTick(state, level, pos, random);
+        preserveVariant(level, pos, state);
+    }
+
+    @Override
+    public void growCrops(Level level, BlockPos pos, BlockState state) {
+        super.growCrops(level, pos, state);
+        preserveVariant(level, pos, state);
+    }
+
+    private static void preserveVariant(Level level, BlockPos pos, BlockState previousState) {
+        BlockState current = level.getBlockState(pos);
+        if (!current.hasProperty(RED_VARIANT)) return;
+        boolean red = level.getBlockState(pos.below()).is(Blocks.SOUL_SAND)
+                || previousState.getValue(RED_VARIANT);
+        if (current.getValue(RED_VARIANT) != red) {
+            level.setBlock(pos, current.setValue(RED_VARIANT, red), 2);
+        }
+    }
+
+    @Override
+    protected int getBonemealAgeIncrease(Level level) {
+        return 1;
+    }
+
+    @Override
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+        BlockState ground = level.getBlockState(pos.below());
+        return ground.is(Blocks.SOUL_SAND) || (ground.is(Blocks.FARMLAND) && level.getRawBrightness(pos, 0) >= 8);
+    }
+
+    @Override
+    protected boolean mayPlaceOn(BlockState state, BlockGetter level, BlockPos pos) {
+        return state.is(Blocks.FARMLAND) || state.is(Blocks.SOUL_SAND);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(AGE, RED_VARIANT);
+    }
+}

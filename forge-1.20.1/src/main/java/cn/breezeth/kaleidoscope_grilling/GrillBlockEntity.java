@@ -122,6 +122,8 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     public boolean isFailed() { return failed; }
     public int getPhase() { return phase; }
     public int getFlips() { return flips; }
+    public int getPhaseTicks() { return phaseTicks; }
+    public int getFlipCooldown() { return flipCooldown; }
     public boolean isSeasoned() { return seasoned; }
     private int occupiedSlots() { return (int) items.stream().filter(s -> !s.isEmpty()).count(); }
     private void resetProcess() { phase = phaseTicks = flips = flipCooldown = heatDurationTicks = 0; seasoned = failed = false; seasoningIngredients.clear(); }

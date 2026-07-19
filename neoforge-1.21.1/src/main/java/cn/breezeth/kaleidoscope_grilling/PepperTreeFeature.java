@@ -35,13 +35,14 @@ public final class PepperTreeFeature extends Feature<NoneFeatureConfiguration> {
             return false;
 
         BlockState log = ModBlocks.PEPPER_LOG.get().defaultBlockState();
-        for (int y = 0; y < height; y++) {
+        int trunkTop = height;
+        for (int y = 0; y <= trunkTop; y++) {
             level.setBlock(origin.above(y), log, 3);
         }
 
         BlockPos.MutableBlockPos leafPos = new BlockPos.MutableBlockPos();
         int trunkMinY = origin.getY();
-        int trunkMaxY = origin.getY() + height - 1;
+        int trunkMaxY = origin.getY() + trunkTop;
 
         // Top layer: 3x3
         for (int dx = -1; dx <= 1; dx++) {
@@ -52,6 +53,17 @@ public final class PepperTreeFeature extends Feature<NoneFeatureConfiguration> {
                             leafPos.getX(), leafPos.getY(), leafPos.getZ());
                     level.setBlock(leafPos, leafState(dist, random), 3);
                 }
+            }
+        }
+
+        // Raised crown: a complete leaf cross one block above the topmost log.
+        int crownY = origin.getY() + trunkTop + 1;
+        for (int[] offset : new int[][]{{0, 0}, {-1, 0}, {1, 0}, {0, -1}, {0, 1}}) {
+            leafPos.set(origin.getX() + offset[0], crownY, origin.getZ() + offset[1]);
+            if (level.isEmptyBlock(leafPos)) {
+                int dist = distanceToTrunk(origin.getX(), trunkMinY, trunkMaxY, origin.getZ(),
+                        leafPos.getX(), leafPos.getY(), leafPos.getZ());
+                level.setBlock(leafPos, leafState(dist, random), 3);
             }
         }
 

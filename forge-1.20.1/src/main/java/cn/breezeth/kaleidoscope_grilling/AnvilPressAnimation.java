@@ -20,7 +20,7 @@ public final class AnvilPressAnimation {
     }
 
     public static void start(Player player) {
-        ((AnvilPressAnimationAccess) player).grilling$startAnvilPress();
+        if (player instanceof AnvilPressAnimationAccess animation) animation.grilling$startAnvilPress();
         player.level().broadcastEntityEvent(player, EVENT_ID);
     }
 

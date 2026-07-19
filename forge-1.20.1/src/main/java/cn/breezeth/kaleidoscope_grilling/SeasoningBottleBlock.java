@@ -72,7 +72,7 @@ public final class SeasoningBottleBlock extends BaseEntityBlock {
         if (SeasoningBottleBlockEntity.isBottle(held)) {
             if (!level.isClientSide && bottle.push(held)) {
                 if (!player.getAbilities().instabuild) held.shrink(1);
-                level.playSound(null, pos, ModSounds.BOTTLE_INTERACT.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+                level.playSound(null, pos, ModSounds.SEASONING_BOTTLE_STACK.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
@@ -80,6 +80,7 @@ public final class SeasoningBottleBlock extends BaseEntityBlock {
         if (id != null && bottle.canAdd(id.toString())) {
             if (!level.isClientSide) {
                 bottle.add(id.toString());
+                ModAdvancements.seasoningAdded(player, bottle.ingredients());
                 if (!player.getAbilities().instabuild) held.shrink(1);
                 level.playSound(null, pos, ModSounds.ACTION_SUCCESS.get(), SoundSource.BLOCKS, 0.65F, 1.0F);
                 if (level instanceof net.minecraft.server.level.ServerLevel server)
@@ -100,7 +101,7 @@ public final class SeasoningBottleBlock extends BaseEntityBlock {
         if (result.isEmpty()) return;
         if (bottle.count() == 0) level.removeBlock(pos, false);
         player.setItemInHand(hand, result);
-        level.playSound(null, pos, ModSounds.BOTTLE_INTERACT.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+        level.playSound(null, pos, ModSounds.SEASONING_BOTTLE_PLACE.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
         warnMissingBase(player, result);
     }
 

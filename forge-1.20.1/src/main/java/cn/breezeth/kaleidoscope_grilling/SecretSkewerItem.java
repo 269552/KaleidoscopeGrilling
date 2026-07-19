@@ -38,7 +38,7 @@ public final class SecretSkewerItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        return isCooked(stack) ? super.use(level, player, hand) : InteractionResultHolder.pass(stack);
+        return player.isShiftKeyDown() ? InteractionResultHolder.pass(stack) : super.use(level, player, hand);
     }
 
     public static void setCooked(ItemStack stack, boolean cooked) {
@@ -144,10 +144,6 @@ public final class SecretSkewerItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        if (!isCooked(stack)) {
-            tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.secret_skewer.raw")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
         List<ItemStack> ingredients = SkeweringHandler.readIngredientStacks(stack);
         for (ItemStack ingredient : ingredients) {
             tooltip.add(Component.literal("- ").append(ingredient.getHoverName())
@@ -155,11 +151,15 @@ public final class SecretSkewerItem extends Item {
         }
         String creator = getCreator(stack);
         tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.secret_skewer.creator_story",
-                        creator.isEmpty() ? Component.translatable("tooltip.kaleidoscope_grilling.secret_skewer.someone") : Component.literal(creator))
+                creator.isEmpty() ? Component.translatable("tooltip.kaleidoscope_grilling.secret_skewer.someone") : Component.literal(creator))
                 .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
-        if (level != null && FoodState.isHot(stack, level)) {
-            tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.hot")
-                    .withStyle(ChatFormatting.GOLD));
+        if (level == null || !FoodState.isHot(stack, level)) {
+            boolean cooked = isCooked(stack);
+            tooltip.add(Component.empty());
+            tooltip.add(Component.translatable(cooked
+                            ? "tooltip.kaleidoscope_grilling.secret_skewer.cooked"
+                            : "tooltip.kaleidoscope_grilling.secret_skewer.raw")
+                    .withStyle(cooked ? ChatFormatting.GOLD : ChatFormatting.DARK_GRAY));
         }
     }
 

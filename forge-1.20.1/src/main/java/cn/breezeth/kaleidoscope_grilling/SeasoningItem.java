@@ -13,7 +13,6 @@ import java.util.List;
 public final class SeasoningItem extends BlockItem {
     public SeasoningItem(Block block, Properties properties) { super(block, properties); }
     @Override public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.seasoning_uses", stack.getMaxDamage() - stack.getDamageValue()).withStyle(ChatFormatting.GRAY));
         SeasoningTooltip.append(stack, tooltip);
     }
 }

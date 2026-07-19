@@ -80,7 +80,7 @@ public final class GrillBlock extends BaseEntityBlock {
         if (OilPotCompat.isOilPot(held)) {
             int needed = grill.getPhase() == 0 ? grill.getContainerSize() - (int) java.util.stream.IntStream.range(0, grill.getContainerSize()).filter(i -> grill.getItem(i).isEmpty()).count() : 0;
             if (needed > 0 && OilPotCompat.getCount(held) >= needed) {
-                if (!level.isClientSide) { OilPotCompat.consume(held, grill.brushOil(OilPotCompat.heatDuration(held))); level.playSound(null,pos,ModSounds.GRILL_FLIP.get(),SoundSource.BLOCKS,0.75F,1.0F); player.displayClientMessage(Component.translatable("message.kaleidoscope_grilling.oiled", needed), true); }
+                if (!level.isClientSide) { String oilType=OilPotCompat.getType(held); OilBrushAnimation.start(player,hand,oilType); OilPotCompat.consume(held, grill.brushOil(OilPotCompat.heatDuration(held))); ModAdvancements.oiled(player); level.playSound(null,pos,ModSounds.GRILL_FLIP.get(),SoundSource.BLOCKS,0.75F,1.0F); player.displayClientMessage(Component.translatable("message.kaleidoscope_grilling.oiled", needed), true); }
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
             if (!level.isClientSide) player.displayClientMessage(Component.translatable(needed == 0 ? "message.kaleidoscope_grilling.no_brushable_skewers" : "message.kaleidoscope_grilling.not_enough_oil"), true);

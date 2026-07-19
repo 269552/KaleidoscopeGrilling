@@ -6,6 +6,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -37,6 +40,12 @@ public final class SkewerItem extends Item {
     }
 
     @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        return player.isShiftKeyDown() ? InteractionResultHolder.pass(stack) : super.use(level, player, hand);
+    }
+
+    @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         ItemStack result = super.finishUsingItem(stack, level, entity);
         if (!level.isClientSide) {
@@ -54,7 +63,6 @@ public final class SkewerItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         FoodTooltip.appendMaxim(tooltip,tooltipKey);
-        if (level != null && FoodState.isHot(stack, level)) tooltip.add(Component.translatable("tooltip.kaleidoscope_grilling.hot").withStyle(ChatFormatting.GOLD));
         ResourceLocation itemId=ForgeRegistries.ITEMS.getKey(stack.getItem());var data=itemId==null?null:GrillingDataManager.skewer(itemId.toString());ResourceLocation resolved=data!=null&&!data.effect().isEmpty()?new ResourceLocation(data.effect()):effectId;int duration=data!=null?data.effectSeconds()*20:effectDuration;FoodTooltip.appendEffect(tooltip,resolved,duration);
     }
 }

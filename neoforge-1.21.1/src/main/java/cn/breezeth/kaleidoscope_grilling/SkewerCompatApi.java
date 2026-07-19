@@ -29,6 +29,8 @@ public final class SkewerCompatApi {
             ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "unskewerable_ingredients"));
     public static final TagKey<Item> RAW_SKEWERS = TagKey.create(Registries.ITEM,
             ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "raw_skewers"));
+    public static final TagKey<Item> GRILLED_SKEWERS = TagKey.create(Registries.ITEM,
+            ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "grilled_skewers"));
 
     private static final Map<ResourceLocation, IngredientRule> INGREDIENT_RULES = new LinkedHashMap<>();
     private static final Map<ResourceLocation, CookingRule> COOKING_RULES = new LinkedHashMap<>();

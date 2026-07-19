@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "kaleidoscope_grilling:block/skewer_plate", "y": 180 },
+    "facing=east": { "model": "kaleidoscope_grilling:block/skewer_plate", "y": 270 },
+    "facing=south": { "model": "kaleidoscope_grilling:block/skewer_plate" },
+    "facing=west": { "model": "kaleidoscope_grilling:block/skewer_plate", "y": 90 }
+  }
+}

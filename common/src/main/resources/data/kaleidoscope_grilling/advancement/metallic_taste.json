@@ -1,0 +1,26 @@
+{
+  "parent": "kaleidoscope_grilling:world_in_a_bottle",
+  "display": {
+    "icon": {
+      "id": "kaleidoscope_grilling:totem_powder"
+    },
+    "title": {
+      "translate": "advancement.kaleidoscope_grilling.metallic_taste.title"
+    },
+    "description": {
+      "translate": "advancement.kaleidoscope_grilling.metallic_taste.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "event": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 25
+  }
+}

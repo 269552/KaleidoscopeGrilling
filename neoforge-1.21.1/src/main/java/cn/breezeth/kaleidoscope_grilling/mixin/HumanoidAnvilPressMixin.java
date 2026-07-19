@@ -4,6 +4,7 @@ import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimation;
 import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimationAccess;
 import cn.breezeth.kaleidoscope_grilling.ModItems;
 import cn.breezeth.kaleidoscope_grilling.SeasoningAnimation;
+import cn.breezeth.kaleidoscope_grilling.OilBrushAnimation;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
@@ -36,22 +37,36 @@ public abstract class HumanoidAnvilPressMixin<T extends LivingEntity> {
             rightArm.zRot = 0.08F; leftArm.zRot = -0.08F;
             return;
         }
+        float brushing = animation.grilling$getOilBrushProgress(partial);
+        if (brushing >= 0.0F) {
+            HumanoidArm brushArm = animation.grilling$getOilBrushHand() == InteractionHand.MAIN_HAND
+                    ? player.getMainArm() : player.getMainArm().getOpposite();
+            ModelPart brushArmPart = brushArm == HumanoidArm.RIGHT ? rightArm : leftArm;
+            float brushSide = brushArm == HumanoidArm.RIGHT ? 1.0F : -1.0F;
+            float brushSwing = OilBrushAnimation.swing(brushing);
+            brushArmPart.xRot = -1.32F;
+            brushArmPart.yRot = brushSide * 0.18F + brushSwing * 0.70F;
+            brushArmPart.zRot = brushSide * (0.10F + brushSwing * 0.42F);
+            return;
+        }
         ModelPart arm = player.getMainArm() == HumanoidArm.RIGHT ? rightArm : leftArm;
         float side = player.getMainArm() == HumanoidArm.RIGHT ? 1.0F : -1.0F;
         if (player.isUsingItem() && player.getUsedItemHand() == InteractionHand.MAIN_HAND
                 && player.getUseItem().is(ModItems.PENDING_SEASONING.get())) {
             float wave = Mth.sin(age * 1.7F);
-            arm.xRot = -1.15F + wave * 0.12F;
-            arm.yRot = side * (0.22F + wave * 0.18F);
-            arm.zRot = side * (0.30F + wave * 0.25F);
+            float crossWave = Mth.cos(age * 1.7F);
+            arm.xRot = -1.35F + wave * 0.35F;
+            arm.yRot = side * (0.30F + wave * 0.65F);
+            arm.zRot = side * (0.45F + crossWave * 0.55F);
             return;
         }
         float seasoning = animation.grilling$getSeasoningProgress(partial);
         if (seasoning >= 0.0F) {
             float arc = SeasoningAnimation.arc(seasoning);
-            arm.xRot = -1.55F + 0.18F * arc;
-            arm.yRot = side * (0.18F + 0.55F * Mth.sin(seasoning * Mth.TWO_PI * 2.0F));
-            arm.zRot = side * (0.35F + 0.25F * arc);
+            float wave = Mth.sin(seasoning * Mth.TWO_PI * 2.0F);
+            arm.xRot = -1.75F - 0.35F * arc + 0.18F * wave;
+            arm.yRot = side * (0.35F + 0.95F * wave);
+            arm.zRot = side * (0.55F + 0.55F * arc + 0.25F * wave);
         }
     }
 }

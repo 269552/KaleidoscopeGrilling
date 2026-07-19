@@ -1,0 +1,26 @@
+{
+  "parent": "kaleidoscope_grilling:better_write_it_down",
+  "display": {
+    "icon": {
+      "item": "kaleidoscope_grilling:advanced_rack"
+    },
+    "title": {
+      "translate": "advancement.kaleidoscope_grilling.neat_and_orderly.title"
+    },
+    "description": {
+      "translate": "advancement.kaleidoscope_grilling.neat_and_orderly.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "event": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 25
+  }
+}

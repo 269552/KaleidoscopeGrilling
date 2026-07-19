@@ -12,6 +12,23 @@
 
 普通兼容优先使用物品标签和数据包。只有需要读取 NBT、数据组件或运行时状态时，才建议调用 Java API。
 
+### 洋葱通用标签
+
+本模组洋葱已加入农夫乐事洋葱使用的平台通用标签。配方应引用标签而不是直接引用任一模组的物品 ID，从而在只安装其中一个模组时仍能正常工作。
+
+Forge 1.20.1：
+
+- `#forge:crops/onion`
+- `#forge:vegetables/onion`
+
+NeoForge 1.21.1：
+
+- `#c:crops/onion`
+- `#c:foods/onion`
+- `#c:foods/vegetable`
+
+这些标签由数据包提供，不会使农夫乐事成为硬依赖。
+
 如果“森罗物语：烟火”是可选依赖，请先通过对应加载器的 `ModList` 判断 `kaleidoscope_grilling` 是否已加载，并将直接引用 API 类的代码放在独立兼容类中，避免缺少模组时触发类加载错误。
 
 ## API 总览
@@ -318,9 +335,33 @@ SkewerCompatApi.registerCookingRule(
 
 当前数据接口只能把材料映射到已有种类，不支持仅通过 JSON 创建全新的调料效果算法。
 
+## 食材与料理标签
+
+烟火同时维护平台通用标签和稳定的模组桥接标签。第三方模组应优先向平台通用标签追加内容；烟火自身配方引用 `#kaleidoscope_grilling:ingredients/*`，用于屏蔽 Forge 1.20.1 的 `forge:` 与 NeoForge 1.21.1 的 `c:` 命名差异。
+
+| 食材语义 | 烟火稳定桥接标签 |
+| --- | --- |
+| 牛肉块 | `#kaleidoscope_grilling:ingredients/beef_chunks` |
+| 鸡皮 | `#kaleidoscope_grilling:ingredients/chicken_skin` |
+| 鸡翅 | `#kaleidoscope_grilling:ingredients/chicken_wings` |
+| 鱿鱼须 | `#kaleidoscope_grilling:ingredients/squid_tentacles` |
+| 折耳根 / 折耳根沫 | `#kaleidoscope_grilling:ingredients/houttuynia` / `minced_houttuynia` |
+| 胡萝卜粒、土豆片、馒头片、生苕皮 | 对应 `ingredients/carrot_dice`、`potato_slices`、`raw_mantou_slices`、`raw_sweet_potato_sheets` |
+| 洋葱、红薯、油菜籽 | 对应 `ingredients/onions`、`sweet_potatoes`、`canola_seeds` |
+
+平台标签覆盖作物、种子、蔬菜和生肉分类。Forge 使用 `#forge:crops/*`、`#forge:seeds/*`、`#forge:vegetables/*`、`#forge:raw_*`；NeoForge 使用 `#c:crops/*`、`#c:seeds/*`、`#c:vegetables/*`、`#c:foods/raw_*` 与 `#c:raw_meats`。
+
+以下料理分类也由烟火追加，不会覆盖森罗原有内容：
+
+- `#kaleidoscope_cookery:meals`：烟火可食用基础食材、凉菜、联动料理及全部生熟烤串。
+- `#kaleidoscope_grilling:raw_skewers`：烧烤架可接收的生串。
+- `#kaleidoscope_grilling:grilled_skewers`：固定熟串集合。
+
+不要为了扩大兼容而错误归类。例如鱿鱼须不是鱼类，不能加入鱼标签；成品、战利品输出和模型引用也应继续使用精确物品 ID。
+
 ## 大缸标准流体能力
 
-大缸容量为 64 桶，同一时间只能容纳一种流体。自动化模组应优先使用标准流体能力，不要直接访问 `BigVatBlockEntity` 的内部字段。
+大缸容量为 8 桶，同一时间只能容纳一种流体。自动化模组应优先使用标准流体能力，不要直接访问 `BigVatBlockEntity` 的内部字段。
 
 Forge 1.20.1：
 
@@ -346,6 +387,7 @@ level.getCapability(Capabilities.FluidHandler.BLOCK, pos, side);
 6. 自定义熟串必须先注册实际物品，再在数据或代码中返回它。
 7. 为 Forge 与 NeoForge 分别放置正确目录形式的物品标签。
 8. 使用 `/reload` 测试数据包更新，并检查日志中的 JSON 解析和未知物品 ID 报错。
+9. 正式版发布前逐项执行 [1.0 发布前完整审核清单](.breezeth/森罗物语：烟火%20-%201.0发布前完整审核清单.md)，未全部通过不得导出正式构建。
 
 ## 稳定性说明
 

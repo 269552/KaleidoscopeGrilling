@@ -4,6 +4,8 @@ import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimation;
 import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimationAccess;
 import cn.breezeth.kaleidoscope_grilling.OilPressTools;
 import cn.breezeth.kaleidoscope_grilling.ModItems;
+import cn.breezeth.kaleidoscope_grilling.OilBrushAnimation;
+import cn.breezeth.kaleidoscope_grilling.OilPotCompat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
@@ -46,6 +48,32 @@ public abstract class ItemInHandLayerAnvilPressMixin {
                 && stack.is(ModItems.SPECIAL_SEASONING.get())
                 && player instanceof AnvilPressAnimationAccess animation
                 && animation.grilling$getSeasoningProgress(Minecraft.getInstance().getPartialTick()) >= 0.0F;
+    }
+
+    @Inject(method = "renderArmWithItem", at = @At(value = "INVOKE", target = RENDER_ITEM, shift = At.Shift.BEFORE))
+    private void grilling$swingOilBrushBefore(LivingEntity entity, ItemStack stack, ItemDisplayContext context,
+                                              HumanoidArm arm, PoseStack pose, MultiBufferSource buffers,
+                                              int packedLight, CallbackInfo ci) {
+        float progress = grilling$oilBrushProgress(entity, stack, arm);
+        if (progress < 0.0F) return;
+        pose.pushPose();
+        float side = arm == HumanoidArm.RIGHT ? 1.0F : -1.0F;
+        pose.mulPose(Axis.ZP.rotationDegrees(side * OilBrushAnimation.swing(progress) * 16.0F));
+    }
+
+    @Inject(method = "renderArmWithItem", at = @At(value = "INVOKE", target = RENDER_ITEM, shift = At.Shift.AFTER))
+    private void grilling$swingOilBrushAfter(LivingEntity entity, ItemStack stack, ItemDisplayContext context,
+                                             HumanoidArm arm, PoseStack pose, MultiBufferSource buffers,
+                                             int packedLight, CallbackInfo ci) {
+        if (grilling$oilBrushProgress(entity, stack, arm) >= 0.0F) pose.popPose();
+    }
+
+    private static float grilling$oilBrushProgress(LivingEntity entity, ItemStack stack, HumanoidArm arm) {
+        if (!(entity instanceof Player player) || !OilPotCompat.isOilPot(stack)
+                || !(player instanceof AnvilPressAnimationAccess animation)) return -1.0F;
+        HumanoidArm activeArm = animation.grilling$getOilBrushHand() == net.minecraft.world.InteractionHand.MAIN_HAND
+                ? player.getMainArm() : player.getMainArm().getOpposite();
+        return arm == activeArm ? animation.grilling$getOilBrushProgress(Minecraft.getInstance().getPartialTick()) : -1.0F;
     }
 
     @Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)

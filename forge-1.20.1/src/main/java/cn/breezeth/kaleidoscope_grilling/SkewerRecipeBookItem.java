@@ -32,6 +32,7 @@ import java.util.Optional;
 
 public final class SkewerRecipeBookItem extends Item {
     private static final String RECIPE_RESULT_TAG = "RecipeResult";
+    private static final String RECIPE_STACK_TAG = "RecipeStack";
 
     public SkewerRecipeBookItem(Properties properties) {
         super(properties);
@@ -48,11 +49,41 @@ public final class SkewerRecipeBookItem extends Item {
         stack.getOrCreateTag().putString(RECIPE_RESULT_TAG, resultId);
     }
 
+    public static void setRecipeStack(ItemStack book, ItemStack recipe) {
+        setRecipeResult(book, ForgeRegistries.ITEMS.getKey(recipe.getItem()).toString());
+        book.getOrCreateTag().put(RECIPE_STACK_TAG, recipe.copyWithCount(1).save(new net.minecraft.nbt.CompoundTag()));
+    }
+
+    public static ItemStack readRecipeStack(ItemStack book) {
+        if (book.hasTag() && book.getTag().contains(RECIPE_STACK_TAG))
+            return ItemStack.of(book.getTag().getCompound(RECIPE_STACK_TAG));
+        String value = readRecipeResult(book);
+        if (value.isEmpty()) return ItemStack.EMPTY;
+        Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(value));
+        return item == null ? ItemStack.EMPTY : new ItemStack(item);
+    }
+
     @Override
     public Component getName(ItemStack stack) {
         ItemStack result = resultStack(stack);
         return result.isEmpty() ? super.getName(stack)
-                : Component.translatable("item.kaleidoscope_grilling.skewer_recipe_book.recorded", result.getHoverName());
+                : Component.translatable("item.kaleidoscope_grilling.skewer_recipe_book.recorded",
+                recipeDisplayName(result));
+    }
+
+    private static Component recipeDisplayName(ItemStack result) {
+        ResourceLocation id = ForgeRegistries.ITEMS.getKey(result.getItem());
+        if (id != null && id.getNamespace().equals(KaleidoscopeGrilling.MOD_ID)
+                && id.getPath().startsWith("raw_") && id.getPath().endsWith("_skewer")) {
+            String type = id.getPath().substring(4, id.getPath().length() - 7);
+            return Component.translatable("item.kaleidoscope_grilling.skewer_recipe_name." + type);
+        }
+        if (result.is(ModItems.SECRET_SKEWER.get())) {
+            String creator = SecretSkewerItem.getCreator(result);
+            return creator.isEmpty() ? result.getHoverName()
+                    : Component.translatable("item.kaleidoscope_grilling.skewer_recipe_name.custom", creator);
+        }
+        return result.getHoverName();
     }
 
     @Override
@@ -74,8 +105,13 @@ public final class SkewerRecipeBookItem extends Item {
     @Override
     public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
         String resultId = readRecipeResult(stack);
+        ItemStack recorded = readRecipeStack(stack);
+        List<ItemStack> custom = recorded.is(ModItems.SECRET_SKEWER.get())
+                ? SkeweringHandler.readIngredientStacks(recorded) : List.of();
         List<List<String>> recipe = SkewerRecipes.getIngredients(resultId);
         ItemStack output = resultStack(stack);
+        if (!custom.isEmpty()) return Optional.of(new RecipeItemTooltip(
+                new RecipeItem.RecipeRecord(custom, output, RecipeItem.POT, false), null));
         if (recipe == null || recipe.isEmpty() || output.isEmpty()) return Optional.empty();
         List<ItemStack> inputs = new ArrayList<>();
         for (List<String> selectors : recipe) {
@@ -90,10 +126,7 @@ public final class SkewerRecipeBookItem extends Item {
     }
 
     private static ItemStack resultStack(ItemStack stack) {
-        String value = readRecipeResult(stack);
-        if (value.isEmpty()) return ItemStack.EMPTY;
-        Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(value));
-        return item == null ? ItemStack.EMPTY : new ItemStack(item);
+        return readRecipeStack(stack);
     }
 
     @Override
@@ -105,15 +138,26 @@ public final class SkewerRecipeBookItem extends Item {
         String resultId = readRecipeResult(book);
         if (resultId.isEmpty()) return InteractionResultHolder.pass(book);
 
-        InteractionResult result = craft(level, player, offhand, resultId);
+        InteractionResult result = craft(level, player, offhand, book);
         return result == InteractionResult.FAIL ? InteractionResultHolder.fail(book)
                 : result.consumesAction() ? InteractionResultHolder.success(book) : InteractionResultHolder.pass(book);
     }
 
     public static InteractionResult craft(Level level, Player player, ItemStack stick, String resultId) {
-        if (!stick.is(Items.STICK)) return InteractionResult.PASS;
+        ItemStack book = new ItemStack(ModItems.SKEWER_RECIPE_BOOK.get());
+        setRecipeResult(book, resultId);
+        return craft(level, player, stick, book);
+    }
 
-        List<List<String>> ingredients = SkewerRecipes.getIngredients(resultId);
+    public static InteractionResult craft(Level level, Player player, ItemStack stick, ItemStack book) {
+        if (!stick.is(Items.STICK)) return InteractionResult.PASS;
+        String resultId = readRecipeResult(book);
+        ItemStack recorded = readRecipeStack(book);
+        List<ItemStack> customIngredients = recorded.is(ModItems.SECRET_SKEWER.get())
+                ? SkeweringHandler.readIngredientStacks(recorded) : List.of();
+        List<List<String>> ingredients = !customIngredients.isEmpty()
+                ? customIngredients.stream().map(s -> List.of(ForgeRegistries.ITEMS.getKey(s.getItem()).toString())).toList()
+                : SkewerRecipes.getIngredients(resultId);
         if (ingredients == null) return InteractionResult.PASS;
 
         if (level.isClientSide) return InteractionResult.SUCCESS;
@@ -163,12 +207,16 @@ public final class SkewerRecipeBookItem extends Item {
             stick.shrink(1);
         }
 
-        Item resultItem = ForgeRegistries.ITEMS.getValue(new ResourceLocation(resultId));
-        if (resultItem != null) {
-            if (!player.getInventory().add(new ItemStack(resultItem))) {
-                player.drop(new ItemStack(resultItem), false);
-            }
+        ItemStack output;
+        if (!customIngredients.isEmpty()) {
+            output = recorded.copyWithCount(1);
+            SecretSkewerItem.setCooked(output, false);
+            SecretSkewerItem.setCreator(output, player);
+        } else {
+            Item resultItem = ForgeRegistries.ITEMS.getValue(new ResourceLocation(resultId));
+            output = resultItem == null ? ItemStack.EMPTY : new ItemStack(resultItem);
         }
+        if (!output.isEmpty() && !player.getInventory().add(output)) player.drop(output, false);
         level.playSound(null, player.blockPosition(), ModSounds.ACTION_SUCCESS.get(), SoundSource.PLAYERS, 0.7F, 1.0F);
         return InteractionResult.SUCCESS;
     }
@@ -178,16 +226,15 @@ public final class SkewerRecipeBookItem extends Item {
         Direction face = context.getClickedFace();
         if (!face.getAxis().isHorizontal()) return InteractionResult.PASS;
         ItemStack book = context.getItemInHand();
-        String id = readRecipeResult(book);
-        if (id.isEmpty() || ForgeRegistries.ITEMS.getValue(new ResourceLocation(id)) == null) return InteractionResult.PASS;
         Level level = context.getLevel();
+        if (!level.isClientSide && readRecipeStack(book).isEmpty()) return InteractionResult.FAIL;
         BlockPos target = context.getClickedPos().relative(face);
         if (!level.getBlockState(target).canBeReplaced()) return InteractionResult.FAIL;
         BlockState state = ModBlocks.SKEWER_RECIPE.get().defaultBlockState().setValue(SkewerRecipeBlock.FACING, face);
         if (!state.canSurvive(level, target)) return InteractionResult.FAIL;
         if (!level.isClientSide) {
             level.setBlock(target, state, 3);
-            if (level.getBlockEntity(target) instanceof SkewerRecipeBlockEntity recipe) recipe.setRecipeResult(id);
+            if (level.getBlockEntity(target) instanceof SkewerRecipeBlockEntity recipe) recipe.setRecipeBook(book);
             level.playSound(null, target, SoundEvents.ITEM_FRAME_PLACE, SoundSource.BLOCKS, 0.8F, 1.0F);
             if (context.getPlayer() != null && !context.getPlayer().getAbilities().instabuild) book.shrink(1);
         }

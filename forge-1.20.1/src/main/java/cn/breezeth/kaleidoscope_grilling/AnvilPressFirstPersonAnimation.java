@@ -19,8 +19,8 @@ public final class AnvilPressFirstPersonAnimation {
     public static void render(RenderHandEvent event) {
         Minecraft minecraft = Minecraft.getInstance();
         var player = minecraft.player;
-        if (player == null) return;
-        float progress = ((AnvilPressAnimationAccess) player).grilling$getAnvilPressProgress(event.getPartialTick());
+        if (!(player instanceof AnvilPressAnimationAccess animation)) return;
+        float progress = animation.grilling$getAnvilPressProgress(event.getPartialTick());
         if (progress < 0.0F || OilPressTools.progress(player.getMainHandItem()) <= 0) return;
 
         event.setCanceled(true);

@@ -44,13 +44,16 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
     private void grilling$captureOilBeforeConsumption(Level level,LivingEntity entity,ItemStack stack,CallbackInfoReturnable<Boolean> cir){
         String stored=OilPotCompat.getType(stack);
         if(!stored.isEmpty())grilling$pendingOilType=stored;
+        else if(stack.is(ModItems.CANOLA_OIL_BUCKET.get()))grilling$pendingOilType="canola";
         else if(stack.is(ModItems.SECRET_CHILI_OIL_BUCKET.get()))grilling$pendingOilType="secret_chili";
         else if(stack.is(ModItems.PREMIUM_CHILI_OIL_BUCKET.get()))grilling$pendingOilType="premium_chili";
         else grilling$pendingOilType="default";
     }
     @Inject(method="onPlaceOil",at=@At("RETURN"))
     private void grilling$oil(Level level,LivingEntity entity,ItemStack stack,CallbackInfoReturnable<Boolean> cir){
-        if(cir.getReturnValueZ())grilling$oilType=grilling$pendingOilType;
+        if(cir.getReturnValueZ()){
+            grilling$oilType=grilling$pendingOilType;
+        }
         grilling$pendingOilType="default";
     }
     @Inject(method="startCooking",at=@At("TAIL")) private void grilling$season(Level level,CallbackInfo ci){

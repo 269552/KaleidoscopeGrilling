@@ -3,6 +3,8 @@ package cn.breezeth.kaleidoscope_grilling.mixin;
 import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimation;
 import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimationAccess;
 import cn.breezeth.kaleidoscope_grilling.SeasoningAnimation;
+import cn.breezeth.kaleidoscope_grilling.OilBrushAnimation;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -14,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class PlayerAnvilPressMixin implements AnvilPressAnimationAccess {
     @Unique private long grilling$anvilPressStart = Long.MIN_VALUE;
     @Unique private long grilling$seasoningStart = Long.MIN_VALUE;
+    @Unique private long grilling$oilBrushStart = Long.MIN_VALUE;
+    @Unique private InteractionHand grilling$oilBrushHand = InteractionHand.MAIN_HAND;
+    @Unique private int grilling$oilBrushType;
 
     @Override public void grilling$startAnvilPress() { grilling$anvilPressStart = player().level().getGameTime(); }
     @Override public float grilling$getAnvilPressProgress(float partialTick) {
@@ -23,6 +28,10 @@ public abstract class PlayerAnvilPressMixin implements AnvilPressAnimationAccess
     @Override public float grilling$getSeasoningProgress(float partialTick) {
         return progress(grilling$seasoningStart, SeasoningAnimation.DURATION_TICKS, partialTick);
     }
+    @Override public void grilling$startOilBrush(InteractionHand hand, int brushType) { grilling$oilBrushStart = player().level().getGameTime(); grilling$oilBrushHand = hand; grilling$oilBrushType = brushType; }
+    @Override public float grilling$getOilBrushProgress(float partialTick) { return progress(grilling$oilBrushStart, OilBrushAnimation.DURATION_TICKS, partialTick); }
+    @Override public InteractionHand grilling$getOilBrushHand() { return grilling$oilBrushHand; }
+    @Override public int grilling$getOilBrushType() { return grilling$oilBrushType; }
 
     @Unique private Player player() { return (Player) (Object) this; }
     @Unique private float progress(long start, int duration, float partialTick) {
@@ -34,6 +43,7 @@ public abstract class PlayerAnvilPressMixin implements AnvilPressAnimationAccess
     private void grilling$animationEvent(byte id, CallbackInfo ci) {
         if (id == AnvilPressAnimation.EVENT_ID) grilling$startAnvilPress();
         else if (id == SeasoningAnimation.EVENT_ID) grilling$startSeasoning();
+        else if (OilBrushAnimation.isEvent(id)) grilling$startOilBrush(OilBrushAnimation.hand(id), OilBrushAnimation.type(id));
         else return;
         ci.cancel();
     }

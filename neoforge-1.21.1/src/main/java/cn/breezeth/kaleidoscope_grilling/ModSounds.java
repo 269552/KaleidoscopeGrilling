@@ -15,7 +15,8 @@ public final class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> SKEWER_DISASSEMBLE = register("skewer_disassemble");
     public static final DeferredHolder<SoundEvent, SoundEvent> SEASON = register("season");
     public static final DeferredHolder<SoundEvent, SoundEvent> SHAKE_SEASONING = register("shake_seasoning");
-    public static final DeferredHolder<SoundEvent, SoundEvent> BOTTLE_INTERACT = register("bottle_interact");
+    public static final DeferredHolder<SoundEvent, SoundEvent> SEASONING_BOTTLE_PLACE = register("seasoning_bottle_place");
+    public static final DeferredHolder<SoundEvent, SoundEvent> SEASONING_BOTTLE_STACK = register("seasoning_bottle_stack");
 
     private static DeferredHolder<SoundEvent, SoundEvent> register(String name) {
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, name);

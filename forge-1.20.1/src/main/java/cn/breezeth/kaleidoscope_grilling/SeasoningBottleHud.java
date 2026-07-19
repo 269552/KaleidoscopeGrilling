@@ -10,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -29,6 +30,8 @@ public final class SeasoningBottleHud {
 
     @SubscribeEvent
     public static void render(RenderGuiOverlayEvent.Post event) {
+        if (!event.getOverlay().id().equals(VanillaGuiOverlay.HOTBAR.id())) return;
+        if (!HudControl.isEnabled()) return;
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.options.hideGui || minecraft.level == null || !(minecraft.hitResult instanceof BlockHitResult hit)) return;
         BlockPos pos = hit.getBlockPos();
@@ -82,21 +85,6 @@ public final class SeasoningBottleHud {
             graphics.drawString(minecraft.font, effect, x + 12, rowY, 0xFFB8D8CD, false);
             rowY += 10;
         }
-    }
-
-    private static List<Component> effects(List<String> values) {
-        java.util.ArrayList<Component> result = new java.util.ArrayList<>();
-        addEffect(result, values, "minecraft:redstone", "hud.kaleidoscope_grilling.seasoning.speed");
-        addEffect(result, values, "minecraft:gunpowder", "hud.kaleidoscope_grilling.seasoning.strength");
-        addEffect(result, values, "kaleidoscope_grilling:houttuynia_powder", "hud.kaleidoscope_grilling.seasoning.duration");
-        addEffect(result, values, "kaleidoscope_grilling:totem_powder", "hud.kaleidoscope_grilling.seasoning.totem");
-        addEffect(result, values, "kaleidoscope_grilling:dragon_egg_powder", "hud.kaleidoscope_grilling.seasoning.vitality");
-        return result;
-    }
-
-    private static void addEffect(List<Component> result, List<String> values, String id, String key) {
-        long count = values.stream().filter(id::equals).count();
-        if (count > 0) result.add(Component.translatable(key, count));
     }
 
     private SeasoningBottleHud() {}

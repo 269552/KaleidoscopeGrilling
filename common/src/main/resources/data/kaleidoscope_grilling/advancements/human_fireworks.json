@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "kaleidoscope_grilling:grill"
+    },
+    "title": {
+      "translate": "advancement.kaleidoscope_grilling.human_fireworks.title"
+    },
+    "description": {
+      "translate": "advancement.kaleidoscope_grilling.human_fireworks.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "background": "minecraft:textures/block/smoker_front.png"
+  },
+  "criteria": {
+    "event": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 10
+  }
+}

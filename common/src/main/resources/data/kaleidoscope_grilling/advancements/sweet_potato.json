@@ -1,0 +1,26 @@
+{
+  "parent": "kaleidoscope_grilling:human_fireworks",
+  "display": {
+    "icon": {
+      "item": "kaleidoscope_grilling:sweet_potato"
+    },
+    "title": {
+      "translate": "advancement.kaleidoscope_grilling.sweet_potato.title"
+    },
+    "description": {
+      "translate": "advancement.kaleidoscope_grilling.sweet_potato.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "event": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 10
+  }
+}

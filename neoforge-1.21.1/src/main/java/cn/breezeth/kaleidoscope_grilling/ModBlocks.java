@@ -27,6 +27,8 @@ public final class ModBlocks {
     public static final DeferredHolder<Block, Block> ADVANCED_RACK=BLOCKS.register("advanced_rack",()->new AdvancedRackBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SLAB).strength(2.0F).noOcclusion()));
     public static final DeferredHolder<Block, Block> SKEWER_RECIPE = BLOCKS.register("skewer_recipe", () -> new SkewerRecipeBlock(
             BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_WOOL).instabreak().noOcclusion()));
+    public static final DeferredHolder<Block, Block> SKEWER_PLATE = BLOCKS.register("skewer_plate", () -> new SkewerPlateBlock(
+            BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PRESSURE_PLATE).instabreak().noOcclusion()));
     public static final DeferredHolder<Block, Block> CANOLA_CROP = BLOCKS.register("canola_crop", () -> new CanolaCropBlock(
             BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT).noCollission().randomTicks().instabreak().noOcclusion()));
     public static final DeferredHolder<Block, Block> ONION_CROP = BLOCKS.register("onion_crop", () -> new OnionCropBlock(
@@ -55,10 +57,10 @@ public final class ModBlocks {
             () -> new FunctionalBlockItem(OIL_PRESS.get(), new Item.Properties(),
                     "tooltip.kaleidoscope_grilling.oil_press.usage",
                     "tooltip.kaleidoscope_grilling.oil_press.requirement"));
-    public static final DeferredHolder<Item, Item> ADVANCED_RACK_ITEM=ModItems.ITEMS.register("advanced_rack",()->new BlockItem(ADVANCED_RACK.get(),new Item.Properties()));
+    public static final DeferredHolder<Item, Item> ADVANCED_RACK_ITEM=ModItems.ITEMS.register("advanced_rack",()->new AdvancedRackBlockItem(ADVANCED_RACK.get(),new Item.Properties()));
     private static SoundType seasoningBottleSound() {
-        return new SoundType(1.0F, 1.0F, ModSounds.BOTTLE_INTERACT.get(), SoundEvents.GLASS_STEP,
-                ModSounds.BOTTLE_INTERACT.get(), ModSounds.BOTTLE_INTERACT.get(), SoundEvents.GLASS_FALL);
+        return new SoundType(1.0F, 1.0F, ModSounds.SEASONING_BOTTLE_PLACE.get(), SoundEvents.GLASS_STEP,
+                ModSounds.SEASONING_BOTTLE_PLACE.get(), ModSounds.SEASONING_BOTTLE_PLACE.get(), SoundEvents.GLASS_FALL);
     }
     private ModBlocks() {}
 }

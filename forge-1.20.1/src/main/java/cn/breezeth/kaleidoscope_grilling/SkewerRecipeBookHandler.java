@@ -13,6 +13,11 @@ public final class SkewerRecipeBookHandler {
         for (int i = 0; i < grid.getContainerSize(); i++) {
             ItemStack slot = grid.getItem(i);
             if (slot.isEmpty()) continue;
+            if (slot.is(ModItems.SECRET_SKEWER.get())
+                    && SkeweringHandler.readIngredientStacks(slot).size() == 3) {
+                SkewerRecipeBookItem.setRecipeStack(result, slot);
+                return;
+            }
             ResourceLocation id = ForgeRegistries.ITEMS.getKey(slot.getItem());
             if (id != null && id.getNamespace().equals(KaleidoscopeGrilling.MOD_ID)
                     && id.getPath().startsWith("raw_")) {

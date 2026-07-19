@@ -1,0 +1,26 @@
+{
+  "parent": "kaleidoscope_grilling:gleaming_with_oil",
+  "display": {
+    "icon": {
+      "id": "kaleidoscope_grilling:grilled_beef_skewer"
+    },
+    "title": {
+      "translate": "advancement.kaleidoscope_grilling.eat_it_hot.title"
+    },
+    "description": {
+      "translate": "advancement.kaleidoscope_grilling.eat_it_hot.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "event": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 25
+  }
+}

@@ -74,7 +74,7 @@ public final class SkewerRecipeBlock extends BaseEntityBlock {
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                          Player player, BlockHitResult hit) {
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof SkewerRecipeBlockEntity recipe) {
-            ItemStack book = createBook(recipe.recipeResult());
+            ItemStack book = recipe.recipeBook();
             level.removeBlock(pos, false);
             if (!player.addItem(book)) player.drop(book, false);
             level.playSound(null, pos, SoundEvents.ITEM_FRAME_REMOVE_ITEM, SoundSource.BLOCKS, 0.8F, 1.0F);
@@ -86,20 +86,14 @@ public final class SkewerRecipeBlock extends BaseEntityBlock {
                                                         Player player, InteractionHand hand, BlockHitResult hit) {
         if (!stack.is(Items.STICK)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         if (!(level.getBlockEntity(pos) instanceof SkewerRecipeBlockEntity recipe)) return ItemInteractionResult.FAIL;
-        InteractionResult result = SkewerRecipeBookItem.craft(level, player, stack, recipe.recipeResult());
+        InteractionResult result = SkewerRecipeBookItem.craft(level, player, stack, recipe.recipeBook());
         return result == InteractionResult.FAIL ? ItemInteractionResult.FAIL : ItemInteractionResult.SUCCESS;
     }
 
     @Override protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
         BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
         return blockEntity instanceof SkewerRecipeBlockEntity recipe
-                ? List.of(createBook(recipe.recipeResult())) : List.of();
-    }
-
-    private static ItemStack createBook(String result) {
-        ItemStack stack = new ItemStack(ModItems.SKEWER_RECIPE_BOOK.get());
-        if (!result.isEmpty()) SkewerRecipeBookItem.setRecipeResult(stack, result);
-        return stack;
+                ? List.of(recipe.recipeBook()) : List.of();
     }
 
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {

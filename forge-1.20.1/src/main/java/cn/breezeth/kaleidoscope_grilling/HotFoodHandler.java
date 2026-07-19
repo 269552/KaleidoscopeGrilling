@@ -40,6 +40,13 @@ public final class HotFoodHandler {
         if (before != null && FoodState.isHot(event.getItem(), event.getEntity().level())) doubleNewDurations(event.getEntity(), before);
         FoodState.applySeasoning(event.getItem(), event.getEntity().level(), event.getEntity());
     }
+    public static ItemStack finishNested(ItemStack stack, LivingEntity entity) {
+        boolean hot = FoodState.isHot(stack, entity.level());
+        Map<MobEffect, Integer> before = hot ? snapshot(entity) : null;
+        ItemStack result = stack.finishUsingItem(entity.level(), entity);
+        if (before != null) doubleNewDurations(entity, before);
+        return result;
+    }
     public static void onSmelted(PlayerEvent.ItemSmeltedEvent event) {
         ItemStack result = event.getSmelting();
         if (!HotFoodConfig.ENABLE_SMELTED_FOOD.get() || result.isEmpty() || result.getItem().getFoodProperties(result, event.getEntity()) == null) return;

@@ -1,1 +1,1 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "minecraft:item/carrot" } }
+{ "parent": "minecraft:item/generated", "textures": { "layer0": "kaleidoscope_grilling:item/carrot_dice" } }

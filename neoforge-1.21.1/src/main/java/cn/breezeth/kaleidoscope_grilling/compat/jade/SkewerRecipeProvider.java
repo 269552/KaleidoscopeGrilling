@@ -2,6 +2,9 @@ package cn.breezeth.kaleidoscope_grilling.compat.jade;
 
 import cn.breezeth.kaleidoscope_grilling.SkewerRecipeBlockEntity;
 import cn.breezeth.kaleidoscope_grilling.SkewerRecipes;
+import cn.breezeth.kaleidoscope_grilling.SkewerRecipeBookItem;
+import cn.breezeth.kaleidoscope_grilling.SkeweringHandler;
+import cn.breezeth.kaleidoscope_grilling.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -21,18 +24,23 @@ enum SkewerRecipeProvider implements IBlockComponentProvider {
     @Override
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
         if (!(accessor.getBlockEntity() instanceof SkewerRecipeBlockEntity recipe)) return;
-        ResourceLocation id = ResourceLocation.tryParse(recipe.recipeResult());
-        if (id == null) return;
-        BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
-            ItemStack stack = new ItemStack(item);
+        ItemStack recorded = SkewerRecipeBookItem.readRecipeStack(recipe.recipeBook());
+        if (recorded.isEmpty()) return;
+        {
             tooltip.add(Component.translatable("jade.kaleidoscope_grilling.skewer_recipe.record"));
             tooltip.append(IElementHelper.get().spacer(3, 1));
-            tooltip.append(IElementHelper.get().smallItem(stack));
+            tooltip.append(IElementHelper.get().smallItem(recorded));
             tooltip.append(IElementHelper.get().spacer(2, 1));
-            tooltip.append(item.getDescription());
-        });
+            tooltip.append(recorded.getHoverName());
+        }
+        List<ItemStack> custom = recorded.is(ModItems.SECRET_SKEWER.get())
+                ? SkeweringHandler.readIngredientStacks(recorded, accessor.getLevel().registryAccess()) : List.of();
         List<List<String>> requirements = SkewerRecipes.getIngredients(recipe.recipeResult());
-        if (requirements != null && !requirements.isEmpty()) {
+        if (!custom.isEmpty()) {
+            tooltip.add(Component.translatable("jade.kaleidoscope_grilling.skewer_recipe.ingredients"));
+            JadeElements.appendItems(tooltip, custom);
+        }
+        else if (requirements != null && !requirements.isEmpty()) {
             List<ItemStack> ingredients = new ArrayList<>();
             for (List<String> selectors : requirements) {
                 BuiltInRegistries.ITEM.stream().map(ItemStack::new)
