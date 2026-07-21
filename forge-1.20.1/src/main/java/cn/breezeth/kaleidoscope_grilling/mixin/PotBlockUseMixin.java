@@ -17,14 +17,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(targets = "com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.PotBlock", remap = false)
 public abstract class PotBlockUseMixin {
-    @Inject(method = "use", at = @At("HEAD"), cancellable = true)
-    private void grilling$season(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit, CallbackInfoReturnable<InteractionResult> cir) {
-        if (hand != InteractionHand.MAIN_HAND) return;
-        ItemStack held = player.getItemInHand(hand);
-        if (!held.is(ModItems.SPECIAL_SEASONING.get())) return;
-        BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof SeasonedPotAccess access)) return;
-        if (!level.isClientSide) SeasoningUse.apply(player, hand, held, access);
-        cir.setReturnValue(InteractionResult.SUCCESS);
-    }
+  @Inject(method = "use", at = @At("HEAD"), cancellable = true)
+  private void grilling$season(
+      BlockState state,
+      Level level,
+      BlockPos pos,
+      Player player,
+      InteractionHand hand,
+      BlockHitResult hit,
+      CallbackInfoReturnable<InteractionResult> cir) {
+    if (hand != InteractionHand.MAIN_HAND) return;
+    ItemStack held = player.getItemInHand(hand);
+    if (!held.is(ModItems.SPECIAL_SEASONING.get())) return;
+    BlockEntity be = level.getBlockEntity(pos);
+    if (!(be instanceof SeasonedPotAccess access)) return;
+    if (!level.isClientSide) SeasoningUse.apply(player, hand, held, access);
+    cir.setReturnValue(InteractionResult.SUCCESS);
+  }
 }

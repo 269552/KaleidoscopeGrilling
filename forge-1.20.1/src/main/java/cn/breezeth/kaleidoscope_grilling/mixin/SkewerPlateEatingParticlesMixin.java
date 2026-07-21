@@ -10,9 +10,9 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(LivingEntity.class)
 abstract class SkewerPlateEatingParticlesMixin {
-    @ModifyVariable(method = "spawnItemParticles", at = @At("HEAD"), argsOnly = true, ordinal = 0)
-    private ItemStack kaleidoscopeGrilling$useSkewerParticles(ItemStack stack) {
-        if (!stack.is(ModItems.SKEWER_PLATE.get())) return stack;
-        return SkewerPlateItem.particleStack(stack, (LivingEntity) (Object) this);
-    }
+  @ModifyVariable(method = "spawnItemParticles", at = @At("HEAD"), argsOnly = true, ordinal = 0)
+  private ItemStack kaleidoscopeGrilling$useSkewerParticles(ItemStack stack) {
+    if (!stack.is(ModItems.SKEWER_PLATE.get())) return stack;
+    return SkewerPlateItem.particleStack(stack, (LivingEntity) (Object) this);
+  }
 }

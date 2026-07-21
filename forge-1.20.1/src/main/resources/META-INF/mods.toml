@@ -1,13 +1,15 @@
 modLoader = "javafml"
 loaderVersion = "[47,)"
-license = "All Rights Reserved"
+license = "BSD-3-Clause + CC BY-NC-SA 4.0"
 
 [[mods]]
 modId = "kaleidoscope_grilling"
 version = "${version}"
 displayName = "Kaleidoscope Grilling"
+logoFile = "kaleidoscope_grilling_logo.png"
 authors = "breezeth"
-description = '''An expansion for Kaleidoscope Cookery focused on grilling and skewers.'''
+description = '''为《森罗物语：厨房》扩展热食、风味油料、新食材与炭火烧烤。
+An expansion for Kaleidoscope Cookery featuring hot food, flavorful oils, new ingredients, and charcoal grilling.'''
 
 [[dependencies.kaleidoscope_grilling]]
 modId = "forge"

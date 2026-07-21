@@ -1,23 +1,23 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
-import java.util.List;
-
 public final class DescriptionItem extends Item {
-    private final String descriptionKey;
+  private final String descriptionKey;
 
-    public DescriptionItem(Properties properties, String descriptionKey) {
-        super(properties);
-        this.descriptionKey = descriptionKey;
-    }
+  public DescriptionItem(Properties properties, String descriptionKey) {
+    super(properties);
+    this.descriptionKey = descriptionKey;
+  }
 
-    @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable(descriptionKey).withStyle(ChatFormatting.DARK_GRAY));
-    }
+  @Override
+  public void appendHoverText(
+      ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    tooltip.add(Component.translatable(descriptionKey).withStyle(ChatFormatting.DARK_GRAY));
+  }
 }

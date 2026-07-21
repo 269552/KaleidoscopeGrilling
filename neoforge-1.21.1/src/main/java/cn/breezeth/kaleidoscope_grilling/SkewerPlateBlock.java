@@ -1,6 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling;
 
 import com.mojang.serialization.MapCodec;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
@@ -27,54 +28,81 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
 public final class SkewerPlateBlock extends BaseEntityBlock {
-    public static final MapCodec<SkewerPlateBlock> CODEC = simpleCodec(SkewerPlateBlock::new);
-    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 7, 15);
+  public static final MapCodec<SkewerPlateBlock> CODEC = simpleCodec(SkewerPlateBlock::new);
+  public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+  private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 7, 15);
 
-    public SkewerPlateBlock(Properties properties) {
-        super(properties);
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.SOUTH));
+  public SkewerPlateBlock(Properties properties) {
+    super(properties);
+    registerDefaultState(stateDefinition.any().setValue(FACING, Direction.SOUTH));
+  }
+
+  @Override
+  protected MapCodec<? extends BaseEntityBlock> codec() {
+    return CODEC;
+  }
+
+  @Override
+  protected RenderShape getRenderShape(BlockState state) {
+    return RenderShape.MODEL;
+  }
+
+  @Override
+  public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+    return new SkewerPlateBlockEntity(pos, state);
+  }
+
+  @Override
+  protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+    builder.add(FACING);
+  }
+
+  @Override
+  protected VoxelShape getShape(
+      BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    return SHAPE;
+  }
+
+  @Override
+  protected ItemInteractionResult useItemOn(
+      ItemStack held,
+      BlockState state,
+      Level level,
+      BlockPos pos,
+      Player player,
+      InteractionHand hand,
+      BlockHitResult hit) {
+    if (!(level.getBlockEntity(pos) instanceof SkewerPlateBlockEntity plate)
+        || !SkewerPlateItem.isSkewer(held))
+      return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    if (player.isShiftKeyDown() && hand != InteractionHand.MAIN_HAND)
+      return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    boolean canAdd = plate.size() < SkewerPlateBlockEntity.CAPACITY;
+    if (!level.isClientSide && plate.add(held, player.getAbilities().instabuild))
+      level.playSound(null, pos, SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 0.8F, 1.0F);
+    return canAdd ? ItemInteractionResult.SUCCESS : ItemInteractionResult.CONSUME;
+  }
+
+  @Override
+  protected InteractionResult useWithoutItem(
+      BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+    if (!(level.getBlockEntity(pos) instanceof SkewerPlateBlockEntity plate) || plate.size() == 0)
+      return InteractionResult.PASS;
+    if (!level.isClientSide) {
+      ItemStack removed = plate.removeLast();
+      if (!removed.isEmpty()) player.setItemInHand(InteractionHand.MAIN_HAND, removed);
+      level.playSound(
+          null, pos, SoundEvents.ITEM_FRAME_REMOVE_ITEM, SoundSource.BLOCKS, 0.8F, 1.0F);
     }
+    return InteractionResult.sidedSuccess(level.isClientSide);
+  }
 
-    @Override protected MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
-    @Override protected RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
-    @Override public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) { return new SkewerPlateBlockEntity(pos, state); }
-    @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) { builder.add(FACING); }
-    @Override protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) { return SHAPE; }
-
-    @Override
-    protected ItemInteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos,
-                                              Player player, InteractionHand hand, BlockHitResult hit) {
-        if (!(level.getBlockEntity(pos) instanceof SkewerPlateBlockEntity plate) || !SkewerPlateItem.isSkewer(held))
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        if (player.isShiftKeyDown() && hand != InteractionHand.MAIN_HAND)
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        boolean canAdd = plate.size() < SkewerPlateBlockEntity.CAPACITY;
-        if (!level.isClientSide && plate.add(held, player.getAbilities().instabuild))
-            level.playSound(null, pos, SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 0.8F, 1.0F);
-        return canAdd ? ItemInteractionResult.SUCCESS : ItemInteractionResult.CONSUME;
-    }
-
-    @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
-                                               Player player, BlockHitResult hit) {
-        if (!(level.getBlockEntity(pos) instanceof SkewerPlateBlockEntity plate) || plate.size() == 0)
-            return InteractionResult.PASS;
-        if (!level.isClientSide) {
-            ItemStack removed = plate.removeLast();
-            if (!removed.isEmpty()) player.setItemInHand(InteractionHand.MAIN_HAND, removed);
-            level.playSound(null, pos, SoundEvents.ITEM_FRAME_REMOVE_ITEM, SoundSource.BLOCKS, 0.8F, 1.0F);
-        }
-        return InteractionResult.sidedSuccess(level.isClientSide);
-    }
-
-    @Override
-    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
-        BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
-        if (!(blockEntity instanceof SkewerPlateBlockEntity plate) || plate.size() == 0) return List.of();
-        return List.of(SkewerPlateItem.create(plate.copySkewers()));
-    }
+  @Override
+  protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+    BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+    if (!(blockEntity instanceof SkewerPlateBlockEntity plate) || plate.size() == 0)
+      return List.of();
+    return List.of(SkewerPlateItem.create(plate.copySkewers()));
+  }
 }

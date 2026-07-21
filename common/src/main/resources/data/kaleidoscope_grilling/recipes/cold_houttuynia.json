@@ -1,1 +1,1 @@
-{"type":"minecraft:crafting_shapeless","category":"food","ingredients":[{"tag":"kaleidoscope_grilling:ingredients/houttuynia"},{"tag":"kaleidoscope_grilling:ingredients/houttuynia"},{"tag":"kaleidoscope_grilling:ingredients/houttuynia"},{"item":"kaleidoscope_grilling:premium_chili_oil_bucket"}],"result":{"item":"kaleidoscope_grilling:cold_houttuynia"}}
+{"type":"kaleidoscope_grilling:cold_houttuynia","category":"food"}

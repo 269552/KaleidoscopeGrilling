@@ -7,12 +7,19 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModRecipeSerializers {
-    public static final DeferredRegister<RecipeSerializer<?>> SERIALIZERS =
-            DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, KaleidoscopeGrilling.MOD_ID);
+  public static final DeferredRegister<RecipeSerializer<?>> SERIALIZERS =
+      DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, KaleidoscopeGrilling.MOD_ID);
 
-    public static final RegistryObject<RecipeSerializer<SkewerRecipeCraftingRecipe>> SKEWER_RECIPE_BOOK =
-            SERIALIZERS.register("skewer_recipe_book",
-                    () -> new SimpleCraftingRecipeSerializer<>(SkewerRecipeCraftingRecipe::new));
+  public static final RegistryObject<RecipeSerializer<SkewerRecipeCraftingRecipe>>
+      SKEWER_RECIPE_BOOK =
+          SERIALIZERS.register(
+              "skewer_recipe_book",
+              () -> new SimpleCraftingRecipeSerializer<>(SkewerRecipeCraftingRecipe::new));
+  public static final RegistryObject<RecipeSerializer<ColdHouttuyniaCraftingRecipe>>
+      COLD_HOUTTUYNIA =
+          SERIALIZERS.register(
+              "cold_houttuynia",
+              () -> new SimpleCraftingRecipeSerializer<>(ColdHouttuyniaCraftingRecipe::new));
 
-    private ModRecipeSerializers() {}
+  private ModRecipeSerializers() {}
 }

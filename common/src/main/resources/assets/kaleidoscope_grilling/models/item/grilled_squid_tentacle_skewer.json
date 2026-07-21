@@ -2,8 +2,15 @@
   "parent": "kaleidoscope_grilling:item/skewer_states/state_42",
   "overrides": [
     {
-      "predicate": { "kaleidoscope_grilling:skewer_outline": 1.0 },
-      "model": "kaleidoscope_grilling:item/skewer_states/outline_state_42"
+      "predicate": { "kaleidoscope_grilling:skewer_gui": 1.0 },
+      "model": "kaleidoscope_grilling:item/fixed_skewer_gui/grilled_squid_tentacle_skewer"
+    },
+    {
+      "predicate": {
+        "kaleidoscope_grilling:skewer_gui": 1.0,
+        "kaleidoscope_grilling:skewer_hot": 1.0
+      },
+      "model": "kaleidoscope_grilling:item/fixed_skewer_gui/grilled_squid_tentacle_skewer_hot"
     }
   ]
 }

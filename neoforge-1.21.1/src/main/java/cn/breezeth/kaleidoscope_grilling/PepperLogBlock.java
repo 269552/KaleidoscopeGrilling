@@ -6,18 +6,18 @@ import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public final class PepperLogBlock extends RotatedPillarBlock {
-    public static final MapCodec<PepperLogBlock> CODEC = simpleCodec(PepperLogBlock::new);
+  public static final MapCodec<PepperLogBlock> CODEC = simpleCodec(PepperLogBlock::new);
 
-    public PepperLogBlock(BlockBehaviour.Properties properties) {
-        super(properties);
-    }
+  public PepperLogBlock(BlockBehaviour.Properties properties) {
+    super(properties);
+  }
 
-    public static PepperLogBlock create() {
-        return new PepperLogBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG));
-    }
+  public static PepperLogBlock create() {
+    return new PepperLogBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG));
+  }
 
-    @Override
-    public MapCodec<? extends RotatedPillarBlock> codec() {
-        return CODEC;
-    }
+  @Override
+  public MapCodec<? extends RotatedPillarBlock> codec() {
+    return CODEC;
+  }
 }

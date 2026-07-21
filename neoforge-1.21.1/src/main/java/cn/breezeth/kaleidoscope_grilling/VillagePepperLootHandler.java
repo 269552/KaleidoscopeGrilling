@@ -10,21 +10,27 @@ import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import net.neoforged.neoforge.event.LootTableLoadEvent;
 
 public final class VillagePepperLootHandler {
-    private static final String VILLAGE_CHEST_PREFIX = "chests/village/";
+  private static final String VILLAGE_CHEST_PREFIX = "chests/village/";
 
-    public static void onLoad(LootTableLoadEvent event) {
-        ResourceLocation name = event.getName();
-        if (!"minecraft".equals(name.getNamespace()) || !name.getPath().startsWith(VILLAGE_CHEST_PREFIX)) {
-            return;
-        }
-
-        event.getTable().addPool(LootPool.lootPool()
-                .setRolls(ConstantValue.exactly(1.0F))
-                .when(LootItemRandomChanceCondition.randomChance(0.4F))
-                .add(LootItem.lootTableItem(ModItems.SICHUAN_PEPPER.get())
-                        .apply(SetItemCountFunction.setCount(UniformGenerator.between(3.0F, 10.0F))))
-                .build());
+  public static void onLoad(LootTableLoadEvent event) {
+    ResourceLocation name = event.getName();
+    if (!"minecraft".equals(name.getNamespace())
+        || !name.getPath().startsWith(VILLAGE_CHEST_PREFIX)) {
+      return;
     }
 
-    private VillagePepperLootHandler() {}
+    event
+        .getTable()
+        .addPool(
+            LootPool.lootPool()
+                .setRolls(ConstantValue.exactly(1.0F))
+                .when(LootItemRandomChanceCondition.randomChance(0.4F))
+                .add(
+                    LootItem.lootTableItem(ModItems.SICHUAN_PEPPER.get())
+                        .apply(
+                            SetItemCountFunction.setCount(UniformGenerator.between(3.0F, 10.0F))))
+                .build());
+  }
+
+  private VillagePepperLootHandler() {}
 }

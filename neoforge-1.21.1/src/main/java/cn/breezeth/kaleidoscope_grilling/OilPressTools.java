@@ -9,11 +9,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.AnvilBlock;
 
 public final class OilPressTools {
-    public static final TagKey<Item> PRESS_STONES = TagKey.create(Registries.ITEM,
-            ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "press_stones"));
-    public static int progress(ItemStack stack) {
-        if (stack.getItem() instanceof BlockItem item && item.getBlock() instanceof AnvilBlock) return 4;
-        return stack.is(PRESS_STONES) ? 1 : 0;
-    }
-    private OilPressTools() {}
+  public static final TagKey<Item> PRESS_STONES =
+      TagKey.create(
+          Registries.ITEM,
+          ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "press_stones"));
+
+  public static int progress(ItemStack stack) {
+    if (stack.getItem() instanceof BlockItem item && item.getBlock() instanceof AnvilBlock)
+      return 4;
+    return stack.is(PRESS_STONES) ? 1 : 0;
+  }
+
+  private OilPressTools() {}
 }

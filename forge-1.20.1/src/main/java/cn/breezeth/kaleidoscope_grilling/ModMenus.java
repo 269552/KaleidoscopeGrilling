@@ -1,3 +1,21 @@
 package cn.breezeth.kaleidoscope_grilling;
-import net.minecraft.world.flag.FeatureFlags;import net.minecraft.world.inventory.MenuType;import net.minecraftforge.registries.*;
-public final class ModMenus{public static final DeferredRegister<MenuType<?>> MENUS=DeferredRegister.create(ForgeRegistries.MENU_TYPES,KaleidoscopeGrilling.MOD_ID);public static final RegistryObject<MenuType<AdvancedRackMenu>> ADVANCED_RACK=MENUS.register("advanced_rack",()->new MenuType<>(AdvancedRackMenu::new,FeatureFlags.VANILLA_SET));public static final RegistryObject<MenuType<RackSelectionMenu>> RACK_SELECTION=MENUS.register("rack_selection",()->new MenuType<>(RackSelectionMenu::new,FeatureFlags.VANILLA_SET));public static final RegistryObject<MenuType<RackShortcutMenu>> RACK_SHORTCUT=MENUS.register("rack_shortcut",()->new MenuType<>(RackShortcutMenu::new,FeatureFlags.VANILLA_SET));private ModMenus(){}}
+
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraftforge.registries.*;
+
+public final class ModMenus {
+  public static final DeferredRegister<MenuType<?>> MENUS =
+      DeferredRegister.create(ForgeRegistries.MENU_TYPES, KaleidoscopeGrilling.MOD_ID);
+  public static final RegistryObject<MenuType<AdvancedRackMenu>> ADVANCED_RACK =
+      MENUS.register(
+          "advanced_rack", () -> new MenuType<>(AdvancedRackMenu::new, FeatureFlags.VANILLA_SET));
+  public static final RegistryObject<MenuType<RackSelectionMenu>> RACK_SELECTION =
+      MENUS.register(
+          "rack_selection", () -> new MenuType<>(RackSelectionMenu::new, FeatureFlags.VANILLA_SET));
+  public static final RegistryObject<MenuType<RackShortcutMenu>> RACK_SHORTCUT =
+      MENUS.register(
+          "rack_shortcut", () -> new MenuType<>(RackShortcutMenu::new, FeatureFlags.VANILLA_SET));
+
+  private ModMenus() {}
+}

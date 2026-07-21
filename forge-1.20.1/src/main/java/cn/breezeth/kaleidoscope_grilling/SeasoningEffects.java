@@ -1,1 +1,29 @@
-package cn.breezeth.kaleidoscope_grilling;import net.minecraft.network.chat.Component;import java.util.*;public final class SeasoningEffects{private static final List<String>KINDS=List.of("speed","strength","duration","totem","vitality");public static List<Component>describe(List<String>v){ArrayList<Component>r=new ArrayList<>();for(String kind:KINDS){long n=GrillingDataManager.seasoningCount(v,kind);if(n>0)r.add(Component.translatable("hud.kaleidoscope_grilling.seasoning."+kind,n));}return r;}private SeasoningEffects(){}}
+package cn.breezeth.kaleidoscope_grilling;
+
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.network.chat.Component;
+
+public final class SeasoningEffects {
+  private static final List<String> KINDS =
+      List.of("speed", "strength", "duration", "totem", "vitality");
+
+  public static List<Component> describe(List<String> values) {
+    ArrayList<Component> result = new ArrayList<>();
+    for (String kind : KINDS) {
+      long count = GrillingDataManager.seasoningCount(values, kind);
+      if (count > 0)
+        result.add(Component.translatable("hud.kaleidoscope_grilling.seasoning." + kind, count));
+    }
+    long pepper = GrillingDataManager.seasoningCount(values, "numbness");
+    if (pepper > 0)
+      result.add(
+          Component.translatable(
+              "hud.kaleidoscope_grilling.seasoning."
+                  + (pepper >= 4 ? "numbness" : "numbness_pending"),
+              pepper));
+    return result;
+  }
+
+  private SeasoningEffects() {}
+}

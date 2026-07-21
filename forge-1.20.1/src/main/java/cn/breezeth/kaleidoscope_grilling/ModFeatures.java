@@ -7,9 +7,10 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModFeatures {
-    public static final DeferredRegister<Feature<?>> FEATURES = DeferredRegister.create(ForgeRegistries.FEATURES, KaleidoscopeGrilling.MOD_ID);
-    public static final RegistryObject<Feature<NoneFeatureConfiguration>> PEPPER_TREE = FEATURES.register("pepper_tree",
-            () -> new PepperTreeFeature(NoneFeatureConfiguration.CODEC));
+  public static final DeferredRegister<Feature<?>> FEATURES =
+      DeferredRegister.create(ForgeRegistries.FEATURES, KaleidoscopeGrilling.MOD_ID);
+  public static final RegistryObject<Feature<NoneFeatureConfiguration>> PEPPER_TREE =
+      FEATURES.register("pepper_tree", () -> new PepperTreeFeature(NoneFeatureConfiguration.CODEC));
 
-    private ModFeatures() {}
+  private ModFeatures() {}
 }

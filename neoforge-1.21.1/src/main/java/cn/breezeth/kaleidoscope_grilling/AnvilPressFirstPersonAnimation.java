@@ -15,41 +15,51 @@ import net.neoforged.neoforge.client.event.RenderHandEvent;
 
 @EventBusSubscriber(modid = KaleidoscopeGrilling.MOD_ID, value = Dist.CLIENT)
 public final class AnvilPressFirstPersonAnimation {
-    @SubscribeEvent
-    public static void render(RenderHandEvent event) {
-        Minecraft minecraft = Minecraft.getInstance();
-        var player = minecraft.player;
-        if (player == null) return;
-        float progress = ((AnvilPressAnimationAccess) player).grilling$getAnvilPressProgress(event.getPartialTick());
-        if (progress < 0.0F || OilPressTools.progress(player.getMainHandItem()) <= 0) return;
+  @SubscribeEvent
+  public static void render(RenderHandEvent event) {
+    Minecraft minecraft = Minecraft.getInstance();
+    var player = minecraft.player;
+    if (player == null) return;
+    float progress =
+        ((AnvilPressAnimationAccess) player).grilling$getAnvilPressProgress(event.getPartialTick());
+    if (progress < 0.0F || OilPressTools.progress(player.getMainHandItem()) <= 0) return;
 
-        event.setCanceled(true);
-        if (event.getHand() != InteractionHand.MAIN_HAND) return;
+    event.setCanceled(true);
+    if (event.getHand() != InteractionHand.MAIN_HAND) return;
 
-        float slam = AnvilPressAnimation.slam(progress);
-        float recovery = AnvilPressAnimation.recovery(progress);
-        renderTool(event, player.getMainHandItem(), slam, recovery);
-    }
+    float slam = AnvilPressAnimation.slam(progress);
+    float recovery = AnvilPressAnimation.recovery(progress);
+    renderTool(event, player.getMainHandItem(), slam, recovery);
+  }
 
-    private static void renderTool(RenderHandEvent event, ItemStack tool, float slam, float recovery) {
-        Minecraft minecraft = Minecraft.getInstance();
-        PoseStack pose = event.getPoseStack();
-        float x = Mth.lerp(recovery, 0.0F, 0.48F);
-        float y = Mth.lerp(recovery, -1.08F + 0.82F * slam, -0.52F);
-        float z = Mth.lerp(recovery, -0.48F - 0.48F * slam, -0.72F);
-        float xRot = Mth.lerp(recovery, -72.0F + 108.0F * slam, 0.0F);
+  private static void renderTool(
+      RenderHandEvent event, ItemStack tool, float slam, float recovery) {
+    Minecraft minecraft = Minecraft.getInstance();
+    PoseStack pose = event.getPoseStack();
+    float x = Mth.lerp(recovery, 0.0F, 0.48F);
+    float y = Mth.lerp(recovery, -1.08F + 0.82F * slam, -0.52F);
+    float z = Mth.lerp(recovery, -0.48F - 0.48F * slam, -0.72F);
+    float xRot = Mth.lerp(recovery, -72.0F + 108.0F * slam, 0.0F);
 
-        pose.pushPose();
-        pose.translate(x, y, z);
-        pose.mulPose(Axis.XP.rotationDegrees(xRot));
-        pose.mulPose(Axis.YP.rotationDegrees(180.0F));
-        float scale = Mth.lerp(recovery, 1.35F, 1.0F);
-        pose.scale(scale, scale, scale);
-        minecraft.getItemRenderer().renderStatic(tool, ItemDisplayContext.FIXED, event.getPackedLight(),
-                OverlayTexture.NO_OVERLAY, pose, event.getMultiBufferSource(), minecraft.level,
-                minecraft.player.getId());
-        pose.popPose();
-    }
+    pose.pushPose();
+    pose.translate(x, y, z);
+    pose.mulPose(Axis.XP.rotationDegrees(xRot));
+    pose.mulPose(Axis.YP.rotationDegrees(180.0F));
+    float scale = Mth.lerp(recovery, 1.35F, 1.0F);
+    pose.scale(scale, scale, scale);
+    minecraft
+        .getItemRenderer()
+        .renderStatic(
+            tool,
+            ItemDisplayContext.FIXED,
+            event.getPackedLight(),
+            OverlayTexture.NO_OVERLAY,
+            pose,
+            event.getMultiBufferSource(),
+            minecraft.level,
+            minecraft.player.getId());
+    pose.popPose();
+  }
 
-    private AnvilPressFirstPersonAnimation() {}
+  private AnvilPressFirstPersonAnimation() {}
 }

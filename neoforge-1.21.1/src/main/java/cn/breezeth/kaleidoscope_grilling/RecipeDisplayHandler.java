@@ -1,1 +1,27 @@
-package cn.breezeth.kaleidoscope_grilling;import net.minecraft.world.entity.decoration.ItemFrame;import net.minecraft.world.item.ItemStack;import net.neoforged.neoforge.event.entity.player.*;public final class RecipeDisplayHandler{public static void attack(AttackEntityEvent e){if(!(e.getTarget()instanceof ItemFrame f)||!f.getPersistentData().getBoolean("GrillingRecipeDisplay"))return;e.setCanceled(true);if(!e.getEntity().level().isClientSide){ItemStack book=new ItemStack(ModItems.SKEWER_RECIPE_BOOK.get());SkewerRecipeBookItem.setRecipeResult(book,f.getPersistentData().getString("GrillingRecipeResult"));if(!e.getEntity().addItem(book))e.getEntity().drop(book,false);f.discard();}}public static void interact(PlayerInteractEvent.EntityInteract e){if(e.getTarget()instanceof ItemFrame f&&f.getPersistentData().getBoolean("GrillingRecipeDisplay"))e.setCanceled(true);}private RecipeDisplayHandler(){}}
+package cn.breezeth.kaleidoscope_grilling;
+
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.event.entity.player.*;
+
+public final class RecipeDisplayHandler {
+  public static void attack(AttackEntityEvent e) {
+    if (!(e.getTarget() instanceof ItemFrame f)
+        || !f.getPersistentData().getBoolean("GrillingRecipeDisplay")) return;
+    e.setCanceled(true);
+    if (!e.getEntity().level().isClientSide) {
+      ItemStack book = new ItemStack(ModItems.SKEWER_RECIPE_BOOK.get());
+      SkewerRecipeBookItem.setRecipeResult(
+          book, f.getPersistentData().getString("GrillingRecipeResult"));
+      if (!e.getEntity().addItem(book)) e.getEntity().drop(book, false);
+      f.discard();
+    }
+  }
+
+  public static void interact(PlayerInteractEvent.EntityInteract e) {
+    if (e.getTarget() instanceof ItemFrame f
+        && f.getPersistentData().getBoolean("GrillingRecipeDisplay")) e.setCanceled(true);
+  }
+
+  private RecipeDisplayHandler() {}
+}

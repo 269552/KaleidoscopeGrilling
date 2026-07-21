@@ -1,5 +1,6 @@
 plugins {
     id 'net.minecraftforge.gradle' version '6.0.53'
+    id 'org.spongepowered.mixin' version '0.7.38'
 }
 
 def props = new Properties()
@@ -15,7 +16,16 @@ repositories {
     mavenCentral()
     maven { url = 'https://maven.blamejared.com' }
     maven { url = 'https://api.modrinth.com/maven' }
-    flatDir { dirs '../.breezeth/KaleidoscopeCookery-main/build/libs' }
+    exclusiveContent {
+        forRepositories(fg.repository)
+        forRepository {
+            maven {
+                name = 'Modrinth'
+                url = 'https://api.modrinth.com/maven'
+            }
+        }
+        filter { includeGroup 'maven.modrinth' }
+    }
 }
 
 sourceSets.main.resources.srcDir file('../common/src/main/resources')
@@ -42,11 +52,17 @@ minecraft {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${props.getProperty('minecraft_version')}-${props.getProperty('forge_version')}"
-    implementation fg.deobf('local:kaleidoscopecookery:1.4.1-forge+mc1.20.1')
+    implementation fg.deobf('maven.modrinth:v17FatAc:NXvhd04p')
     compileOnly fg.deobf('mezz.jei:jei-1.20.1-common-api:15.20.0.105')
     compileOnly fg.deobf('mezz.jei:jei-1.20.1-forge-api:15.20.0.105')
     compileOnly fg.deobf('maven.modrinth:jade:11.13.1+forge')
     runtimeOnly fg.deobf('maven.modrinth:jade:11.13.1+forge')
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+mixin {
+    add sourceSets.main, 'kaleidoscope_grilling.refmap.json'
+    config 'kaleidoscope_grilling.mixins.json'
 }
 
 processResources {
@@ -65,4 +81,7 @@ java { toolchain.languageVersion = JavaLanguageVersion.of(17) }
 tasks.withType(Jar).configureEach {
     archiveFileName = "kaleidoscope_grilling-${project.version}-forge1.20.1.jar"
     manifest { attributes 'MixinConfigs': 'kaleidoscope_grilling.mixins.json' }
+    from('../LICENSE-CODE')
+    from('../LICENSE-ASSETS')
+    from('../NOTICE')
 }

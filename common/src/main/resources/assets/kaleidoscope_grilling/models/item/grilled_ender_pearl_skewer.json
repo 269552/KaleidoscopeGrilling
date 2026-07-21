@@ -2,8 +2,15 @@
   "parent": "kaleidoscope_grilling:item/skewer_states/state_25",
   "overrides": [
     {
-      "predicate": { "kaleidoscope_grilling:skewer_outline": 1.0 },
-      "model": "kaleidoscope_grilling:item/skewer_states/outline_state_25"
+      "predicate": { "kaleidoscope_grilling:skewer_gui": 1.0 },
+      "model": "kaleidoscope_grilling:item/fixed_skewer_gui/grilled_ender_pearl_skewer"
+    },
+    {
+      "predicate": {
+        "kaleidoscope_grilling:skewer_gui": 1.0,
+        "kaleidoscope_grilling:skewer_hot": 1.0
+      },
+      "model": "kaleidoscope_grilling:item/fixed_skewer_gui/grilled_ender_pearl_skewer_hot"
     }
   ]
 }

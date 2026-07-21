@@ -38,6 +38,7 @@
     {"ingredient":"minecraft:gunpowder","kind":"strength"},
     {"ingredient":"kaleidoscope_grilling:houttuynia_powder","kind":"duration"},
     {"ingredient":"kaleidoscope_grilling:totem_powder","kind":"totem"},
-    {"ingredient":"kaleidoscope_grilling:dragon_egg_powder","kind":"vitality"}
+    {"ingredient":"kaleidoscope_grilling:dragon_egg_powder","kind":"vitality"},
+    {"ingredient":"kaleidoscope_grilling:sichuan_pepper","kind":"numbness"}
   ]
 }

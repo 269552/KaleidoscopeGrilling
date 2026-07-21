@@ -8,7 +8,7 @@
 - Java 包：`cn.breezeth.kaleidoscope_grilling`
 - Forge：Minecraft 1.20.1
 - NeoForge：Minecraft 1.21.1
-- 当前接口文档版本：v0.4
+- 当前接口文档版本：v0.8
 
 普通兼容优先使用物品标签和数据包。只有需要读取 NBT、数据组件或运行时状态时，才建议调用 Java API。
 
@@ -36,6 +36,7 @@ NeoForge 1.21.1：
 | 能力 | 接口或数据入口 | 用途 |
 | --- | --- | --- |
 | 热属性 | `HotFoodApi` | 标记热食、查询热状态、注册默认热时长、复制调料 |
+| 烧烤架自动化 | `GrillAutomationApi` | 模拟或执行放串、刷油、翻面、撒料和取出 |
 | 榨油进度 | `OilPressApi` | 由其他机械或交互向榨油器提交进度 |
 | 榨油容器 | `OilPressContainerApi` | 注册可接收榨油器菜籽油输出的容器 |
 | 串类扩展 | `SkewerCompatApi` | 注册特殊原料判定和自定义熟制结果 |
@@ -55,6 +56,58 @@ NeoForge 1.21.1：
 - `SkewerCompatApi.registerCookingRule`
 
 重复使用同一个 `ResourceLocation` 注册处理器会抛出 `IllegalArgumentException`。
+
+## 烧烤架自动化 API
+
+类：`cn.breezeth.kaleidoscope_grilling.GrillAutomationApi`
+
+该接口是烧烤架的无玩家动作层，供机械动力机械手、其他自动化方块或服务端逻辑调用。玩家右键也使用同一套状态规则，但玩家动画、音效、聊天提示和成就由交互层单独处理，因此接入自动化不会改变手动玩法。
+
+```java
+GrillAutomationApi.Result inserted =
+        GrillAutomationApi.insertSkewer(level, grillPos, input, false);
+
+GrillAutomationApi.Result oiled =
+        GrillAutomationApi.brushOil(level, grillPos, oilPot, false);
+
+GrillAutomationApi.Result flipped =
+        GrillAutomationApi.flip(level, grillPos, false);
+
+GrillAutomationApi.Result seasoned =
+        GrillAutomationApi.season(level, grillPos, seasoning, false);
+
+GrillAutomationApi.Result extracted =
+        GrillAutomationApi.extract(level, grillPos, false);
+```
+
+所有动作均保留烧烤架原有顺序和限制，不能绕过点火、刷油、翻面次数、翻面冷却、撒料或完成状态直接修改阶段。
+
+### 模拟与资源事务
+
+- `simulate = true`：只检查当前动作是否可执行，不修改烧烤架、输入堆、油壶或调料瓶。
+- `simulate = false`：真正执行动作，只允许在逻辑服务端成功。
+- `insertSkewer`、`brushOil`、`season` 的四参数简写会在成功时自动扣除输入资源。
+- 上述三个方法另有 `consumeInput`、`consumeOil`、`consumeSeasoning` 参数，可由拥有独立储罐或库存事务的机器设为 `false`，并在自身事务中扣除资源。
+- `extract` 不会自行塞入玩家或机器库存；成功时必须接收 `Result.output()`，确认目标库存可容纳后再正式调用。
+- 调料耗尽时 `Result.shouldReplaceHeld()` 为 `true`，调用方必须把原调料槽替换为 `Result.heldReplacement()` 返回的空调料瓶。
+
+推荐采用“先模拟、确认输出空间或资源事务、再执行”的顺序：
+
+```java
+GrillAutomationApi.Result preview =
+        GrillAutomationApi.extract(level, grillPos, true);
+if (preview.success() && machineInventory.canAccept(preview.output())) {
+    GrillAutomationApi.Result result =
+            GrillAutomationApi.extract(level, grillPos, false);
+    if (result.success()) machineInventory.insert(result.output());
+}
+```
+
+### 返回状态
+
+`Result.status()` 可能为 `SUCCESS`、`INVALID_TARGET`、`CLIENT_SIDE`、`NOT_LIT`、`INVALID_INPUT`、`FULL`、`EMPTY`、`WRONG_PHASE`、`COOLDOWN`、`INSUFFICIENT_RESOURCE` 或 `NOT_READY`。成功时 `affected()` 表示本次覆盖的烤串数量；取出成功时为 `1`。
+
+自动化兼容应直接调用本接口，不建议伪造玩家右键。伪玩家路径会额外触发手部动画、聊天提示或成就，而且某些机械只检测物品数量变化，不能可靠识别油壶存量和调料耐久变化。
 
 ## 热属性 API
 
@@ -387,8 +440,8 @@ level.getCapability(Capabilities.FluidHandler.BLOCK, pos, side);
 6. 自定义熟串必须先注册实际物品，再在数据或代码中返回它。
 7. 为 Forge 与 NeoForge 分别放置正确目录形式的物品标签。
 8. 使用 `/reload` 测试数据包更新，并检查日志中的 JSON 解析和未知物品 ID 报错。
-9. 正式版发布前逐项执行 [1.0 发布前完整审核清单](.breezeth/森罗物语：烟火%20-%201.0发布前完整审核清单.md)，未全部通过不得导出正式构建。
+9. 发布前同时执行 Forge 与 NeoForge 的 `build` 任务，并在干净客户端核查资源重载、Jade、JEI 和存档迁移。
 
 ## 稳定性说明
 
-上述类和数据入口是计划保留的公开兼容面。当前项目仍处于 v0.4 开发阶段；发布前若必须调整签名，应同步更新本文并在版本说明中标记破坏性变更。第三方模组不应调用未在本文列出的内部类或直接读写本模组私有 NBT/数据组件键。
+上述类和数据入口是计划保留的公开兼容面。当前接口文档对应 v0.8；发布前若必须调整签名，应同步更新本文并在版本说明中标记破坏性变更。第三方模组不应调用未在本文列出的内部类或直接读写本模组私有 NBT/数据组件键。
