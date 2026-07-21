@@ -3,10 +3,13 @@ package cn.breezeth.kaleidoscope_grilling;
 import java.util.List;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -77,10 +80,24 @@ final class SeasoningJeiCategory implements IRecipeCategory<GrillingJeiRecipes.S
     builder.addOutputSlot(196, 20).setSlotName("result").addItemStack(recipe.result());
   }
 
+  @Override
+  public void draw(
+      GrillingJeiRecipes.Seasoning recipe,
+      IRecipeSlotsView recipeSlotsView,
+      GuiGraphics graphics,
+      double mouseX,
+      double mouseY) {
+    Component label = Component.translatable("jei.kaleidoscope_grilling.seasoning.optional");
+    var font = Minecraft.getInstance().font;
+    graphics.drawString(font, label, 46 - font.width(label) / 2, 64, 0xFF777777, false);
+  }
+
   private static List<ItemStack> rotated(List<ItemStack> choices, int offset) {
     if (choices.isEmpty()) return choices;
-    return java.util.stream.IntStream.range(0, choices.size())
-        .mapToObj(index -> choices.get((index + offset) % choices.size()))
+    List<ItemStack> choicesWithBlank = new java.util.ArrayList<>(choices);
+    choicesWithBlank.add(null);
+    return java.util.stream.IntStream.range(0, choicesWithBlank.size())
+        .mapToObj(index -> choicesWithBlank.get((index + offset) % choicesWithBlank.size()))
         .toList();
   }
 }
