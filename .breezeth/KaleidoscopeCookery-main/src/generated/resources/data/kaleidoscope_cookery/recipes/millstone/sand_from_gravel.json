@@ -1,9 +1,0 @@
-{
-  "type": "kaleidoscope_cookery:millstone",
-  "ingredient": {
-    "tag": "forge:gravel"
-  },
-  "result": {
-    "item": "minecraft:sand"
-  }
-}

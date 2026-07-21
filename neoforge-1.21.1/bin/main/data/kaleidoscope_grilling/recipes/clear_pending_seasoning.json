@@ -1,6 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [{ "item": "kaleidoscope_grilling:pending_seasoning" }],
-  "result": { "item": "kaleidoscope_grilling:empty_seasoning_bottle", "count": 1 }
-}

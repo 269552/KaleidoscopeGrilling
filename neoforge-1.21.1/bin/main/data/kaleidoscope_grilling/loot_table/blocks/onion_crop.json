@@ -1,1 +1,0 @@
-{"type":"minecraft:block","pools":[{"rolls":1,"entries":[{"type":"minecraft:item","name":"kaleidoscope_grilling:onion_seeds"}]},{"rolls":1,"conditions":[{"condition":"minecraft:block_state_property","block":"kaleidoscope_grilling:onion_crop","properties":{"age":"3"}}],"entries":[{"type":"minecraft:item","name":"kaleidoscope_grilling:onion"}]}]}
