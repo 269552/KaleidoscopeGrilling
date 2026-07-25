@@ -35,6 +35,10 @@ public final class ClientSetup {
       ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "skewer_hot");
   private static final ResourceLocation SKEWER_COOKING_STAGE =
       ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "skewer_cooking_stage");
+  private static final ResourceLocation SLIME_SKEWER_FRAME =
+      ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "slime_skewer_frame");
+  private static final ResourceLocation FAILED_SKEWER_SOURCE =
+      ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "failed_skewer_source");
   private static final ResourceLocation OIL_TYPE =
       ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "oil_type");
   private static final ResourceLocation OIL_BRUSHING =
@@ -62,8 +66,27 @@ public final class ClientSetup {
               ModBlockEntities.SKEWER_PLATE.get(), SkewerPlateRenderer::new);
           register(ModItems.UNFINISHED_SKEWER.get());
           register(ModItems.SECRET_SKEWER.get());
+          register(ModItems.MYSTERIOUS_SKEWER.get());
+          register(ModItems.DARK_GRILLING.get());
           ModItems.RAW_SKEWERS.forEach(item -> registerFixed(item.get()));
           ModItems.FIXED_SKEWERS.forEach(item -> registerFixed(item.get()));
+          Item cookedSlimeSkewer =
+              net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
+                  ResourceLocation.fromNamespaceAndPath(
+                      KaleidoscopeGrilling.MOD_ID, "grilled_slime_skewer"));
+          ItemProperties.register(
+              cookedSlimeSkewer,
+              SLIME_SKEWER_FRAME,
+              (stack, level, entity, seed) ->
+                  level == null ? 0.0F : (level.getGameTime() / 4L % 5L) / 4.0F);
+          ItemProperties.register(
+              ModItems.MYSTERIOUS_SKEWER.get(),
+              FAILED_SKEWER_SOURCE,
+              (stack, level, entity, seed) -> FailedSkewerData.modelValue(stack));
+          ItemProperties.register(
+              ModItems.DARK_GRILLING.get(),
+              FAILED_SKEWER_SOURCE,
+              (stack, level, entity, seed) -> FailedSkewerData.modelValue(stack));
           Item oilPot =
               net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
                   ResourceLocation.fromNamespaceAndPath("kaleidoscope_cookery", "oil_pot"));

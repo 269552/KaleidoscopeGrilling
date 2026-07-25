@@ -87,9 +87,10 @@ public abstract class HumanoidAnvilPressMixin<T extends LivingEntity> {
     if (!player.hasEffect(ModEffects.NUMB.get())) return;
     float movement = Mth.clamp(walkSpeed * 1.8F, 0.0F, 1.0F);
     if (movement < 0.04F) return;
-    float armWave = Mth.cos(walkPosition * 0.32F);
-    float armCrossWave = Mth.sin(walkPosition * 0.32F);
-    float legWave = Mth.cos(walkPosition * 0.32F);
+    float phase = age * 0.32F;
+    float armWave = Mth.cos(phase);
+    float armCrossWave = Mth.sin(phase);
+    float legWave = Mth.cos(phase);
     rightArm.xRot = armWave * 3.1F * movement;
     leftArm.xRot = -armWave * 3.1F * movement;
     rightArm.zRot = armCrossWave * 0.75F * movement;

@@ -11,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public final class KnifeDropHandler {
   private static final TagKey<Item> KNIVES =
@@ -22,8 +23,21 @@ public final class KnifeDropHandler {
     if (!weapon.is(KNIVES)) return;
     int looting = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MOB_LOOTING, weapon);
     if (event.getEntity().getType() == EntityType.CHICKEN) {
-      drop(event, ModItems.CHICKEN_SKIN.get(), 1 + randomBonus(player, looting), 0.5F);
-      drop(event, ModItems.CHICKEN_WING.get(), 1 + randomBonus(player, looting), 0.5F);
+      drop(
+          event,
+          ModItems.CHICKEN_WING.get(),
+          1 + player.getRandom().nextInt(2) + randomBonus(player, looting),
+          1.0F);
+    } else if (event.getEntity().getType() == EntityType.COW) {
+      Item rawOffal =
+          ForgeRegistries.ITEMS.getValue(
+              new ResourceLocation("kaleidoscope_cookery", "raw_cow_offal"));
+      if (rawOffal != null)
+        drop(
+            event,
+            rawOffal,
+            1 + player.getRandom().nextInt(2) + randomBonus(player, looting),
+            1.0F);
     } else if (event.getEntity().getType() == EntityType.SQUID) {
       drop(
           event,

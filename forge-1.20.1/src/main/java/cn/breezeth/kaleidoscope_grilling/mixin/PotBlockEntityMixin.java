@@ -1,6 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
 import cn.breezeth.kaleidoscope_grilling.*;
+import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.PotBlockEntity;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.nbt.CompoundTag;
@@ -16,9 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(
-    targets = "com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.PotBlockEntity",
-    remap = false)
+@Mixin(PotBlockEntity.class)
 public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAccess, PotHudAccess {
   @Shadow private ItemStack result;
   @Shadow private net.minecraft.core.NonNullList<ItemStack> inputs;
@@ -61,10 +60,11 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
     return hasHeatSource(level);
   }
 
-  @Inject(method = "addIngredient", at = @At("HEAD"), cancellable = true)
+  @Inject(method = "addIngredient", at = @At("HEAD"), cancellable = true, remap = false)
   private void grilling$acceptSeasoning(
       Level level, LivingEntity user, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
     if (!stack.is(ModItems.SPECIAL_SEASONING.get())) return;
+    if (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()) return;
     if (user instanceof Player player) SeasoningAnimation.start(player);
     grilling$setSeasoning(SeasoningData.get(stack));
     if (!(user instanceof Player player) || !player.getAbilities().instabuild) {
@@ -80,7 +80,7 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
     cir.setReturnValue(true);
   }
 
-  @Inject(method = "onPlaceOil", at = @At("HEAD"))
+  @Inject(method = "onPlaceOil", at = @At("HEAD"), remap = false)
   private void grilling$captureOilBeforeConsumption(
       Level level, LivingEntity entity, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
     String stored = OilPotCompat.getType(stack);
@@ -93,7 +93,7 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
     else grilling$pendingOilType = "default";
   }
 
-  @Inject(method = "onPlaceOil", at = @At("RETURN"))
+  @Inject(method = "onPlaceOil", at = @At("RETURN"), remap = false)
   private void grilling$captureOilType(
       Level level, LivingEntity entity, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
     if (cir.getReturnValueZ()) {
@@ -102,8 +102,9 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
     grilling$pendingOilType = "default";
   }
 
-  @Inject(method = "startCooking", at = @At("TAIL"))
+  @Inject(method = "startCooking", at = @At("TAIL"), remap = false)
   private void grilling$seasonResult(Level level, CallbackInfo ci) {
+    if (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()) return;
     if (!grilling$seasoning.isEmpty() && !result.isEmpty()) {
       SeasoningData.set(result, grilling$seasoning);
     }
@@ -118,9 +119,10 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
     }
   }
 
-  @Inject(method = "takeOutProduct", at = @At("HEAD"))
+  @Inject(method = "takeOutProduct", at = @At("HEAD"), remap = false)
   private void grilling$applyHotOnTakeout(
       Level level, LivingEntity user, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+    if (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()) return;
     if (!result.isEmpty()) {
       int seconds =
           switch (grilling$oilType) {
@@ -133,7 +135,7 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
     }
   }
 
-  @Inject(method = "reset", at = @At("TAIL"))
+  @Inject(method = "reset", at = @At("TAIL"), remap = false)
   private void grilling$reset(CallbackInfo ci) {
     grilling$seasoning.clear();
     grilling$oilType = "";

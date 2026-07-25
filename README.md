@@ -11,7 +11,7 @@ Kaleidoscope Grilling is an expansion for Kaleidoscope Cookery focused on grilli
 | 1.20.1 | Forge 47.4.0+ | 17 | 1.4.1+ |
 | 1.21.1 | NeoForge 21.1+ | 21 | 1.4.1+ |
 
-当前开发版本：`0.8.0`。
+当前开发版本：`0.9.9b`。
 
 ## 主要内容
 
@@ -22,8 +22,6 @@ Kaleidoscope Grilling is an expansion for Kaleidoscope Cookery focused on grilli
 - 折耳根、红薯、油菜、洋葱和花椒等食材及联动料理。
 - 签谱、烤串餐盘、高级厨具架、Jade 信息和 JEI 烹饪配方展示。
 - 面向其他模组的烧烤架、串类、热食、榨油容器和厨具架兼容接口。
-
-更完整的中英文介绍见 [模组描述](docs/MOD_DESCRIPTION.md)，玩法与数值设计见 [设计文档](docs/DESIGN.md)。
 
 ## 构建
 
@@ -49,7 +47,6 @@ Set-Location forge-1.20.1
 - `common/`：两版共用的数据包、语言、模型、贴图和音效资源。
 - `forge-1.20.1/`：Forge 1.20.1 源码与构建配置。
 - `neoforge-1.21.1/`：NeoForge 1.21.1 源码与构建配置。
-- `docs/`：公开设计、资源和发布描述文档。
 - `COMPATIBILITY.md`：第三方模组兼容开发指南。
 
 ## 自动化兼容

@@ -3,6 +3,7 @@ package cn.breezeth.kaleidoscope_grilling.mixin;
 import cn.breezeth.kaleidoscope_grilling.OilPotCompat;
 import cn.breezeth.kaleidoscope_grilling.OilPotVisualState;
 import cn.breezeth.kaleidoscope_grilling.TypedOilPotAccess;
+import com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.OilPotBlock;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -25,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(targets = "com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.OilPotBlock", remap = false)
+@Mixin(OilPotBlock.class)
 public abstract class OilPotBlockMixin {
   @Inject(method = "use", at = @At("HEAD"), cancellable = true)
   private void grilling$blockWrongOilExtraction(

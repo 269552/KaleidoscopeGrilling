@@ -3,10 +3,13 @@ package cn.breezeth.kaleidoscope_grilling;
 import java.util.List;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -56,7 +59,7 @@ final class ThreadingJeiCategory
 
   @Override
   public int getHeight() {
-    return 110;
+    return 134;
   }
 
   @Override
@@ -72,5 +75,25 @@ final class ThreadingJeiCategory
           .addItemStacks(ingredients.get(i));
     builder.addInputSlot(8, 87).setSlotName("stick").addItemStack(new ItemStack(Items.STICK));
     builder.addOutputSlot(123, 57).setSlotName("result").addItemStack(recipe.result());
+  }
+
+  @Override
+  public void draw(
+      GrillingJeiRecipes.Threading recipe,
+      IRecipeSlotsView recipeSlotsView,
+      GuiGraphics graphics,
+      double mouseX,
+      double mouseY) {
+    drawThreadingHint(graphics);
+  }
+
+  static void drawThreadingHint(GuiGraphics graphics) {
+    var font = Minecraft.getInstance().font;
+    var lines =
+        font.split(Component.translatable("jei.kaleidoscope_grilling.threading.hint"), 143);
+    for (int i = 0; i < lines.size(); i++) {
+      var line = lines.get(i);
+      graphics.drawString(font, line, (147 - font.width(line)) / 2, 112 + i * 10, 0xFF777777, false);
+    }
   }
 }

@@ -31,7 +31,6 @@ public final class SkewerGuiIconCache {
   private static final int MAX_CUSTOM_ICONS = 64;
   private static final int FIXED_BAKES_PER_FRAME = 2;
   private static final int CUSTOM_BAKES_PER_FRAME = 1;
-  // JVM fallback switch: -Dkaleidoscope_grilling.disableGuiIconCache=true
   private static final boolean JVM_DISABLED =
       Boolean.getBoolean("kaleidoscope_grilling.disableGuiIconCache");
   private static final Map<String, ResourceLocation> FIXED_CACHE = new HashMap<>();
@@ -58,6 +57,12 @@ public final class SkewerGuiIconCache {
             || stack.is(ModItems.SECRET_SKEWER.get()) && SecretSkewerItem.isCooked(stack);
     boolean hot = cooked && minecraft.level != null && FoodState.isHot(stack, minecraft.level);
     String state = cooked ? hot ? "hot" : "cooked" : "raw";
+    if (cooked
+        && itemId != null
+        && "grilled_slime_skewer".equals(itemId.getPath())
+        && minecraft.level != null) {
+      state += "_frame_" + (minecraft.level.getGameTime() / 4L % 5L);
+    }
     int size = CACHE_SIZE;
     String key = custom ? customKey(minecraft, stack, itemId, state) : itemId + "/" + state;
     if (FAILED.contains(key)) return false;
@@ -162,13 +167,6 @@ public final class SkewerGuiIconCache {
       DynamicTexture texture = new DynamicTexture(outlined);
       texture.setFilter(true, false);
       minecraft.getTextureManager().register(textureId, texture);
-      LOGGER.info(
-          "Cached skewer GUI icon {} ({}, {}x{}, {} visible pixels)",
-          itemId,
-          state,
-          size,
-          size,
-          visiblePixels);
       return textureId;
     } catch (RuntimeException exception) {
       LOGGER.warn("Unable to cache skewer GUI icon {} ({})", itemId, state, exception);

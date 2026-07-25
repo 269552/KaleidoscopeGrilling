@@ -92,10 +92,15 @@ public final class PotHud {
     graphics.drawString(
         minecraft.font,
         Component.translatable(
-            "hud.kaleidoscope_grilling.pot.seasoning." + (seasoned ? "added" : "none")),
+            "hud.kaleidoscope_grilling.pot.seasoning."
+                + (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()
+                    ? "disabled"
+                    : seasoned ? "added" : "none")),
         x + 12,
         y + 90,
-        seasoned ? 0xFFE0A83B : 0xFF8D9697,
+        seasoned && HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()
+            ? 0xFFE0A83B
+            : 0xFF8D9697,
         false);
   }
 
@@ -124,10 +129,15 @@ public final class PotHud {
     if (pot.grilling$getStatus() >= 2)
       return Component.translatable(
           "hud.kaleidoscope_grilling.pot.state."
-              + (seasoning.grilling$getSeasoning().isEmpty() ? "take_or_season" : "take"));
+              + (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()
+                  || !seasoning.grilling$getSeasoning().isEmpty()
+                  ? "take"
+                  : "take_or_season"));
     if (pot.grilling$getStatus() == 1 || !seasoning.grilling$getSeasoning().isEmpty())
       return Component.translatable("hud.kaleidoscope_grilling.pot.state.stir");
-    return Component.translatable("hud.kaleidoscope_grilling.pot.state.stir_or_season");
+    return Component.translatable(
+        "hud.kaleidoscope_grilling.pot.state."
+            + (HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get() ? "stir_or_season" : "stir"));
   }
 
   private PotHud() {}

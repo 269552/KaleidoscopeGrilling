@@ -7,6 +7,7 @@ public final class HotFoodConfig {
   public static final ModConfigSpec.BooleanValue ENABLE_SMELTED_FOOD;
   public static final ModConfigSpec.IntValue SMELTED_FOOD_SECONDS;
   public static final ModConfigSpec.IntValue HOT_SATURATION_PERCENT;
+  public static final ModConfigSpec.BooleanValue ENABLE_COOKERY_HEAT_AND_SEASONING;
   public static final ModConfigSpec.BooleanValue ENABLE_SKEWER_GUI_CACHE;
 
   static {
@@ -15,7 +16,13 @@ public final class HotFoodConfig {
     ENABLE_SMELTED_FOOD =
         builder
             .comment("When enabled, edible furnace and smoker outputs become hot when taken out.")
-            .define("enableSmeltedFood", false);
+            .define("enableSmeltedFoodHeat", false);
+    ENABLE_COOKERY_HEAT_AND_SEASONING =
+        builder
+            .comment(
+                "Allow Kaleidoscope Cookery pots and stockpots to provide hot-food and special"
+                    + " seasoning effects.")
+            .define("enableCookeryFoodHeatAndSeasoning", true);
     SMELTED_FOOD_SECONDS =
         builder
             .comment("Hot duration in seconds for edible furnace and smoker outputs.")

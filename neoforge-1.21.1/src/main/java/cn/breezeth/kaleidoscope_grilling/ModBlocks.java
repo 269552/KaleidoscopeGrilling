@@ -28,7 +28,7 @@ public final class ModBlocks {
           "grill",
           () ->
               new GrillBlock(
-                  BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS)
+                  BlockBehaviour.Properties.ofLegacyCopy(Blocks.IRON_BARS)
                       .sound(COOKERY_POT_SOUND)
                       .strength(3.0F)
                       .lightLevel(s -> s.getValue(GrillBlock.LIT) ? 7 : 0)
@@ -87,7 +87,7 @@ public final class ModBlocks {
           "canola_crop",
           () ->
               new CanolaCropBlock(
-                  BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)
+                  BlockBehaviour.Properties.ofLegacyCopy(Blocks.WHEAT)
                       .noCollission()
                       .randomTicks()
                       .instabreak()
@@ -97,7 +97,7 @@ public final class ModBlocks {
           "onion_crop",
           () ->
               new OnionCropBlock(
-                  BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)
+                  BlockBehaviour.Properties.ofLegacyCopy(Blocks.WHEAT)
                       .noCollission()
                       .randomTicks()
                       .instabreak()
@@ -107,7 +107,7 @@ public final class ModBlocks {
           "sweet_potato_crop",
           () ->
               new SweetPotatoCropBlock(
-                  BlockBehaviour.Properties.ofFullCopy(Blocks.BEETROOTS)
+                  BlockBehaviour.Properties.ofLegacyCopy(Blocks.BEETROOTS)
                       .noCollission()
                       .randomTicks()
                       .instabreak()
@@ -117,7 +117,7 @@ public final class ModBlocks {
           "houttuynia_crop",
           () ->
               new HouttuyniaCropBlock(
-                  BlockBehaviour.Properties.ofFullCopy(Blocks.NETHER_WART)
+                  BlockBehaviour.Properties.ofLegacyCopy(Blocks.NETHER_WART)
                       .noCollission()
                       .randomTicks()
                       .instabreak()

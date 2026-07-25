@@ -1,9 +1,10 @@
 {
-  "parent": "kaleidoscope_grilling:item/skewer_states/state_38",
+  "parent": "kaleidoscope_grilling:item/fixed_skewers/pork_belly_skewer",
   "overrides": [
-    {
-      "predicate": { "kaleidoscope_grilling:skewer_gui": 1.0 },
-      "model": "kaleidoscope_grilling:item/fixed_skewer_gui/raw_pork_belly_skewer"
-    }
+    { "predicate": { "kaleidoscope_grilling:skewer_cooking_stage": 0.2 }, "model": "kaleidoscope_grilling:item/fixed_skewers/pork_belly_skewer_stage_1" },
+    { "predicate": { "kaleidoscope_grilling:skewer_cooking_stage": 0.4 }, "model": "kaleidoscope_grilling:item/fixed_skewers/pork_belly_skewer_stage_2" },
+    { "predicate": { "kaleidoscope_grilling:skewer_cooking_stage": 0.6 }, "model": "kaleidoscope_grilling:item/fixed_skewers/pork_belly_skewer_stage_3" },
+    { "predicate": { "kaleidoscope_grilling:skewer_cooking_stage": 0.8 }, "model": "kaleidoscope_grilling:item/fixed_skewers/pork_belly_skewer_cooked" },
+    { "predicate": { "kaleidoscope_grilling:skewer_cooking_stage": 1.0 }, "model": "kaleidoscope_grilling:item/fixed_skewers/pork_belly_skewer_burnt" }
   ]
 }

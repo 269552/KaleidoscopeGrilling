@@ -13,7 +13,7 @@ public final class SkewerRecipes {
       ResourceLocation rawResult, ResourceLocation cookedResult, List<List<String>> ingredients) {}
 
   private static List<Recipe> recipes() {
-    return GrillingDataManager.skewers().entrySet().stream()
+    return GrillingDataManager.skewersForDisplay().entrySet().stream()
         .filter(entry -> !entry.getValue().ingredients().isEmpty())
         .map(SkewerRecipes::recipe)
         .filter(java.util.Objects::nonNull)

@@ -13,7 +13,7 @@ public final class PepperLogBlock extends RotatedPillarBlock {
   }
 
   public static PepperLogBlock create() {
-    return new PepperLogBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG));
+    return new PepperLogBlock(BlockBehaviour.Properties.ofLegacyCopy(Blocks.OAK_LOG));
   }
 
   @Override

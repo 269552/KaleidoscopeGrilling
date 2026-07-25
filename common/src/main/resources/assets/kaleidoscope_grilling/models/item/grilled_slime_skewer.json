@@ -1,16 +1,9 @@
 {
-  "parent": "kaleidoscope_grilling:item/skewer_states/state_57",
+  "parent": "kaleidoscope_grilling:item/fixed_skewers/slime_skewer_0",
   "overrides": [
-    {
-      "predicate": { "kaleidoscope_grilling:skewer_gui": 1.0 },
-      "model": "kaleidoscope_grilling:item/fixed_skewer_gui/grilled_slime_skewer"
-    },
-    {
-      "predicate": {
-        "kaleidoscope_grilling:skewer_gui": 1.0,
-        "kaleidoscope_grilling:skewer_hot": 1.0
-      },
-      "model": "kaleidoscope_grilling:item/fixed_skewer_gui/grilled_slime_skewer_hot"
-    }
+    { "predicate": { "kaleidoscope_grilling:slime_skewer_frame": 0.2 }, "model": "kaleidoscope_grilling:item/fixed_skewers/slime_skewer_1" },
+    { "predicate": { "kaleidoscope_grilling:slime_skewer_frame": 0.4 }, "model": "kaleidoscope_grilling:item/fixed_skewers/slime_skewer_2" },
+    { "predicate": { "kaleidoscope_grilling:slime_skewer_frame": 0.6 }, "model": "kaleidoscope_grilling:item/fixed_skewers/slime_skewer_3" },
+    { "predicate": { "kaleidoscope_grilling:slime_skewer_frame": 0.8 }, "model": "kaleidoscope_grilling:item/fixed_skewers/slime_skewer_4" }
   ]
 }

@@ -22,32 +22,26 @@ public final class PepperTreeFeature extends Feature<NoneFeatureConfiguration> {
     BlockPos origin = context.origin();
     RandomSource random = context.random();
 
-    // 2-3 blocks tall
     int height = 2 + random.nextInt(2);
 
-    // Check space above
     for (int y = 0; y < height + 3; y++) {
       if (!level.getBlockState(origin.above(y)).isAir()
           && !level.getBlockState(origin.above(y)).canBeReplaced()) return false;
     }
 
-    // Check ground is dirt/grass
     BlockState ground = level.getBlockState(origin.below());
     if (!ground.is(BlockTags.DIRT)) return false;
 
-    // Place trunk
     BlockState log = ModBlocks.PEPPER_LOG.get().defaultBlockState();
     int trunkTop = height;
     for (int y = 0; y <= trunkTop; y++) {
       level.setBlock(origin.above(y), log, 3);
     }
 
-    // Place leaves canopy with correct distance to nearest log
     BlockPos.MutableBlockPos leafPos = new BlockPos.MutableBlockPos();
     int trunkMinY = origin.getY();
     int trunkMaxY = origin.getY() + trunkTop;
 
-    // Top layer: 3x3
     for (int dx = -1; dx <= 1; dx++) {
       for (int dz = -1; dz <= 1; dz++) {
         leafPos.set(origin.getX() + dx, origin.getY() + height, origin.getZ() + dz);
@@ -66,7 +60,6 @@ public final class PepperTreeFeature extends Feature<NoneFeatureConfiguration> {
       }
     }
 
-    // Raised crown: a complete leaf cross one block above the topmost log.
     int crownY = origin.getY() + trunkTop + 1;
     for (int[] offset : new int[][] {{0, 0}, {-1, 0}, {1, 0}, {0, -1}, {0, 1}}) {
       leafPos.set(origin.getX() + offset[0], crownY, origin.getZ() + offset[1]);
@@ -84,7 +77,6 @@ public final class PepperTreeFeature extends Feature<NoneFeatureConfiguration> {
       }
     }
 
-    // Second layer (1 block below top)
     int topY = origin.getY() + height - 1;
     for (int dx = -1; dx <= 1; dx++) {
       for (int dz = -1; dz <= 1; dz++) {
@@ -106,7 +98,6 @@ public final class PepperTreeFeature extends Feature<NoneFeatureConfiguration> {
       }
     }
 
-    // Bottom layer (2 blocks below top)
     int bottomY = origin.getY() + height - 2;
     if (bottomY > origin.getY()) {
       for (int d = -1; d <= 1; d += 2) {

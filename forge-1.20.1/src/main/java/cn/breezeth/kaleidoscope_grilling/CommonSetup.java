@@ -7,6 +7,7 @@ public final class CommonSetup {
   public static void onSetup(FMLCommonSetupEvent event) {
     event.enqueueWork(
         () -> {
+          GrillingNetwork.register();
           ComposterBlock.COMPOSTABLES.put(ModItems.CANOLA_SEEDS.get(), 0.30F);
           ComposterBlock.COMPOSTABLES.put(ModItems.ONION.get(), 0.65F);
           ComposterBlock.COMPOSTABLES.put(ModItems.SWEET_POTATO.get(), 0.65F);

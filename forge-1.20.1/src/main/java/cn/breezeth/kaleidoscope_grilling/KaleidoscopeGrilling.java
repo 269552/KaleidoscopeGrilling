@@ -2,6 +2,7 @@ package cn.breezeth.kaleidoscope_grilling;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -26,7 +27,8 @@ public final class KaleidoscopeGrilling {
     ModFluids.FLUIDS.register(modBus);
     ModCreativeTabs.TABS.register(modBus);
     modBus.addListener(CommonSetup::onSetup);
-    MinecraftForge.EVENT_BUS.addListener(SkeweringHandler::onRightClickItem);
+    MinecraftForge.EVENT_BUS.addListener(
+        EventPriority.HIGHEST, true, SkeweringHandler::onRightClickItem);
     MinecraftForge.EVENT_BUS.addListener(SkewerPlatePlacement::onRightClickBlock);
     MinecraftForge.EVENT_BUS.addListener(AdvancedSeasoningHandler::onDeath);
     MinecraftForge.EVENT_BUS.addListener(AdvancedSeasoningHandler::onLivingTick);
@@ -37,10 +39,12 @@ public final class KaleidoscopeGrilling {
     MinecraftForge.EVENT_BUS.addListener(KnifeDropHandler::onLivingDrops);
     MinecraftForge.EVENT_BUS.addListener(StrippingHandler::onBlockToolModification);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onTooltip);
+    MinecraftForge.EVENT_BUS.addListener(IngredientTooltipHandler::onTooltip);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onFinish);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onStart);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onStop);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onSmelted);
+    MinecraftForge.EVENT_BUS.addListener(HotFoodExpiryHandler::onPlayerTick);
     MinecraftForge.EVENT_BUS.addListener(DragonEggPowderHandler::onRightClickBlock);
     MinecraftForge.EVENT_BUS.addListener(RackCommand::register);
     MinecraftForge.EVENT_BUS.addListener(FortressHouttuyniaHandler::onLoad);

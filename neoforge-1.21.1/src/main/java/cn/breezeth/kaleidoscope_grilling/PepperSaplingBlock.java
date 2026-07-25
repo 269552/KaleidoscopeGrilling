@@ -32,7 +32,7 @@ public final class PepperSaplingBlock extends BushBlock implements BonemealableB
   }
 
   public static PepperSaplingBlock create() {
-    return new PepperSaplingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING));
+    return new PepperSaplingBlock(BlockBehaviour.Properties.ofLegacyCopy(Blocks.OAK_SAPLING));
   }
 
   @Override

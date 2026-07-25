@@ -48,6 +48,9 @@ public final class GrillingJeiPlugin implements IModPlugin {
     registration
         .getCraftingCategory()
         .addExtension(SkewerRecipeCraftingRecipe.class, new SkewerRecipeJeiExtension());
+    registration
+        .getCraftingCategory()
+        .addExtension(ColdHouttuyniaCraftingRecipe.class, new ColdHouttuyniaRecipeJeiExtension());
   }
 
   @Override

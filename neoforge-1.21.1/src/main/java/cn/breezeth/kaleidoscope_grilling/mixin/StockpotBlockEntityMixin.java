@@ -34,6 +34,7 @@ public abstract class StockpotBlockEntityMixin implements SeasonedPotAccess {
   private void grilling$acceptSeasoning(
       Level level, LivingEntity user, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
     if (!stack.is(ModItems.SPECIAL_SEASONING.get())) return;
+    if (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()) return;
     if (user instanceof Player player) SeasoningAnimation.start(player);
     grilling$seasoning = new ArrayList<>(SeasoningData.get(stack));
     if (user instanceof Player player && !player.getAbilities().instabuild) {
@@ -55,6 +56,7 @@ public abstract class StockpotBlockEntityMixin implements SeasonedPotAccess {
 
   @Inject(method = "setRecipe", at = @At("TAIL"))
   private void grilling$seasonResult(Level level, CallbackInfo ci) {
+    if (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()) return;
     if (!grilling$seasoning.isEmpty() && !result.isEmpty()) {
       SeasoningData.set(result, grilling$seasoning);
       HotFoodApi.makeHot(result, level, 60);
@@ -64,6 +66,7 @@ public abstract class StockpotBlockEntityMixin implements SeasonedPotAccess {
   @Inject(method = "takeOutProduct", at = @At("HEAD"))
   private void grilling$refreshHotOnTakeout(
       Level level, LivingEntity user, ItemStack carrier, CallbackInfoReturnable<Boolean> cir) {
+    if (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()) return;
     if (result != null && !result.isEmpty()) {
       HotFoodApi.makeHot(result, level, 60);
       if (!grilling$seasoning.isEmpty()) SeasoningData.set(result, grilling$seasoning);

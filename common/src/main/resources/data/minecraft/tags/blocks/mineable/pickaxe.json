@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "kaleidoscope_grilling:big_vat"
+    "kaleidoscope_grilling:big_vat",
+    "kaleidoscope_grilling:grill"
   ]
 }

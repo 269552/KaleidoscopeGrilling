@@ -10,10 +10,13 @@ import java.util.Optional;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -192,7 +195,6 @@ public final class SkewerRecipeBookItem extends Item {
 
     if (level.isClientSide) return InteractionResult.SUCCESS;
 
-    // Scan inventory for ingredients
     Map<Integer, Integer> consumption = new HashMap<>();
     for (int slot = 0; slot < ingredients.size(); slot++) {
       List<String> acceptable = ingredients.get(slot);
@@ -212,19 +214,10 @@ public final class SkewerRecipeBookItem extends Item {
         }
       }
       if (!found) {
-        // Build missing ingredient message
         StringBuilder missing = new StringBuilder();
         for (String acc : acceptable) {
-          if (acc.startsWith("#")) {
-            if (missing.length() > 0) missing.append("/");
-            missing.append(acc);
-            continue;
-          }
-          Item accItem = ForgeRegistries.ITEMS.getValue(new ResourceLocation(acc));
-          if (accItem != null) {
-            if (missing.length() > 0) missing.append("/");
-            missing.append(accItem.getDescription().getString());
-          }
+          if (missing.length() > 0) missing.append("/");
+          missing.append(displaySelector(acc));
         }
         player.displayClientMessage(
             Component.translatable(
@@ -234,7 +227,6 @@ public final class SkewerRecipeBookItem extends Item {
       }
     }
 
-    // All ingredients found, consume and produce
     if (!player.getAbilities().instabuild) {
       consumption.forEach((slot, count) -> player.getInventory().getItem(slot).shrink(count));
       stick.shrink(1);
@@ -258,6 +250,20 @@ public final class SkewerRecipeBookItem extends Item {
         0.7F,
         1.0F);
     return InteractionResult.SUCCESS;
+  }
+
+  private static String displaySelector(String selector) {
+    if (!selector.startsWith("#")) {
+      Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(selector));
+      return item == null ? selector : item.getDescription().getString();
+    }
+    ResourceLocation tagId = new ResourceLocation(selector.substring(1));
+    TagKey<Item> tag = TagKey.create(Registries.ITEM, tagId);
+    return BuiltInRegistries.ITEM
+        .getTag(tag)
+        .flatMap(values -> values.stream().findFirst())
+        .map(holder -> holder.value().getDescription().getString())
+        .orElse(selector);
   }
 
   @Override

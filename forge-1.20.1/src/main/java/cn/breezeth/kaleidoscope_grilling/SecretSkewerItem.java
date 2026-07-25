@@ -122,7 +122,6 @@ public final class SecretSkewerItem extends Item {
       minNutrition = Math.min(minNutrition, n);
       totalSaturation += fp.getSaturationModifier();
       count++;
-      // Check for duplicates
       for (int j = 0; j < i; j++) {
         if (ItemStack.isSameItemSameTags(ingredients.get(j), ingredient)) {
           hasDuplicate = true;

@@ -18,6 +18,7 @@ public final class RackKeyHandler {
           GLFW.GLFW_KEY_CAPS_LOCK,
           "key.categories.kaleidoscope_grilling");
   private static boolean held;
+  private static boolean capsHeld;
 
   @EventBusSubscriber(
       modid = KaleidoscopeGrilling.MOD_ID,
@@ -35,13 +36,22 @@ public final class RackKeyHandler {
     @SubscribeEvent
     public static void key(InputEvent.Key event) {
       if (!KEY.matches(event.getKey(), event.getScanCode())) return;
-      if (event.getAction() == GLFW.GLFW_PRESS) beginHold();
-      else if (event.getAction() == GLFW.GLFW_RELEASE) finishHold();
+      if (event.getAction() == GLFW.GLFW_PRESS) {
+        capsHeld = true;
+        beginHold();
+      } else if (event.getAction() == GLFW.GLFW_RELEASE) {
+        capsHeld = false;
+        finishHold();
+      }
     }
   }
 
   public static boolean isHeld() {
     return held;
+  }
+
+  public static boolean isCapsHeld() {
+    return capsHeld;
   }
 
   public static void finishHold() {

@@ -27,7 +27,7 @@ final class GrillingJeiRecipes {
 
   static List<Threading> fixedThreadingRecipes() {
     List<Threading> result = new ArrayList<>();
-    GrillingDataManager.skewers().entrySet().stream()
+    GrillingDataManager.skewersForDisplay().entrySet().stream()
         .filter(entry -> !entry.getValue().ingredients().isEmpty())
         .sorted(Map.Entry.comparingByKey())
         .map(GrillingJeiRecipes::threadingRecipe)
@@ -39,6 +39,12 @@ final class GrillingJeiRecipes {
 
   static List<Threading> secretThreadingRecipes() {
     List<ItemStack> choices = skewerableIngredients();
+    if (choices.isEmpty())
+      choices =
+          itemStacks(
+              "minecraft:apple",
+              "kaleidoscope_grilling:raw_mantou_slice",
+              "kaleidoscope_grilling:beef_chunks");
     if (choices.isEmpty()) return List.of();
     return List.of(
         new Threading(
@@ -113,6 +119,14 @@ final class GrillingJeiRecipes {
       result.add(stack);
     }
     return List.copyOf(result);
+  }
+
+  static ItemStack premiumChiliOilPot(int points) {
+    ResourceLocation id = new ResourceLocation("kaleidoscope_cookery", "oil_pot");
+    if (!BuiltInRegistries.ITEM.containsKey(id)) return ItemStack.EMPTY;
+    ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(id));
+    OilPotCompat.fill(stack, "premium_chili", points);
+    return stack;
   }
 
   static List<Seasoning> seasoningRecipes() {

@@ -1,0 +1,7 @@
+{
+    "parent":  "kaleidoscope_grilling:item/fixed_skewers/fried_egg_skewer",
+    "textures":  {
+                     "4":  "kaleidoscope_grilling:item/fixed_skewers/fried_egg_skewer_burnt",
+                     "particle":  "#4"
+                 }
+}

@@ -2,6 +2,7 @@ package cn.breezeth.kaleidoscope_grilling.mixin;
 
 import cn.breezeth.kaleidoscope_grilling.OilPotVisualState;
 import cn.breezeth.kaleidoscope_grilling.TypedOilPotAccess;
+import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.decoration.OilPotBlockEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,9 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(
-    targets = "com.github.ysbbbbbb.kaleidoscopecookery.blockentity.decoration.OilPotBlockEntity",
-    remap = false)
+@Mixin(OilPotBlockEntity.class)
 public abstract class OilPotBlockEntityMixin implements TypedOilPotAccess {
   @Unique private String grilling$oilType = "";
 
@@ -76,5 +75,18 @@ public abstract class OilPotBlockEntityMixin implements TypedOilPotAccess {
   @Inject(method = "load", at = @At("TAIL"))
   private void grilling$load(CompoundTag tag, CallbackInfo ci) {
     grilling$oilType = tag.getString("GrillingOilType");
+  }
+
+  @Inject(method = "load", at = @At("TAIL"))
+  private void grilling$capOilCountAfterLoad(CompoundTag tag, CallbackInfo ci) {
+    if (getOilCount() > 64) setOilCount(64);
+  }
+
+  @Inject(method = "setOilCount", at = @At("HEAD"), cancellable = true)
+  private void grilling$capSetOilCount(int count, CallbackInfo ci) {
+    if (count > 64) {
+      setOilCount(64);
+      ci.cancel();
+    }
   }
 }

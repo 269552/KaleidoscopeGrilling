@@ -19,6 +19,6 @@ public final class RawSweetPotatoSheetItem extends Item {
       ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
     tooltip.add(
         Component.translatable("tooltip.kaleidoscope_grilling.raw_sweet_potato_sheet")
-            .withStyle(ChatFormatting.GRAY));
+            .withStyle(ChatFormatting.DARK_GRAY));
   }
 }

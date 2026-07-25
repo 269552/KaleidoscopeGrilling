@@ -8,6 +8,7 @@ build/
 **/runs/
 .idea/
 .vscode/
+.eclipse/
 *.iml
 
 # Runtime and diagnostic output
@@ -26,7 +27,6 @@ replay_pid*.log
 # Local artifacts and development helpers
 *.jar
 .breezeth/
-.vscode/
 
 # Operating system files
 .DS_Store

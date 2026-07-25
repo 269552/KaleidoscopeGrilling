@@ -165,8 +165,8 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
       ItemStack output;
       if (phase == 0) output = input.copy();
       else if (phase == 2 && seasoned && !failed) output = cookedOutput(input);
-      else if (phase == 3) output = new ItemStack(ModItems.DARK_GRILLING.get());
-      else output = new ItemStack(ModItems.MYSTERIOUS_SKEWER.get());
+      else if (phase == 3) output = FailedSkewerData.create(input, ModItems.DARK_GRILLING.get());
+      else output = FailedSkewerData.create(input, ModItems.MYSTERIOUS_SKEWER.get());
       Block.popResource(level, worldPosition, output);
     }
     items = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY);
@@ -176,8 +176,8 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
 
   private ItemStack cookedOutput(ItemStack input) {
     ItemStack output;
-    if (phase == 3) output = new ItemStack(ModItems.DARK_GRILLING.get());
-    else if (failed) output = new ItemStack(ModItems.MYSTERIOUS_SKEWER.get());
+    if (phase == 3) output = FailedSkewerData.create(input, ModItems.DARK_GRILLING.get());
+    else if (failed) output = FailedSkewerData.create(input, ModItems.MYSTERIOUS_SKEWER.get());
     else if (input.is(ModItems.SECRET_SKEWER.get())) {
       output = input.copy();
       CustomData data = input.get(DataComponents.CUSTOM_DATA);
@@ -187,7 +187,7 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
       if (level != null) FoodState.setHot(output, level.getGameTime() + heatDurationTicks);
     } else {
       output = SkewerRecipes.cookedResult(input);
-      if (output.isEmpty()) output = new ItemStack(ModItems.MYSTERIOUS_SKEWER.get());
+      if (output.isEmpty()) return FailedSkewerData.create(input, ModItems.MYSTERIOUS_SKEWER.get());
       CustomData data = input.get(DataComponents.CUSTOM_DATA);
       if (data != null) output.set(DataComponents.CUSTOM_DATA, data);
       SeasoningData.set(output, seasoningIngredients);

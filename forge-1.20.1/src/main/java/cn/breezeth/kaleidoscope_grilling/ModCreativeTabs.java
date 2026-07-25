@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -57,8 +58,8 @@ public final class ModCreativeTabs {
     // All raw fixed recipes precede their cooked results.
     ModItems.RAW_SKEWERS.forEach(item -> add(output, added, item));
     ModItems.FIXED_SKEWERS.forEach(item -> add(output, added, item));
-    add(output, added, ModItems.MYSTERIOUS_SKEWER);
-    add(output, added, ModItems.DARK_GRILLING);
+    add(output, added, customMysteriousSkewer());
+    add(output, added, failedSkewer(ModItems.DARK_GRILLING.get(), 0));
 
     // Remaining registered content keeps a stable registration order.
     Item unfinished = ModItems.UNFINISHED_SKEWER.get();
@@ -89,6 +90,23 @@ public final class ModCreativeTabs {
 
   private static void add(CreativeModeTab.Output output, Set<Item> added, ItemStack stack) {
     if (!stack.isEmpty() && added.add(stack.getItem())) output.accept(stack);
+  }
+
+  private static ItemStack failedSkewer(Item failedResult, int sourceIndex) {
+    ItemStack stack = new ItemStack(failedResult);
+    FailedSkewerData.setCreativeSource(stack, ModItems.RAW_SKEWERS.get(sourceIndex).get());
+    return stack;
+  }
+
+  private static ItemStack customMysteriousSkewer() {
+    ItemStack custom =
+        SkeweringHandler.jeiSecretSkewer(
+            List.of(
+                new ItemStack(Items.APPLE),
+                new ItemStack(ModItems.BEEF_CHUNKS.get()),
+                new ItemStack(Items.BROWN_MUSHROOM)),
+            true);
+    return FailedSkewerData.create(custom, ModItems.MYSTERIOUS_SKEWER.get());
   }
 
   private static ItemStack fullOilPot(String type) {

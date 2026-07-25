@@ -1,6 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling;
 
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
@@ -25,7 +26,8 @@ public final class KaleidoscopeGrilling {
     ModCreativeTabs.TABS.register(modBus);
     modBus.addListener(CommonSetup::onSetup);
     modBus.addListener(BigVatCapabilities::register);
-    NeoForge.EVENT_BUS.addListener(SkeweringHandler::onRightClickItem);
+    NeoForge.EVENT_BUS.addListener(
+        EventPriority.HIGHEST, true, SkeweringHandler::onRightClickItem);
     NeoForge.EVENT_BUS.addListener(SkewerPlatePlacement::onRightClickBlock);
     NeoForge.EVENT_BUS.addListener(AdvancedSeasoningHandler::onDeath);
     NeoForge.EVENT_BUS.addListener(AdvancedSeasoningHandler::onEntityTick);
@@ -36,10 +38,12 @@ public final class KaleidoscopeGrilling {
     NeoForge.EVENT_BUS.addListener(KnifeDropHandler::onLivingDrops);
     NeoForge.EVENT_BUS.addListener(StrippingHandler::onBlockToolModification);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onTooltip);
+    NeoForge.EVENT_BUS.addListener(IngredientTooltipHandler::onTooltip);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onFinish);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onStart);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onStop);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onSmelted);
+    NeoForge.EVENT_BUS.addListener(HotFoodExpiryHandler::onPlayerTick);
     NeoForge.EVENT_BUS.addListener(DragonEggPowderHandler::onRightClickBlock);
     NeoForge.EVENT_BUS.addListener(RackCommand::register);
     NeoForge.EVENT_BUS.addListener(FortressHouttuyniaHandler::onLoad);

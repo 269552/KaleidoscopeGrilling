@@ -22,7 +22,7 @@ public abstract class PlayerAnvilPressMixin implements AnvilPressAnimationAccess
 
   @Override
   public void grilling$startAnvilPress() {
-    grilling$anvilPressStart = player().level().getGameTime();
+    grilling$anvilPressStart = player().tickCount;
   }
 
   @Override
@@ -32,7 +32,7 @@ public abstract class PlayerAnvilPressMixin implements AnvilPressAnimationAccess
 
   @Override
   public void grilling$startSeasoning() {
-    grilling$seasoningStart = player().level().getGameTime();
+    grilling$seasoningStart = player().tickCount;
   }
 
   @Override
@@ -42,7 +42,7 @@ public abstract class PlayerAnvilPressMixin implements AnvilPressAnimationAccess
 
   @Override
   public void grilling$startOilBrush(InteractionHand hand, int brushType) {
-    grilling$oilBrushStart = player().level().getGameTime();
+    grilling$oilBrushStart = player().tickCount;
     grilling$oilBrushHand = hand;
     grilling$oilBrushType = brushType;
   }
@@ -69,7 +69,7 @@ public abstract class PlayerAnvilPressMixin implements AnvilPressAnimationAccess
 
   @Unique
   private float progress(long start, int duration, float partialTick) {
-    float elapsed = player().level().getGameTime() + partialTick - start;
+    float elapsed = player().tickCount + partialTick - start;
     return elapsed < 0 || elapsed >= duration ? -1.0F : elapsed / duration;
   }
 

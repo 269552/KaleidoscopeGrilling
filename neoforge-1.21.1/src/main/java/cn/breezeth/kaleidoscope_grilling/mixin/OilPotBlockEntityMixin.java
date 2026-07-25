@@ -76,4 +76,17 @@ public abstract class OilPotBlockEntityMixin implements TypedOilPotAccess {
   private void grilling$load(CompoundTag tag, HolderLookup.Provider provider, CallbackInfo ci) {
     grilling$oilType = tag.getString("GrillingOilType");
   }
+
+  @Inject(method = "loadAdditional", at = @At("TAIL"))
+  private void grilling$capOilCountAfterLoad(CompoundTag tag, HolderLookup.Provider provider, CallbackInfo ci) {
+    if (getOilCount() > 64) setOilCount(64);
+  }
+
+  @Inject(method = "setOilCount", at = @At("HEAD"), cancellable = true)
+  private void grilling$capSetOilCount(int count, CallbackInfo ci) {
+    if (count > 64) {
+      setOilCount(64);
+      ci.cancel();
+    }
+  }
 }

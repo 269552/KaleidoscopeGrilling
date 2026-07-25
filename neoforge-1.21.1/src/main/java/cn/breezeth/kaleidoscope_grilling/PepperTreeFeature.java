@@ -42,7 +42,6 @@ public final class PepperTreeFeature extends Feature<NoneFeatureConfiguration> {
     int trunkMinY = origin.getY();
     int trunkMaxY = origin.getY() + trunkTop;
 
-    // Top layer: 3x3
     for (int dx = -1; dx <= 1; dx++) {
       for (int dz = -1; dz <= 1; dz++) {
         leafPos.set(origin.getX() + dx, origin.getY() + height, origin.getZ() + dz);
@@ -61,7 +60,6 @@ public final class PepperTreeFeature extends Feature<NoneFeatureConfiguration> {
       }
     }
 
-    // Raised crown: a complete leaf cross one block above the topmost log.
     int crownY = origin.getY() + trunkTop + 1;
     for (int[] offset : new int[][] {{0, 0}, {-1, 0}, {1, 0}, {0, -1}, {0, 1}}) {
       leafPos.set(origin.getX() + offset[0], crownY, origin.getZ() + offset[1]);

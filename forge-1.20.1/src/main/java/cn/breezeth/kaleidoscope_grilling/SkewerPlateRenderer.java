@@ -40,6 +40,8 @@ public final class SkewerPlateRenderer implements BlockEntityRenderer<SkewerPlat
       pose.pushPose();
       pose.translate(slot[0] / 16F, slot[1] / 16F, slot[2] / 16F);
       pose.mulPose(Axis.YP.rotationDegrees(slot[3]));
+      // Fixed item models already contain a Z -180 display rotation; cancel it on plates.
+      pose.mulPose(Axis.ZP.rotationDegrees(180F));
       pose.mulPose(Axis.XP.rotationDegrees(90F));
       if (stack.is(ModItems.SECRET_SKEWER.get())) pose.scale(2F / 3F, 2F / 3F, 2F / 3F);
       Minecraft.getInstance()

@@ -1,6 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
@@ -28,8 +29,22 @@ public final class KnifeDropHandler {
                 .lookupOrThrow(Registries.ENCHANTMENT)
                 .getOrThrow(net.minecraft.world.item.enchantment.Enchantments.LOOTING));
     if (event.getEntity().getType() == EntityType.CHICKEN) {
-      drop(event, ModItems.CHICKEN_SKIN.get(), 1 + randomBonus(player, looting), 0.5F);
-      drop(event, ModItems.CHICKEN_WING.get(), 1 + randomBonus(player, looting), 0.5F);
+      drop(
+          event,
+          ModItems.CHICKEN_WING.get(),
+          1 + player.getRandom().nextInt(2) + randomBonus(player, looting),
+          1.0F);
+    } else if (event.getEntity().getType() == EntityType.COW) {
+      Item rawOffal =
+          BuiltInRegistries.ITEM.get(
+              ResourceLocation.fromNamespaceAndPath(
+                  "kaleidoscope_cookery", "raw_cow_offal"));
+      if (rawOffal != null)
+        drop(
+            event,
+            rawOffal,
+            1 + player.getRandom().nextInt(2) + randomBonus(player, looting),
+            1.0F);
     } else if (event.getEntity().getType() == EntityType.SQUID) {
       drop(
           event,

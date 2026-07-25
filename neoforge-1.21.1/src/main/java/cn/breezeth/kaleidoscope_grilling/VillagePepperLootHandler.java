@@ -30,6 +30,14 @@ public final class VillagePepperLootHandler {
                         .apply(
                             SetItemCountFunction.setCount(UniformGenerator.between(3.0F, 10.0F))))
                 .build());
+    event
+        .getTable()
+        .addPool(
+            LootPool.lootPool()
+                .setRolls(ConstantValue.exactly(1.0F))
+                .when(LootItemRandomChanceCondition.randomChance(0.2F))
+                .add(LootItem.lootTableItem(ModBlocks.PEPPER_SAPLING_ITEM.get()))
+                .build());
   }
 
   private VillagePepperLootHandler() {}

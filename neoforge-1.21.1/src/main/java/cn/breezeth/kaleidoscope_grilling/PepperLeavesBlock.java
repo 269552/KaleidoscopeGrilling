@@ -37,7 +37,7 @@ public final class PepperLeavesBlock extends LeavesBlock {
 
   public static PepperLeavesBlock create() {
     return new PepperLeavesBlock(
-        BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES).randomTicks());
+        BlockBehaviour.Properties.ofLegacyCopy(Blocks.OAK_LEAVES).randomTicks());
   }
 
   @Override
@@ -70,7 +70,7 @@ public final class PepperLeavesBlock extends LeavesBlock {
     if (state.getValue(HAS_PEPPER)) {
       if (!level.isClientSide) {
         popResource(
-            level, pos, new ItemStack(ModItems.SICHUAN_PEPPER.get(), 1 + level.random.nextInt(3)));
+            level, pos, new ItemStack(ModItems.SICHUAN_PEPPER.get(), 1 + level.random.nextInt(2)));
         ModAdvancements.pepperPicked(player);
         level.setBlock(pos, state.setValue(HAS_PEPPER, false), 3);
         level.playSound(

@@ -1,9 +1,10 @@
 {
-  "parent": "kaleidoscope_grilling:item/skewer_states/state_30",
+  "parent": "kaleidoscope_grilling:item/fixed_skewers/meat_and_bone_skewer",
   "overrides": [
-    {
-      "predicate": { "kaleidoscope_grilling:skewer_gui": 1.0 },
-      "model": "kaleidoscope_grilling:item/fixed_skewer_gui/raw_meat_and_bone_skewer"
-    }
+    { "predicate": { "kaleidoscope_grilling:skewer_cooking_stage": 0.2 }, "model": "kaleidoscope_grilling:item/fixed_skewers/meat_and_bone_skewer_stage_1" },
+    { "predicate": { "kaleidoscope_grilling:skewer_cooking_stage": 0.4 }, "model": "kaleidoscope_grilling:item/fixed_skewers/meat_and_bone_skewer_stage_2" },
+    { "predicate": { "kaleidoscope_grilling:skewer_cooking_stage": 0.6 }, "model": "kaleidoscope_grilling:item/fixed_skewers/meat_and_bone_skewer_stage_3" },
+    { "predicate": { "kaleidoscope_grilling:skewer_cooking_stage": 0.8 }, "model": "kaleidoscope_grilling:item/fixed_skewers/meat_and_bone_skewer_cooked" },
+    { "predicate": { "kaleidoscope_grilling:skewer_cooking_stage": 1.0 }, "model": "kaleidoscope_grilling:item/fixed_skewers/meat_and_bone_skewer_burnt" }
   ]
 }

@@ -30,6 +30,15 @@ public abstract class StockpotBlockUseMixin {
     if (hand != InteractionHand.MAIN_HAND || !held.is(ModItems.SPECIAL_SEASONING.get())) return;
     BlockEntity blockEntity = level.getBlockEntity(pos);
     if (!(blockEntity instanceof SeasonedPotAccess seasoned)) return;
+    if (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()) {
+      if (!level.isClientSide)
+        player.displayClientMessage(
+            net.minecraft.network.chat.Component.translatable(
+                "message.kaleidoscope_grilling.cookery_integration_disabled"),
+            true);
+      cir.setReturnValue(ItemInteractionResult.SUCCESS);
+      return;
+    }
     if (!level.isClientSide) SeasoningUse.apply(player, hand, held, seasoned);
     cir.setReturnValue(ItemInteractionResult.SUCCESS);
   }

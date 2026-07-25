@@ -1,6 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
 import cn.breezeth.kaleidoscope_grilling.*;
+import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.StockpotBlockEntity;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.nbt.CompoundTag;
@@ -14,9 +15,7 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(
-    targets = "com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.StockpotBlockEntity",
-    remap = false)
+@Mixin(StockpotBlockEntity.class)
 public abstract class StockpotBlockEntityMixin implements SeasonedPotAccess {
   @Shadow private ItemStack result;
   @Unique private List<String> grilling$seasoning = new ArrayList<>();
@@ -31,10 +30,11 @@ public abstract class StockpotBlockEntityMixin implements SeasonedPotAccess {
     return List.copyOf(grilling$seasoning);
   }
 
-  @Inject(method = "addIngredient", at = @At("HEAD"), cancellable = true)
+  @Inject(method = "addIngredient", at = @At("HEAD"), cancellable = true, remap = false)
   private void grilling$acceptSeasoning(
       Level level, LivingEntity user, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
     if (!stack.is(ModItems.SPECIAL_SEASONING.get())) return;
+    if (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()) return;
     if (user instanceof Player player) SeasoningAnimation.start(player);
     grilling$seasoning = new ArrayList<>(SeasoningData.get(stack));
     if (user instanceof Player player && !player.getAbilities().instabuild) {
@@ -54,17 +54,19 @@ public abstract class StockpotBlockEntityMixin implements SeasonedPotAccess {
     cir.setReturnValue(true);
   }
 
-  @Inject(method = "setRecipe", at = @At("TAIL"))
+  @Inject(method = "setRecipe", at = @At("TAIL"), remap = false)
   private void grilling$seasonResult(Level level, CallbackInfo ci) {
+    if (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()) return;
     if (!grilling$seasoning.isEmpty() && !result.isEmpty()) {
       SeasoningData.set(result, grilling$seasoning);
       HotFoodApi.makeHot(result, level, 60);
     }
   }
 
-  @Inject(method = "takeOutProduct", at = @At("HEAD"))
+  @Inject(method = "takeOutProduct", at = @At("HEAD"), remap = false)
   private void grilling$refreshHotOnTakeout(
       Level level, LivingEntity user, ItemStack carrier, CallbackInfoReturnable<Boolean> cir) {
+    if (!HotFoodConfig.ENABLE_COOKERY_HEAT_AND_SEASONING.get()) return;
     if (result != null && !result.isEmpty()) {
       HotFoodApi.makeHot(result, level, 60);
       if (!grilling$seasoning.isEmpty()) SeasoningData.set(result, grilling$seasoning);

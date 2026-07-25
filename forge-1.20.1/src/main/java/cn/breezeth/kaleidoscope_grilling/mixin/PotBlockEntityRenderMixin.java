@@ -4,6 +4,7 @@ import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
 import cn.breezeth.kaleidoscope_grilling.PotOilAccess;
 import com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.PotBlock;
 import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.PotBlockEntity;
+import com.github.ysbbbbbb.kaleidoscopecookery.client.render.block.PotBlockEntityRender;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -19,15 +20,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(
-    targets = "com.github.ysbbbbbb.kaleidoscopecookery.client.render.block.PotBlockEntityRender",
-    remap = false)
+@Mixin(PotBlockEntityRender.class)
 public abstract class PotBlockEntityRenderMixin {
   private static final float OIL_Y = 1.2F / 16.0F;
   private static final float MIN = 3.0F / 16.0F;
   private static final float SIZE = 10.0F / 16.0F;
 
-  @Inject(method = "render", at = @At("TAIL"))
+  @Inject(method = "render", at = @At("TAIL"), remap = false)
   private void grilling$renderOil(
       PotBlockEntity pot,
       float partialTick,

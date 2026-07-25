@@ -76,7 +76,7 @@ public final class SkewerItem extends Item {
       ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
     FoodTooltip.appendMaxim(tooltip, tooltipKey);
     ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
-    var data = itemId == null ? null : GrillingDataManager.skewer(itemId.toString());
+    var data = itemId == null ? null : GrillingDataManager.skewerForDisplay(itemId.toString());
     ResourceLocation resolved =
         data != null && !data.effect().isEmpty() ? new ResourceLocation(data.effect()) : effectId;
     int duration = data != null ? data.effectSeconds() * 20 : effectDuration;
