@@ -22,6 +22,7 @@ public final class SkeweringHandler {
   private static final String INGREDIENTS_TAG = "SkewerIngredients";
   private static final String INGREDIENT_STACKS_TAG = "SkewerIngredientStacks";
   private static final String VARIANTS_TAG = "SkewerModelVariants";
+  private static final String CREATIVE_PREVIEW_TAG = "CreativeSkewerPreview";
 
   public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
     ItemStack offhand = event.getEntity().getOffhandItem();
@@ -215,6 +216,43 @@ public final class SkeweringHandler {
     result.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     SecretSkewerItem.setCooked(result, cooked);
     return result;
+  }
+
+  static ItemStack creativePreviewSkewer() {
+    ItemStack result = jeiSecretSkewer(creativePreviewIngredients(0), false);
+    CompoundTag tag =
+        result.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+    tag.putBoolean(CREATIVE_PREVIEW_TAG, true);
+    result.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+    return result;
+  }
+
+  static ItemStack creativePreviewFrame(ItemStack stack, long gameTime) {
+    CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+    if (!stack.is(ModItems.SECRET_SKEWER.get())
+        || data == null
+        || !data.copyTag().getBoolean(CREATIVE_PREVIEW_TAG)) return stack;
+    return jeiSecretSkewer(creativePreviewIngredients((int) (gameTime / 40L % 3L)), false);
+  }
+
+  private static List<ItemStack> creativePreviewIngredients(int frame) {
+    return switch (frame) {
+      case 1 ->
+          List.of(
+              new ItemStack(ModItems.CHICKEN_WING.get()),
+              new ItemStack(ModItems.ONION.get()),
+              new ItemStack(Items.POTATO));
+      case 2 ->
+          List.of(
+              new ItemStack(ModItems.SQUID_TENTACLE.get()),
+              new ItemStack(Items.CARROT),
+              new ItemStack(ModItems.HOUTTUYNIA.get()));
+      default ->
+          List.of(
+              new ItemStack(Items.APPLE),
+              new ItemStack(ModItems.BEEF_CHUNKS.get()),
+              new ItemStack(Items.BROWN_MUSHROOM));
+    };
   }
 
   private static void write(

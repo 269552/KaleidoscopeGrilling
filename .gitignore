@@ -6,8 +6,10 @@ build/
 **/bin/
 **/out/
 **/runs/
+**/run/
 .idea/
 .vscode/
+.github/
 .eclipse/
 *.iml
 

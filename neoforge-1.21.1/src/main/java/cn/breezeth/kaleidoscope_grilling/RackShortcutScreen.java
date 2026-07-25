@@ -85,6 +85,7 @@ public final class RackShortcutScreen extends AbstractContainerScreen<RackShortc
     renderBg(
         graphics, partialTick, (int) Math.round(logicalMouseX), (int) Math.round(logicalMouseY));
     renderSlotItems(graphics);
+    graphics.flush();
     for (int i = 0; i < 9; i++) drawCount(graphics, i, menu.slots.get(i).getItem().getCount());
     graphics.pose().popPose();
     if (progress > .9F) {
@@ -196,7 +197,10 @@ public final class RackShortcutScreen extends AbstractContainerScreen<RackShortc
     String text = Integer.toString(count);
     int x = leftPos + menu.slots.get(slot).x + 16 - font.width(text),
         y = topPos + menu.slots.get(slot).y + 8;
+    g.pose().pushPose();
+    g.pose().translate(0.0F, 0.0F, 200.0F);
     g.drawString(font, text, x, y, 0xFFFFFFFF, true);
+    g.pose().popPose();
   }
 
   private void drawDeposit(GuiGraphics graphics) {

@@ -82,7 +82,7 @@ public abstract class OilPotBlockEntityMixin implements TypedOilPotAccess {
     if (getOilCount() > 64) setOilCount(64);
   }
 
-  @Inject(method = "setOilCount", at = @At("HEAD"), cancellable = true)
+  @Inject(method = "setOilCount", at = @At("HEAD"), cancellable = true, remap = false)
   private void grilling$capSetOilCount(int count, CallbackInfo ci) {
     if (count > 64) {
       setOilCount(64);

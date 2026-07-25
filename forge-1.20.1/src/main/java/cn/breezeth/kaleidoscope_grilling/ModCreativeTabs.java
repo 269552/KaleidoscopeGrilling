@@ -44,7 +44,6 @@ public final class ModCreativeTabs {
     add(output, added, ModBlocks.ADVANCED_RACK_ITEM);
     add(output, added, beefSkewerRecipe());
     add(output, added, ModItems.EMPTY_SEASONING_BOTTLE);
-    add(output, added, ModItems.PENDING_SEASONING);
     ItemStack specialSeasoning = new ItemStack(ModItems.SPECIAL_SEASONING.get());
     SeasoningData.set(specialSeasoning, BASE_SEASONINGS);
     add(output, added, specialSeasoning);
@@ -56,6 +55,7 @@ public final class ModCreativeTabs {
     add(output, added, ModItems.PREMIUM_CHILI_OIL_BUCKET);
 
     // All raw fixed recipes precede their cooked results.
+    add(output, added, SkeweringHandler.creativePreviewSkewer());
     ModItems.RAW_SKEWERS.forEach(item -> add(output, added, item));
     ModItems.FIXED_SKEWERS.forEach(item -> add(output, added, item));
     add(output, added, customMysteriousSkewer());
@@ -64,6 +64,7 @@ public final class ModCreativeTabs {
     // Remaining registered content keeps a stable registration order.
     Item unfinished = ModItems.UNFINISHED_SKEWER.get();
     Item secret = ModItems.SECRET_SKEWER.get();
+    Item pendingSeasoning = ModItems.PENDING_SEASONING.get();
     Item skewerPlate = ModItems.SKEWER_PLATE.get();
     Item canolaBrush = ModItems.CANOLA_OIL_BRUSH.get();
     Item secretBrush = ModItems.SECRET_CHILI_OIL_BRUSH.get();
@@ -75,6 +76,7 @@ public final class ModCreativeTabs {
               Item item = entry.get();
               if (item != unfinished
                   && item != secret
+                  && item != pendingSeasoning
                   && item != skewerPlate
                   && item != canolaBrush
                   && item != secretBrush

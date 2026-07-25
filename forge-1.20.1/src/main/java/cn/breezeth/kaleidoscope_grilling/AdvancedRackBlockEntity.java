@@ -445,6 +445,8 @@ public final class AdvancedRackBlockEntity extends BlockEntity implements Contai
   private static boolean canShareCategory(ItemStack a, ItemStack b) {
     if (!a.isStackable() && !b.isStackable() && a.isDamageableItem() && b.isDamageableItem())
       return a.getItem() == b.getItem();
+    if (OilPotCompat.isOilPot(a) && OilPotCompat.isOilPot(b))
+      return a.getItem() == b.getItem() && OilPotCompat.getType(a).equals(OilPotCompat.getType(b));
     return ItemStack.isSameItemSameTags(a, b);
   }
 

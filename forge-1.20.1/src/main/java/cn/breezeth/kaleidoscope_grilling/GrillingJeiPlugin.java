@@ -54,6 +54,10 @@ public final class GrillingJeiPlugin implements IModPlugin {
         .addCategoryExtension(
             ColdHouttuyniaCraftingRecipe.class,
             recipe -> new ColdHouttuyniaRecipeJeiExtension());
+    registration
+        .getCraftingCategory()
+        .addCategoryExtension(
+            ClearSeasoningCraftingRecipe.class, recipe -> new ClearSeasoningJeiExtension());
   }
 
   @Override

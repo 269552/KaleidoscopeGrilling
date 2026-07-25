@@ -443,6 +443,8 @@ public final class AdvancedRackBlockEntity extends BaseContainerBlockEntity {
         && second.isDamageableItem()) {
       return first.getItem() == second.getItem();
     }
+    if (OilPotCompat.isOilPot(first) && OilPotCompat.isOilPot(second))
+      return first.getItem() == second.getItem() && OilPotCompat.getType(first).equals(OilPotCompat.getType(second));
     return ItemStack.isSameItemSameComponents(first, second);
   }
 

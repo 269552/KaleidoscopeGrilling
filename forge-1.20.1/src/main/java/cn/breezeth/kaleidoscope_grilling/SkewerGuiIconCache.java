@@ -16,6 +16,7 @@ import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -25,6 +26,7 @@ import org.joml.Matrix4f;
 import org.slf4j.Logger;
 
 public final class SkewerGuiIconCache {
+  private static final float GUI_ITEM_DEPTH = 150.0F;
   private static final Logger LOGGER = LogUtils.getLogger();
   private static final int BASE_SIZE = 32;
   private static final int CACHE_SIZE = 64;
@@ -48,6 +50,8 @@ public final class SkewerGuiIconCache {
     if (!isEnabled() || SkewerItemRenderContext.isCapturing() || SkewerOutlineRender.isActive())
       return false;
     Minecraft minecraft = Minecraft.getInstance();
+    if (minecraft.screen instanceof CreativeModeInventoryScreen && minecraft.level != null)
+      stack = SkeweringHandler.creativePreviewFrame(stack, minecraft.level.getGameTime());
     boolean custom = isCompletedCustom(minecraft, stack);
     boolean fixed = SkewerRecipes.isRawSkewer(stack) || SkewerRecipes.isCookedSkewer(stack);
     if (!custom && !fixed) return false;
@@ -94,13 +98,18 @@ public final class SkewerGuiIconCache {
       cache.put(key, texture);
       if (custom) trimCustomCache(minecraft);
     }
+    graphics.pose().pushPose();
+    graphics.pose().translate(0.0F, 0.0F, GUI_ITEM_DEPTH);
     graphics.blit(texture, x, y, 16, 16, 0.0F, 0.0F, size, size, size, size);
+    graphics.pose().popPose();
     return true;
   }
 
   public static boolean hasCachedIcon(ItemStack stack) {
     if (!isEnabled() || SkewerItemRenderContext.isCapturing()) return false;
     Minecraft minecraft = Minecraft.getInstance();
+    if (minecraft.screen instanceof CreativeModeInventoryScreen && minecraft.level != null)
+      stack = SkeweringHandler.creativePreviewFrame(stack, minecraft.level.getGameTime());
     if (!isCompletedCustom(minecraft, stack)) return false;
     ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
     boolean cooked = stack.is(ModItems.SECRET_SKEWER.get()) && SecretSkewerItem.isCooked(stack);

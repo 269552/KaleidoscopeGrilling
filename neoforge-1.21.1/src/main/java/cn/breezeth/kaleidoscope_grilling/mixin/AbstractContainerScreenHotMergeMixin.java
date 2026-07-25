@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import cn.breezeth.kaleidoscope_grilling.AdvancedRackMenu;
 import cn.breezeth.kaleidoscope_grilling.FoodState;
 import cn.breezeth.kaleidoscope_grilling.HotFoodMerge;
@@ -7,6 +8,7 @@ import cn.breezeth.kaleidoscope_grilling.RackKeyHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,10 +21,12 @@ import org.lwjgl.glfw.GLFW;
 
 @Mixin(AbstractContainerScreen.class)
 abstract class AbstractContainerScreenHotMergeMixin {
+  private static final ResourceLocation MERGE_BORDER =
+      ResourceLocation.tryParse(
+          "kaleidoscope_grilling:textures/gui/hot_food_merge_border.png");
+
   @Shadow protected AbstractContainerMenu menu;
   @Shadow private Slot hoveredSlot;
-  @Shadow protected int leftPos;
-  @Shadow protected int topPos;
 
   @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
   private void grilling$mergeHotFood(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
@@ -49,22 +53,28 @@ abstract class AbstractContainerScreenHotMergeMixin {
         || slot.getItem().isEmpty()
         || slot.getItem().getCount() >= slot.getItem().getMaxStackSize()
         || !FoodState.canMergeHot(slot.getItem(), menu.getCarried(), minecraft.level)) return;
-    drawMergeGlyph(graphics, leftPos + slot.x + 8, topPos + slot.y);
+    graphics.pose().pushPose();
+    graphics.pose().translate(0.0F, 0.0F, 300.0F);
+    RenderSystem.enableBlend();
+    RenderSystem.defaultBlendFunc();
+    graphics.blit(MERGE_BORDER, slot.x, slot.y, 16, 16, 0.0F, 0.0F, 64, 64, 64, 64);
+    graphics.flush();
+    RenderSystem.disableBlend();
+    graphics.pose().popPose();
   }
 
-  private static void drawMergeGlyph(GuiGraphics graphics, int x, int y) {
-    int shadow = 0xC018120C;
-    int light = 0xE0FFD66B;
-    fillGlyph(graphics, x + 1, y + 1, shadow);
-    fillGlyph(graphics, x, y, light);
-  }
-
-  private static void fillGlyph(GuiGraphics graphics, int x, int y, int color) {
-    graphics.fill(x, y, x + 2, y + 2, color);
-    graphics.fill(x + 6, y, x + 8, y + 2, color);
-    graphics.fill(x + 1, y + 2, x + 3, y + 4, color);
-    graphics.fill(x + 5, y + 2, x + 7, y + 4, color);
-    graphics.fill(x + 2, y + 4, x + 6, y + 6, color);
-    graphics.fill(x + 3, y + 6, x + 5, y + 8, color);
+  @Inject(
+      method = "render",
+      at =
+          @At(
+              value = "INVOKE",
+              target =
+                  "Lnet/minecraft/client/gui/screens/inventory/AbstractContainerScreen;"
+                      + "renderFloatingItem(Lnet/minecraft/client/gui/GuiGraphics;"
+                      + "Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V",
+              ordinal = 0))
+  private void grilling$flushSlotLayersBeforeCarriedItem(
+      GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+    graphics.flush();
   }
 }

@@ -20,6 +20,11 @@ public final class ModRecipeSerializers {
           SERIALIZERS.register(
               "cold_houttuynia",
               () -> new SimpleCraftingRecipeSerializer<>(ColdHouttuyniaCraftingRecipe::new));
+  public static final RegistryObject<RecipeSerializer<ClearSeasoningCraftingRecipe>>
+      CLEAR_SEASONING =
+          SERIALIZERS.register(
+              "clear_seasoning",
+              () -> new SimpleCraftingRecipeSerializer<>(ClearSeasoningCraftingRecipe::new));
 
   private ModRecipeSerializers() {}
 }

@@ -5,6 +5,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
 public final class AdvancedRackScreen extends AbstractContainerScreen<AdvancedRackMenu> {
   private static final int COMPARTMENT_BACKGROUND = 0x80666666;
@@ -74,6 +75,7 @@ public final class AdvancedRackScreen extends AbstractContainerScreen<AdvancedRa
   public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
     renderBackground(graphics);
     super.render(graphics, mouseX, mouseY, partialTick);
+    graphics.flush();
     for (int i = 0; i < AdvancedRackBlockEntity.COMPARTMENT_COUNT; i++) drawCount(graphics, i);
     renderTooltip(graphics, mouseX, mouseY);
     int compartment = compartmentAt(mouseX, mouseY);
@@ -105,9 +107,14 @@ public final class AdvancedRackScreen extends AbstractContainerScreen<AdvancedRa
 
   private void drawCount(GuiGraphics graphics, int slot) {
     if (menu.getFilter(slot).isEmpty() && menu.slots.get(slot).getItem().isEmpty()) return;
-    String text = Integer.toString(menu.slots.get(slot).getItem().getCount());
+    ItemStack stack = menu.slots.get(slot).getItem();
+    if (stack.isEmpty()) return;
+    String text = Integer.toString(stack.getCount());
     int x = leftPos + menu.slots.get(slot).x + 16 - font.width(text);
     int y = topPos + menu.slots.get(slot).y + 8;
+    graphics.pose().pushPose();
+    graphics.pose().translate(0.0F, 0.0F, 300.0F);
     graphics.drawString(font, text, x, y, 0xFFFFFFFF, true);
+    graphics.pose().popPose();
   }
 }

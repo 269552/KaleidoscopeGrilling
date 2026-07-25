@@ -4,8 +4,10 @@ import cn.breezeth.kaleidoscope_grilling.OilPotCompat;
 import cn.breezeth.kaleidoscope_grilling.OilPotVisualState;
 import cn.breezeth.kaleidoscope_grilling.TypedOilPotAccess;
 import com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.OilPotBlock;
+import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.decoration.OilPotBlockEntity;
 import java.util.List;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -22,12 +24,19 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(OilPotBlock.class)
 public abstract class OilPotBlockMixin {
+  @ModifyConstant(method = "use", constant = @Constant(intValue = 256), remap = false)
+  private int grilling$capFillCapacity(int value) {
+    return 64;
+  }
+
   @Inject(method = "use", at = @At("HEAD"), cancellable = true)
   private void grilling$blockWrongOilExtraction(
       BlockState state,
@@ -72,6 +81,25 @@ public abstract class OilPotBlockMixin {
       cir.getReturnValue().stream()
           .filter(OilPotCompat::isOilPot)
           .forEach(stack -> OilPotCompat.setType(stack, access.grilling$getOilType()));
+    }
+  }
+
+  @Inject(method = "use", at = @At("RETURN"))
+  private void grilling$showFullMessage(
+      BlockState state,
+      Level level,
+      BlockPos pos,
+      Player player,
+      InteractionHand hand,
+      BlockHitResult hit,
+      CallbackInfoReturnable<InteractionResult> cir) {
+    if (hand == InteractionHand.MAIN_HAND
+        && cir.getReturnValue() == InteractionResult.PASS
+        && !player.getMainHandItem().isEmpty()
+        && level.getBlockEntity(pos) instanceof OilPotBlockEntity pot
+        && pot.getOilCount() >= 64) {
+      player.displayClientMessage(
+          Component.translatable("message.kaleidoscope_grilling.oil_type_mismatch"), true);
     }
   }
 }

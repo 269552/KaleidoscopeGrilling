@@ -69,6 +69,7 @@ public final class RackSelectionScreen extends AbstractContainerScreen<RackSelec
     renderBg(
         graphics, partialTick, (int) Math.round(logicalMouseX), (int) Math.round(logicalMouseY));
     renderSlotItems(graphics);
+    graphics.flush();
     drawRackNumbers(graphics);
     graphics.pose().popPose();
     if (eased > .9F) {
@@ -169,11 +170,14 @@ public final class RackSelectionScreen extends AbstractContainerScreen<RackSelec
   }
 
   private void drawRackNumbers(GuiGraphics graphics) {
+    graphics.pose().pushPose();
+    graphics.pose().translate(0.0F, 0.0F, 200.0F);
     for (int i = 0; i < menu.rackCount(); i++) {
       int x = i < 5 ? leftPos + 42 + i * 18 : leftPos + 51 + (i - 5) * 18;
       int y = i < 5 ? topPos + 24 : topPos + 48;
       graphics.drawString(font, Integer.toString(i + 1), x + 11, y + 10, 0xFFFFFFFF, true);
     }
+    graphics.pose().popPose();
   }
 
   private void renderSlotItems(GuiGraphics graphics) {
