@@ -9,7 +9,6 @@ build/
 **/run/
 .idea/
 .vscode/
-.github/
 .eclipse/
 *.iml
 
