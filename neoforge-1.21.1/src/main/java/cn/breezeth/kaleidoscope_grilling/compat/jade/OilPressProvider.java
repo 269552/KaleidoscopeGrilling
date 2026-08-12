@@ -1,8 +1,8 @@
 package cn.breezeth.kaleidoscope_grilling.compat.jade;
 
-import cn.breezeth.kaleidoscope_grilling.BigVatBlockEntity;
-import cn.breezeth.kaleidoscope_grilling.CreateCompat;
-import cn.breezeth.kaleidoscope_grilling.OilPressBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.oil.BigVatBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.compat.CreateCompat;
+import cn.breezeth.kaleidoscope_grilling.oil.OilPressBlockEntity;
 import cn.breezeth.kaleidoscope_grilling.OilPressContainerApi;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;

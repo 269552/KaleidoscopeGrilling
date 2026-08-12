@@ -2,6 +2,8 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.134'
 }
 
+apply from: rootProject.file('gradle/package-structure.gradle')
+
 def props = new Properties()
 file('gradle.properties').withInputStream { props.load(it) }
 

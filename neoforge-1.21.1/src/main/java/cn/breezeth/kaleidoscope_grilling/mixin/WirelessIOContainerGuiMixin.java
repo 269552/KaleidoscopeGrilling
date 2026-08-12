@@ -1,5 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
+import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
+
 import cn.breezeth.kaleidoscope_grilling.compat.touhoulittlemaid.GrillingWirelessIOData;
 import cn.breezeth.kaleidoscope_grilling.compat.touhoulittlemaid.GrillingWirelessIOModePayload;
 import com.github.tartaricacid.touhoulittlemaid.client.gui.item.WirelessIOContainerGui;

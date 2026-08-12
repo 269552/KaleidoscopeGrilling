@@ -1,9 +1,9 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.SkewerGuiIconCache;
-import cn.breezeth.kaleidoscope_grilling.SkewerItemRenderContext;
-import cn.breezeth.kaleidoscope_grilling.HotFoodGuiBadge;
-import cn.breezeth.kaleidoscope_grilling.SkewerOutlineRender;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerGuiIconCache;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerItemRenderContext;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodGuiBadge;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerOutlineRender;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;

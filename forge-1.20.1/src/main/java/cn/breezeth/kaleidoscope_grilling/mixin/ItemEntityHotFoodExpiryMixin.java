@@ -1,6 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.FoodState;
+import cn.breezeth.kaleidoscope_grilling.food.FoodState;
 import net.minecraft.world.entity.item.ItemEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

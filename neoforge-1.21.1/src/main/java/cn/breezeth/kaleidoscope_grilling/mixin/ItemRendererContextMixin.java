@@ -1,6 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.SkewerItemRenderContext;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerItemRenderContext;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.ItemRenderer;

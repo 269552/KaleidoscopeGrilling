@@ -1,6 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.compat.touhoulittlemaid;
 
-import cn.breezeth.kaleidoscope_grilling.HotFoodConfig;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.init.InitSounds;
 import java.util.HashMap;

@@ -1,9 +1,9 @@
 package cn.breezeth.kaleidoscope_grilling.compat.create;
 
-import cn.breezeth.kaleidoscope_grilling.ModItems;
-import cn.breezeth.kaleidoscope_grilling.SecretSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+import cn.breezeth.kaleidoscope_grilling.skewer.SecretSkewerItem;
 import cn.breezeth.kaleidoscope_grilling.SkewerCompatApi;
-import cn.breezeth.kaleidoscope_grilling.SkewerRecipes;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
 import com.simibubi.create.content.kinetics.deployer.DeployerRecipeSearchEvent;
 import java.util.Optional;
 import net.minecraft.world.item.ItemStack;

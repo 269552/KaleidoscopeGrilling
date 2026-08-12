@@ -1,10 +1,10 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.ModItems;
-import cn.breezeth.kaleidoscope_grilling.ModSounds;
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+import cn.breezeth.kaleidoscope_grilling.registry.ModSounds;
 import cn.breezeth.kaleidoscope_grilling.SeasoningAutomationApi;
-import cn.breezeth.kaleidoscope_grilling.SecretSkewerItem;
-import cn.breezeth.kaleidoscope_grilling.SkeweringHandler;
+import cn.breezeth.kaleidoscope_grilling.skewer.SecretSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour;
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour.TransportedResult;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;

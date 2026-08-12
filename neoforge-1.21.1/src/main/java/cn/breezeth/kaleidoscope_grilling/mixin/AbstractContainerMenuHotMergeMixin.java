@@ -1,8 +1,8 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.AdvancedRackMenu;
-import cn.breezeth.kaleidoscope_grilling.FoodState;
-import cn.breezeth.kaleidoscope_grilling.HotFoodMerge;
+import cn.breezeth.kaleidoscope_grilling.rack.AdvancedRackMenu;
+import cn.breezeth.kaleidoscope_grilling.food.FoodState;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodMerge;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;

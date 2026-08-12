@@ -1,5 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+import cn.breezeth.kaleidoscope_grilling.rack.AdvancedRackBlockEntity;
+
 
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;

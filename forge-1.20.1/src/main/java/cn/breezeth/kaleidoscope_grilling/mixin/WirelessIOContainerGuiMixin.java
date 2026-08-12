@@ -1,8 +1,10 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
+import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
+
 import cn.breezeth.kaleidoscope_grilling.compat.touhoulittlemaid.GrillingWirelessIOData;
 import cn.breezeth.kaleidoscope_grilling.compat.touhoulittlemaid.GrillingWirelessIOModePayload;
-import cn.breezeth.kaleidoscope_grilling.GrillingNetwork;
+import cn.breezeth.kaleidoscope_grilling.network.GrillingNetwork;
 import com.github.tartaricacid.touhoulittlemaid.client.gui.item.WirelessIOContainerGui;
 import com.github.tartaricacid.touhoulittlemaid.inventory.container.other.WirelessIOContainer;
 import net.minecraft.client.gui.components.Button;

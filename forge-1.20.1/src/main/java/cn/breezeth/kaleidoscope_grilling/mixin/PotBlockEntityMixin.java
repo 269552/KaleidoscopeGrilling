@@ -1,13 +1,16 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.FoodState;
-import cn.breezeth.kaleidoscope_grilling.HotFoodConfig;
-import cn.breezeth.kaleidoscope_grilling.OilPotCompat;
-import cn.breezeth.kaleidoscope_grilling.PotHudAccess;
-import cn.breezeth.kaleidoscope_grilling.PotOilAccess;
-import cn.breezeth.kaleidoscope_grilling.SeasonedPotAccess;
-import cn.breezeth.kaleidoscope_grilling.SeasoningAnimation;
-import cn.breezeth.kaleidoscope_grilling.SeasoningData;
+import cn.breezeth.kaleidoscope_grilling.HotFoodApi;
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+
+import cn.breezeth.kaleidoscope_grilling.food.FoodState;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
+import cn.breezeth.kaleidoscope_grilling.oil.OilPotCompat;
+import cn.breezeth.kaleidoscope_grilling.oil.PotHudAccess;
+import cn.breezeth.kaleidoscope_grilling.oil.PotOilAccess;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasonedPotAccess;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningAnimation;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningData;
 
 import cn.breezeth.kaleidoscope_grilling.*;
 import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.PotBlockEntity;

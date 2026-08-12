@@ -1,9 +1,9 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimation;
-import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimationAccess;
-import cn.breezeth.kaleidoscope_grilling.OilBrushAnimation;
-import cn.breezeth.kaleidoscope_grilling.SeasoningAnimation;
+import cn.breezeth.kaleidoscope_grilling.oil.AnvilPressAnimation;
+import cn.breezeth.kaleidoscope_grilling.oil.AnvilPressAnimationAccess;
+import cn.breezeth.kaleidoscope_grilling.oil.OilBrushAnimation;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningAnimation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;

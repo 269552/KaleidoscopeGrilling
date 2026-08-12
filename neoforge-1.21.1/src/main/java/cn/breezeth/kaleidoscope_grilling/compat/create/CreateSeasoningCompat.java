@@ -1,11 +1,11 @@
 package cn.breezeth.kaleidoscope_grilling.compat.create;
 
 import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
-import cn.breezeth.kaleidoscope_grilling.ModItems;
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
 import cn.breezeth.kaleidoscope_grilling.SeasoningAutomationApi;
 import cn.breezeth.kaleidoscope_grilling.SeasoningAutomationApi.MixPlan;
 import cn.breezeth.kaleidoscope_grilling.SeasoningAutomationApi.SlotTake;
-import cn.breezeth.kaleidoscope_grilling.SeasoningData;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningData;
 import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.content.kinetics.mixer.MixingRecipe;
 import com.simibubi.create.content.logistics.filter.ListFilterItem;

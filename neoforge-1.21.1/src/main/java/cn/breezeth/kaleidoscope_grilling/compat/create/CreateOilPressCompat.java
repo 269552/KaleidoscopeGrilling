@@ -1,7 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.compat.create;
 
 import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
-import cn.breezeth.kaleidoscope_grilling.ModFluids;
+import cn.breezeth.kaleidoscope_grilling.registry.ModFluids;
 import cn.breezeth.kaleidoscope_grilling.OilPressContainerApi;
 import cn.breezeth.kaleidoscope_grilling.OilPressContainerApi.Handler;
 import cn.breezeth.kaleidoscope_grilling.OilPressContainerApi.Probe;

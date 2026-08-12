@@ -1,15 +1,15 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimation;
-import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimationAccess;
-import cn.breezeth.kaleidoscope_grilling.EnderPearlEatingAnimation;
+import cn.breezeth.kaleidoscope_grilling.oil.AnvilPressAnimation;
+import cn.breezeth.kaleidoscope_grilling.oil.AnvilPressAnimationAccess;
+import cn.breezeth.kaleidoscope_grilling.skewer.EnderPearlEatingAnimation;
 import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
-import cn.breezeth.kaleidoscope_grilling.ModItems;
-import cn.breezeth.kaleidoscope_grilling.MultiBiteSkewerItem;
-import cn.breezeth.kaleidoscope_grilling.OilBrushAnimation;
-import cn.breezeth.kaleidoscope_grilling.OilPotCompat;
-import cn.breezeth.kaleidoscope_grilling.OilPressTools;
-import cn.breezeth.kaleidoscope_grilling.SkewerEatingAnimation;
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.oil.OilBrushAnimation;
+import cn.breezeth.kaleidoscope_grilling.oil.OilPotCompat;
+import cn.breezeth.kaleidoscope_grilling.oil.OilPressTools;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerEatingAnimation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;

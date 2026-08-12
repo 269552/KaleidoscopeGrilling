@@ -1,7 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.OilPressBlock;
-import cn.breezeth.kaleidoscope_grilling.OilPressBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.oil.OilPressBlock;
+import cn.breezeth.kaleidoscope_grilling.oil.OilPressBlockEntity;
 import com.simibubi.create.content.kinetics.press.PressingBehaviour;
 import com.simibubi.create.content.kinetics.press.PressingBehaviour.Mode;
 import com.simibubi.create.content.kinetics.press.PressingBehaviour.PressingBehaviourSpecifics;

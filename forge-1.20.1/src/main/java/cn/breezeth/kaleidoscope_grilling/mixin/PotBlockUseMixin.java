@@ -1,8 +1,10 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.HotFoodConfig;
-import cn.breezeth.kaleidoscope_grilling.SeasonedPotAccess;
-import cn.breezeth.kaleidoscope_grilling.SeasoningUse;
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasonedPotAccess;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningUse;
 
 import cn.breezeth.kaleidoscope_grilling.*;
 import com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.PotBlock;

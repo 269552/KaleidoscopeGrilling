@@ -1,5 +1,14 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+
+import cn.breezeth.kaleidoscope_grilling.grill.GrillBlock;
+import cn.breezeth.kaleidoscope_grilling.grill.GrillBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.oil.OilPotCompat;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningData;
+import cn.breezeth.kaleidoscope_grilling.skewer.SecretSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
+
 
 import java.util.UUID;
 import java.util.HashMap;
@@ -269,11 +278,11 @@ public final class GrillAutomationApi {
     return released;
   }
 
-  static void trackLoadedLease(Level level, BlockPos pos) {
+  public static void trackLoadedLease(Level level, BlockPos pos) {
     if (!level.isClientSide) trackLease(level, pos);
   }
 
-  static void untrackExpiredLease(Level level, BlockPos pos) {
+  public static void untrackExpiredLease(Level level, BlockPos pos) {
     if (!level.isClientSide) untrackLease(level, pos);
   }
 

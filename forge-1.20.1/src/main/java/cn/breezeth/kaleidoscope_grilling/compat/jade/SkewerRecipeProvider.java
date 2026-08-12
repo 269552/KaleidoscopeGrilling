@@ -1,10 +1,10 @@
 package cn.breezeth.kaleidoscope_grilling.compat.jade;
 
-import cn.breezeth.kaleidoscope_grilling.ModItems;
-import cn.breezeth.kaleidoscope_grilling.SkewerRecipeBlockEntity;
-import cn.breezeth.kaleidoscope_grilling.SkewerRecipeBookItem;
-import cn.breezeth.kaleidoscope_grilling.SkewerRecipes;
-import cn.breezeth.kaleidoscope_grilling.SkeweringHandler;
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipeBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipeBookItem;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.registries.BuiltInRegistries;

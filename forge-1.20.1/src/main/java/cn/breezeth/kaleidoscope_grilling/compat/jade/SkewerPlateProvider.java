@@ -1,7 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.compat.jade;
 
 import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
-import cn.breezeth.kaleidoscope_grilling.SkewerPlateBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlateBlockEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import snownee.jade.api.BlockAccessor;

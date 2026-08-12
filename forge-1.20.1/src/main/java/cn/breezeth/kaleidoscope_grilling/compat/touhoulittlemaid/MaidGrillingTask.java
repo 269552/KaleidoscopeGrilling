@@ -1,8 +1,8 @@
 package cn.breezeth.kaleidoscope_grilling.compat.touhoulittlemaid;
 
-import cn.breezeth.kaleidoscope_grilling.HotFoodConfig;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
-import cn.breezeth.kaleidoscope_grilling.ModBlocks;
+import cn.breezeth.kaleidoscope_grilling.registry.ModBlocks;
 import com.github.tartaricacid.touhoulittlemaid.api.task.IMaidTask;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.mojang.datafixers.util.Pair;

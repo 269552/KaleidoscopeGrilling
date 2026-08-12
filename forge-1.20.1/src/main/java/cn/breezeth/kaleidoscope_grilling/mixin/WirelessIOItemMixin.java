@@ -1,5 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
+import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
+
 import cn.breezeth.kaleidoscope_grilling.compat.touhoulittlemaid.GrillingWirelessIOData;
 import com.github.tartaricacid.touhoulittlemaid.item.ItemWirelessIO;
 import java.util.List;

@@ -1,6 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.MultiBiteSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;

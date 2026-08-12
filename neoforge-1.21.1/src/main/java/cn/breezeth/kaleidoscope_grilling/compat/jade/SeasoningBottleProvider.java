@@ -1,7 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.compat.jade;
 
-import cn.breezeth.kaleidoscope_grilling.SeasoningBottleBlockEntity;
-import cn.breezeth.kaleidoscope_grilling.SeasoningData;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningBottleBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningData;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.registries.BuiltInRegistries;

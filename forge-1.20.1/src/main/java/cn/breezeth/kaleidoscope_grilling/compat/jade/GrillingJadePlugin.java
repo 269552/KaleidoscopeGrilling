@@ -1,11 +1,11 @@
 package cn.breezeth.kaleidoscope_grilling.compat.jade;
 
-import cn.breezeth.kaleidoscope_grilling.GrillBlock;
+import cn.breezeth.kaleidoscope_grilling.grill.GrillBlock;
 import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
-import cn.breezeth.kaleidoscope_grilling.OilPressBlock;
-import cn.breezeth.kaleidoscope_grilling.SeasoningBottleBlock;
-import cn.breezeth.kaleidoscope_grilling.SkewerPlateBlock;
-import cn.breezeth.kaleidoscope_grilling.SkewerRecipeBlock;
+import cn.breezeth.kaleidoscope_grilling.oil.OilPressBlock;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningBottleBlock;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlateBlock;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipeBlock;
 import com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.OilPotBlock;
 import net.minecraft.resources.ResourceLocation;
 import snownee.jade.api.IWailaClientRegistration;

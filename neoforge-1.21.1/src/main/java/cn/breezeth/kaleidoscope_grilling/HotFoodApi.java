@@ -1,5 +1,8 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+import cn.breezeth.kaleidoscope_grilling.food.FoodState;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningData;
+
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

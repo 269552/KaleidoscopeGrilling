@@ -20,7 +20,9 @@ public final class GrillingMixinPlugin implements IMixinConfigPlugin {
         || mixinClassName.endsWith("BasinRecipeSeasoningMixin")) return CREATE_AVAILABLE;
     if (mixinClassName.endsWith("WirelessIOBaubleMixin")
         || mixinClassName.endsWith("WirelessIOItemMixin")
-        || mixinClassName.endsWith("WirelessIOContainerGuiMixin")) return MAID_AVAILABLE;
+        || mixinClassName.endsWith("WirelessIOContainerGuiMixin")
+        || mixinClassName.endsWith("MaidRendererGrillingLayerMixin")
+        || mixinClassName.endsWith("GeckoMaidRendererGrillingLayerMixin")) return MAID_AVAILABLE;
     return true;
   }
 

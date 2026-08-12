@@ -1,9 +1,9 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.EnderPearlEatingAnimation;
+import cn.breezeth.kaleidoscope_grilling.skewer.EnderPearlEatingAnimation;
 import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
-import cn.breezeth.kaleidoscope_grilling.MultiBiteSkewerItem;
-import cn.breezeth.kaleidoscope_grilling.SkewerEatingAnimation;
+import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerEatingAnimation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;

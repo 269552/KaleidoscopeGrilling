@@ -3,6 +3,8 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7.38'
 }
 
+apply from: file('../gradle/package-structure.gradle')
+
 def props = new Properties()
 file('gradle.properties').withInputStream { props.load(it) }
 

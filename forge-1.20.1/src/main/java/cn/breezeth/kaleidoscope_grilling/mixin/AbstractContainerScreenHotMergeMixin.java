@@ -1,10 +1,10 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import cn.breezeth.kaleidoscope_grilling.AdvancedRackMenu;
-import cn.breezeth.kaleidoscope_grilling.FoodState;
-import cn.breezeth.kaleidoscope_grilling.HotFoodMerge;
-import cn.breezeth.kaleidoscope_grilling.RackKeyHandler;
+import cn.breezeth.kaleidoscope_grilling.rack.AdvancedRackMenu;
+import cn.breezeth.kaleidoscope_grilling.food.FoodState;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodMerge;
+import cn.breezeth.kaleidoscope_grilling.rack.RackKeyHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;

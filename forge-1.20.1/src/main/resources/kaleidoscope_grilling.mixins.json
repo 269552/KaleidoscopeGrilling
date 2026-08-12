@@ -6,6 +6,6 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "kaleidoscope_grilling.refmap.json",
   "mixins": ["ChoppingBoardBlockEntityMixin", "OilPotBlockEntityMixin", "OilPotBlockMixin", "PotBlockEntityMixin", "StockpotBlockEntityMixin", "PotBlockUseMixin", "StockpotBlockUseMixin", "PotBlockEntityRenderMixin", "FoodDataAccessor", "PlayerAnvilPressMixin", "ItemEntityHotFoodExpiryMixin", "LivingEntitySkewerEatingSoundMixin", "PressingBehaviourMixin", "BeltDeployerCallbacksMixin", "BasinOperatingBlockEntityAccessor", "MechanicalMixerSeasoningMixin", "BasinRecipeSeasoningMixin", "WirelessIOBaubleMixin", "WirelessIOItemMixin"],
-  "client": ["GuiGraphicsContextMixin", "HumanoidAnvilPressMixin", "ItemInHandLayerAnvilPressMixin", "ItemInHandSkewerEatingMixin", "ItemRendererContextMixin", "NumbCrosshairMixin", "SpriteContentsAccessor", "SkewerPlateEatingParticlesMixin", "AbstractContainerScreenHotMergeMixin", "WirelessIOContainerGuiMixin"],
+  "client": ["GuiGraphicsContextMixin", "HumanoidAnvilPressMixin", "ItemInHandLayerAnvilPressMixin", "ItemInHandSkewerEatingMixin", "ItemRendererContextMixin", "NumbCrosshairMixin", "SpriteContentsAccessor", "SkewerPlateEatingParticlesMixin", "AbstractContainerScreenHotMergeMixin", "WirelessIOContainerGuiMixin", "MaidRendererGrillingLayerMixin", "GeckoMaidRendererGrillingLayerMixin"],
   "injectors": { "defaultRequire": 1 }
 }

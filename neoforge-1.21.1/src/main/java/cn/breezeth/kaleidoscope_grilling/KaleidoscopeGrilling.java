@@ -1,5 +1,44 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+import cn.breezeth.kaleidoscope_grilling.bootstrap.CommonSetup;
+import cn.breezeth.kaleidoscope_grilling.registry.ModAdvancements;
+import cn.breezeth.kaleidoscope_grilling.registry.ModBlockEntities;
+import cn.breezeth.kaleidoscope_grilling.registry.ModBlocks;
+import cn.breezeth.kaleidoscope_grilling.registry.ModCreativeTabs;
+import cn.breezeth.kaleidoscope_grilling.registry.ModEffects;
+import cn.breezeth.kaleidoscope_grilling.registry.ModFeatures;
+import cn.breezeth.kaleidoscope_grilling.registry.ModFluids;
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+import cn.breezeth.kaleidoscope_grilling.registry.ModMenus;
+import cn.breezeth.kaleidoscope_grilling.registry.ModRecipeSerializers;
+import cn.breezeth.kaleidoscope_grilling.registry.ModSounds;
+
+import cn.breezeth.kaleidoscope_grilling.seasoning.AdvancedSeasoningHandler;
+import cn.breezeth.kaleidoscope_grilling.oil.BigVatCapabilities;
+import cn.breezeth.kaleidoscope_grilling.world.CropDropHandler;
+import cn.breezeth.kaleidoscope_grilling.effect.DragonEggPowderHandler;
+import cn.breezeth.kaleidoscope_grilling.world.FortressHouttuyniaHandler;
+import cn.breezeth.kaleidoscope_grilling.world.FortressWartReplacementHandler;
+import cn.breezeth.kaleidoscope_grilling.grill.GrillCommand;
+import cn.breezeth.kaleidoscope_grilling.data.GrillingDataManager;
+import cn.breezeth.kaleidoscope_grilling.network.GrillingNetwork;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodExpiryHandler;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodHandler;
+import cn.breezeth.kaleidoscope_grilling.food.IngredientTooltipHandler;
+import cn.breezeth.kaleidoscope_grilling.effect.InvincibleHandler;
+import cn.breezeth.kaleidoscope_grilling.world.KnifeDropHandler;
+import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.oil.OilFillingHandler;
+import cn.breezeth.kaleidoscope_grilling.oil.OilPressCapabilities;
+import cn.breezeth.kaleidoscope_grilling.rack.RackCommand;
+import cn.breezeth.kaleidoscope_grilling.jei.RecipeDisplayHandler;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningHandler;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlatePlacement;
+import cn.breezeth.kaleidoscope_grilling.world.StrippingHandler;
+import cn.breezeth.kaleidoscope_grilling.world.VillagePepperLootHandler;
+
 
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.EventPriority;

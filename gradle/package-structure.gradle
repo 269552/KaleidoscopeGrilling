@@ -1,0 +1,42 @@
+def rootPackageClasses = [
+        'AdvancedRackAutomationApi.java',
+        'AdvancedRackCompatApi.java',
+        'GrillAutomationApi.java',
+        'HotFoodApi.java',
+        'KaleidoscopeGrilling.java',
+        'OilPressApi.java',
+        'OilPressContainerApi.java',
+        'SeasoningAutomationApi.java',
+        'SkewerCompatApi.java',
+        'TypedOilPotAccess.java'
+] as Set
+
+tasks.register('verifyPackageStructure') {
+    group = 'verification'
+    description = 'Rejects internal implementation classes added directly to the mod root package.'
+
+    def packageDirectory = project.file(
+            'src/main/java/cn/breezeth/kaleidoscope_grilling')
+    inputs.dir(packageDirectory)
+
+    doLast {
+        def unexpected = packageDirectory.listFiles()
+                ?.findAll { it.isFile() && it.name.endsWith('.java') }
+                ?.collect { it.name }
+                ?.findAll { !rootPackageClasses.contains(it) }
+                ?.sort() ?: []
+
+        if (!unexpected.isEmpty()) {
+            throw new GradleException(
+                    'Do not add implementation classes directly to ' +
+                    'cn.breezeth.kaleidoscope_grilling. Move them into a domain package ' +
+                    '(for example grill, skewer, seasoning, oil, rack, food, world, client, ' +
+                    'registry, network, jei, compat, or mixin). Unexpected files: ' +
+                    unexpected.join(', '))
+        }
+    }
+}
+
+tasks.named('compileJava').configure {
+    dependsOn tasks.named('verifyPackageStructure')
+}

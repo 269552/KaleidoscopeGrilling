@@ -1,7 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.compat.jade;
 
-import cn.breezeth.kaleidoscope_grilling.GrillBlock;
-import cn.breezeth.kaleidoscope_grilling.GrillBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.grill.GrillBlock;
+import cn.breezeth.kaleidoscope_grilling.grill.GrillBlockEntity;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.network.chat.Component;

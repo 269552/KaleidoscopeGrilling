@@ -1,8 +1,10 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.ModItems;
-import cn.breezeth.kaleidoscope_grilling.MultiBiteSkewerItem;
-import cn.breezeth.kaleidoscope_grilling.SkewerPlateItem;
+import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
+
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlateItem;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;

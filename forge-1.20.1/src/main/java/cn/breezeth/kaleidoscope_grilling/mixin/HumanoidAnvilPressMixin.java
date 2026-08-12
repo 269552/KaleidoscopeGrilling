@@ -1,14 +1,14 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimation;
-import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimationAccess;
-import cn.breezeth.kaleidoscope_grilling.EnderPearlEatingAnimation;
-import cn.breezeth.kaleidoscope_grilling.ModEffects;
-import cn.breezeth.kaleidoscope_grilling.ModItems;
-import cn.breezeth.kaleidoscope_grilling.MultiBiteSkewerItem;
-import cn.breezeth.kaleidoscope_grilling.OilBrushAnimation;
-import cn.breezeth.kaleidoscope_grilling.SeasoningAnimation;
-import cn.breezeth.kaleidoscope_grilling.SkewerEatingAnimation;
+import cn.breezeth.kaleidoscope_grilling.oil.AnvilPressAnimation;
+import cn.breezeth.kaleidoscope_grilling.oil.AnvilPressAnimationAccess;
+import cn.breezeth.kaleidoscope_grilling.skewer.EnderPearlEatingAnimation;
+import cn.breezeth.kaleidoscope_grilling.registry.ModEffects;
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.oil.OilBrushAnimation;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningAnimation;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerEatingAnimation;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;

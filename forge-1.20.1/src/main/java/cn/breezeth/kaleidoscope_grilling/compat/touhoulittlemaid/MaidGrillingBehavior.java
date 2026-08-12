@@ -1,14 +1,14 @@
 package cn.breezeth.kaleidoscope_grilling.compat.touhoulittlemaid;
 
 import cn.breezeth.kaleidoscope_grilling.AdvancedRackAutomationApi;
-import cn.breezeth.kaleidoscope_grilling.AdvancedRackBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.rack.AdvancedRackBlockEntity;
 import cn.breezeth.kaleidoscope_grilling.GrillAutomationApi;
-import cn.breezeth.kaleidoscope_grilling.GrillBlockEntity;
-import cn.breezeth.kaleidoscope_grilling.HotFoodConfig;
-import cn.breezeth.kaleidoscope_grilling.ModItems;
-import cn.breezeth.kaleidoscope_grilling.ModSounds;
-import cn.breezeth.kaleidoscope_grilling.OilPotCompat;
-import cn.breezeth.kaleidoscope_grilling.SeasoningData;
+import cn.breezeth.kaleidoscope_grilling.grill.GrillBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
+import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
+import cn.breezeth.kaleidoscope_grilling.registry.ModSounds;
+import cn.breezeth.kaleidoscope_grilling.oil.OilPotCompat;
+import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningData;
 import com.github.tartaricacid.touhoulittlemaid.entity.item.EntityChair;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.google.common.collect.ImmutableMap;
