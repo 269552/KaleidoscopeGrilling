@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +38,9 @@ public final class ModAdvancements {
           "grilled_slime_skewer",
           "grilled_meat_and_bone_skewer",
           "grilled_fried_egg_skewer",
+          "grilled_lamb_skewer",
+          "grilled_golden_skewer",
+          "ordinary_skewer",
           "cold_houttuynia",
           "sugared_tomato",
           "pepper_honey",
@@ -44,7 +48,8 @@ public final class ModAdvancements {
           "green_pepper_squid_tentacles",
           "braised_chicken_wings",
           "potato_beef_stew",
-          "red_sweet_potato_porridge");
+          "red_sweet_potato_porridge",
+          "sour_spicy_noodles");
 
   public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
     Player player = event.player;
@@ -123,6 +128,14 @@ public final class ModAdvancements {
 
   public static void heavyMetalBlocked(LivingEntity entity) {
     if (entity instanceof ServerPlayer player) award(player, "metal_tolerance_failed");
+  }
+
+  public static void strongestShield(LivingEntity entity) {
+    if (entity instanceof ServerPlayer player) award(player, "strongest_shield");
+  }
+
+  public static void strongestSpear(LivingEntity entity) {
+    if (entity instanceof ServerPlayer player) award(player, "strongest_spear");
   }
 
   private static boolean has(Player player, Item item) {

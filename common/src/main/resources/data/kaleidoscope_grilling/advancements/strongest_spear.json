@@ -1,0 +1,14 @@
+{
+  "parent": "kaleidoscope_grilling:fireworks_feast",
+  "display": {
+    "icon": {"item": "kaleidoscope_grilling:ordinary_skewer"},
+    "title": {"translate": "advancement.kaleidoscope_grilling.strongest_spear.title"},
+    "description": {"translate": "advancement.kaleidoscope_grilling.strongest_spear.description"},
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {"event": {"trigger": "minecraft:impossible"}},
+  "rewards": {"experience": 50}
+}

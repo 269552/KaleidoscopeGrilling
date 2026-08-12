@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import cn.breezeth.kaleidoscope_grilling.mixin.FoodDataAccessor;
 import java.util.HashMap;
 import java.util.List;
@@ -88,13 +89,18 @@ public final class HotFoodHandler {
 
   public static void onFinish(LivingEntityUseItemEvent.Finish event) {
     if (event.getEntity().level().isClientSide) return;
-    Map<Holder<MobEffect>, Integer> before = EFFECTS_BEFORE_USE.remove(event.getEntity());
-    Float saturationBefore = SATURATION_BEFORE_USE.remove(event.getEntity());
-    boolean hot = FoodState.isHot(event.getItem(), event.getEntity().level());
-    if (before != null && hot) doubleNewDurations(event.getEntity(), before);
+    finishEarly(event.getItem(), event.getEntity());
+  }
+
+  /** Applies the normal finish-side heat and seasoning work for a deliberate early completion. */
+  public static void finishEarly(ItemStack stack, LivingEntity entity) {
+    Map<Holder<MobEffect>, Integer> before = EFFECTS_BEFORE_USE.remove(entity);
+    Float saturationBefore = SATURATION_BEFORE_USE.remove(entity);
+    boolean hot = FoodState.isHot(stack, entity.level());
+    if (before != null && hot) doubleNewDurations(entity, before);
     if (saturationBefore != null && hot)
-      multiplySaturationGain(event.getEntity(), saturationBefore);
-    FoodState.applySeasoning(event.getItem(), event.getEntity().level(), event.getEntity());
+      multiplySaturationGain(entity, saturationBefore);
+    FoodState.applySeasoning(stack, entity.level(), entity);
   }
 
   public static ItemStack finishNested(ItemStack stack, LivingEntity entity) {
@@ -127,6 +133,7 @@ public final class HotFoodHandler {
   private static void doubleNewDurations(
       LivingEntity entity, Map<Holder<MobEffect>, Integer> before) {
     for (MobEffectInstance effect : List.copyOf(entity.getActiveEffects())) {
+      if (effect.getEffect().is(ModEffects.INVINCIBLE)) continue;
       int old = before.getOrDefault(effect.getEffect(), 0);
       if (effect.getDuration() <= old) continue;
       int duration = old + (effect.getDuration() - old) * 2;

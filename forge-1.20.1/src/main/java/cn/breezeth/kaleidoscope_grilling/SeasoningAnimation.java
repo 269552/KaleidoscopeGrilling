@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import net.minecraft.world.entity.player.Player;
 
 public final class SeasoningAnimation {

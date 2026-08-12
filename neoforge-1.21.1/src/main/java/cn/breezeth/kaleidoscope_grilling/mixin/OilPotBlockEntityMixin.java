@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
+import cn.breezeth.kaleidoscope_grilling.OilPotCompat;
 import cn.breezeth.kaleidoscope_grilling.OilPotVisualState;
 import cn.breezeth.kaleidoscope_grilling.TypedOilPotAccess;
 import net.minecraft.core.HolderLookup;
@@ -29,7 +30,10 @@ public abstract class OilPotBlockEntityMixin implements TypedOilPotAccess {
 
   @Override
   public void grilling$setOilType(String type) {
-    grilling$oilType = type;
+    grilling$oilType = type == null ? "" : type;
+    if (getOilCount() > OilPotCompat.capacity(grilling$oilType)) {
+      setOilCount(OilPotCompat.capacity(grilling$oilType));
+    }
     grilling$updateVisualState();
     grilling$sync();
   }
@@ -75,17 +79,15 @@ public abstract class OilPotBlockEntityMixin implements TypedOilPotAccess {
   @Inject(method = "loadAdditional", at = @At("TAIL"))
   private void grilling$load(CompoundTag tag, HolderLookup.Provider provider, CallbackInfo ci) {
     grilling$oilType = tag.getString("GrillingOilType");
-  }
-
-  @Inject(method = "loadAdditional", at = @At("TAIL"))
-  private void grilling$capOilCountAfterLoad(CompoundTag tag, HolderLookup.Provider provider, CallbackInfo ci) {
-    if (getOilCount() > 64) setOilCount(64);
+    int capacity = OilPotCompat.capacity(grilling$oilType);
+    if (getOilCount() > capacity) setOilCount(capacity);
   }
 
   @Inject(method = "setOilCount", at = @At("HEAD"), cancellable = true)
   private void grilling$capSetOilCount(int count, CallbackInfo ci) {
-    if (count > 64) {
-      setOilCount(64);
+    int capacity = OilPotCompat.capacity(grilling$oilType);
+    if (count > capacity) {
+      setOilCount(capacity);
       ci.cancel();
     }
   }

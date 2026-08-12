@@ -11,7 +11,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public final class CropDropHandler {
   public static void onBlockBreak(BlockEvent.BreakEvent event) {
-    if (event.getLevel().isClientSide() || !event.getState().is(Blocks.GRASS)) return;
+    if (event.getPlayer().isCreative() || event.getLevel().isClientSide() || !event.getState().is(Blocks.GRASS)) return;
     ItemStack hat = event.getPlayer().getItemBySlot(EquipmentSlot.HEAD);
     var id = ForgeRegistries.ITEMS.getKey(hat.getItem());
     if (id == null

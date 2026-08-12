@@ -9,7 +9,7 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 
 public final class CropDropHandler {
   public static void onBlockBreak(BlockEvent.BreakEvent event) {
-    if (event.getLevel().isClientSide() || !event.getState().is(Blocks.SHORT_GRASS)) return;
+    if (event.getPlayer().isCreative() || event.getLevel().isClientSide() || !event.getState().is(Blocks.SHORT_GRASS)) return;
     ItemStack hat = event.getPlayer().getItemBySlot(EquipmentSlot.HEAD);
     String id = BuiltInRegistries.ITEM.getKey(hat.getItem()).toString();
     if (!id.equals("kaleidoscope_cookery:straw_hat")

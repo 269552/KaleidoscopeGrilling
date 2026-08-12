@@ -76,7 +76,9 @@ public final class SkewerPlateBlock extends BaseEntityBlock {
           ? InteractionResult.sidedSuccess(level.isClientSide)
           : InteractionResult.CONSUME;
     }
-    if (!held.isEmpty()) return InteractionResult.PASS;
+    // Claim the interaction so the held item cannot place/use itself and then fall through to the
+    // empty offhand, which would incorrectly replace it with a skewer from the plate.
+    if (!held.isEmpty()) return InteractionResult.sidedSuccess(level.isClientSide);
     if (plate.size() == 0) return InteractionResult.PASS;
     if (!level.isClientSide) {
       ItemStack removed = plate.removeLast();

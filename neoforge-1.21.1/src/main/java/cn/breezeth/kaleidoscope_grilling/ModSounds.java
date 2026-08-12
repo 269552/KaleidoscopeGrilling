@@ -23,6 +23,10 @@ public final class ModSounds {
       register("seasoning_bottle_place");
   public static final DeferredHolder<SoundEvent, SoundEvent> SEASONING_BOTTLE_STACK =
       register("seasoning_bottle_stack");
+  public static final DeferredHolder<SoundEvent, SoundEvent> THREE_SKEWER_EAT =
+      register("three_skewer_eat");
+  public static final DeferredHolder<SoundEvent, SoundEvent> FOUR_SKEWER_EAT =
+      register("four_skewer_eat");
 
   private static DeferredHolder<SoundEvent, SoundEvent> register(String name) {
     ResourceLocation id = ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, name);

@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import cn.breezeth.kaleidoscope_grilling.mixin.FoodDataAccessor;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -35,13 +36,18 @@ public final class SecretSkewerItem extends Item {
   @Override
   public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
     ItemStack stack = player.getItemInHand(hand);
-    return player.isShiftKeyDown()
-        ? InteractionResultHolder.pass(stack)
-        : super.use(level, player, hand);
+    if (player.isShiftKeyDown()) return InteractionResultHolder.pass(stack);
+    if (HotFoodConfig.ALLOW_SKEWERS_AT_FULL_HUNGER.get()
+        && !player.getFoodData().needsFood()) {
+      player.startUsingItem(hand);
+      return InteractionResultHolder.consume(stack);
+    }
+    return super.use(level, player, hand);
   }
 
   public static void setCooked(ItemStack stack, boolean cooked) {
-    stack.getOrCreateTag().putBoolean(COOKED_TAG, cooked);
+    if (cooked) stack.getOrCreateTag().putBoolean(COOKED_TAG, true);
+    else if (stack.hasTag()) stack.getTag().remove(COOKED_TAG);
   }
 
   static void setVisualStage(ItemStack stack, int stage) {
@@ -75,7 +81,7 @@ public final class SecretSkewerItem extends Item {
   @Override
   public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
     ItemStack consumed = stack.copy();
-    List<ItemStack> ingredients = SkeweringHandler.readIngredientStacks(consumed);
+    List<ItemStack> ingredients = SkeweringHandler.readEffectiveIngredientStacks(consumed);
     ItemStack result = super.finishUsingItem(stack, level, entity);
     if (!level.isClientSide) {
       for (ItemStack ingredient : ingredients) {
@@ -102,41 +108,32 @@ public final class SecretSkewerItem extends Item {
 
   @Override
   public FoodProperties getFoodProperties(ItemStack stack, @Nullable LivingEntity entity) {
-    List<ItemStack> ingredients = SkeweringHandler.readIngredientStacks(stack);
+    List<ItemStack> ingredients = SkeweringHandler.readEffectiveIngredientStacks(stack);
+    List<ItemStack> rawIngredients = SkeweringHandler.readIngredientStacks(stack);
     if (ingredients.isEmpty()) {
       return new FoodProperties.Builder().nutrition(1).saturationMod(0).build();
     }
 
     int totalNutrition = 0;
-    int minNutrition = Integer.MAX_VALUE;
-    float totalSaturation = 0;
+    float weightedSaturation = 0;
     int count = 0;
-    boolean hasDuplicate = false;
 
-    for (int i = 0; i < ingredients.size(); i++) {
-      ItemStack ingredient = ingredients.get(i);
+    for (ItemStack ingredient : ingredients) {
       FoodProperties fp = ingredient.getItem().getFoodProperties(ingredient, entity);
       if (fp == null) continue;
       int n = fp.getNutrition();
       totalNutrition += n;
-      minNutrition = Math.min(minNutrition, n);
-      totalSaturation += fp.getSaturationModifier();
+      weightedSaturation += n * fp.getSaturationModifier();
       count++;
-      for (int j = 0; j < i; j++) {
-        if (ItemStack.isSameItemSameTags(ingredients.get(j), ingredient)) {
-          hasDuplicate = true;
-          break;
-        }
-      }
     }
 
-    if (count == 0) {
+    if (count == 0 || totalNutrition <= 0) {
       return new FoodProperties.Builder().nutrition(1).saturationMod(0).build();
     }
 
-    float coefficient = hasDuplicate ? 0.5F : 0.6F;
-    int nutrition = Math.max(1, (int) Math.floor((totalNutrition - minNutrition) * coefficient));
-    float saturation = Math.min(0.8F, Math.max(0, (totalSaturation / count) * coefficient));
+    float coefficient = 0.6F * (hasDuplicateIngredients(rawIngredients) ? 0.8F : 1.0F);
+    int nutrition = Math.max(1, (int) Math.floor(totalNutrition * coefficient));
+    float saturation = Math.max(0, weightedSaturation / totalNutrition);
     if (!isCooked(stack)) {
       nutrition = Math.max(1, (int) Math.floor(nutrition * 0.5F));
       saturation *= 0.5F;
@@ -171,6 +168,20 @@ public final class SecretSkewerItem extends Item {
                       : "tooltip.kaleidoscope_grilling.secret_skewer.raw")
               .withStyle(cooked ? ChatFormatting.GOLD : ChatFormatting.DARK_GRAY));
     }
+    if (hasDuplicateIngredients(ingredients)) {
+      tooltip.add(
+          Component.translatable("tooltip.kaleidoscope_grilling.secret_skewer.duplicate_penalty")
+              .withStyle(ChatFormatting.DARK_GRAY));
+    }
+  }
+
+  private static boolean hasDuplicateIngredients(List<ItemStack> ingredients) {
+    for (int i = 1; i < ingredients.size(); i++) {
+      for (int j = 0; j < i; j++) {
+        if (ItemStack.isSameItemSameTags(ingredients.get(i), ingredients.get(j))) return true;
+      }
+    }
+    return false;
   }
 
   private record FoodSnapshot(int food, float saturation, float exhaustion) {

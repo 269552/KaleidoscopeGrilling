@@ -11,6 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -22,6 +23,12 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class OilPressBlockEntity extends BlockEntity {
   public static final int MAX_CAKES = 4,
@@ -30,6 +37,8 @@ public final class OilPressBlockEntity extends BlockEntity {
       PRESS_COOLDOWN_TICKS = 10;
   private final Map<UUID, Long> playerCooldowns = new HashMap<>();
   private final List<PendingImpact> pendingImpacts = new ArrayList<>();
+  private final IItemHandler oilCakeHandler = createOilCakeHandler();
+  private LazyOptional<IItemHandler> oilCakeCapability = LazyOptional.of(() -> oilCakeHandler);
   private int cakes, progress, residue, completionDelay;
   private boolean waitingForContainer;
   private long lastFailureMessage = -100;
@@ -67,6 +76,55 @@ public final class OilPressBlockEntity extends BlockEntity {
 
   public boolean waitingForContainer() {
     return waitingForContainer;
+  }
+
+  /** Item handler for Create funnel insertion; refuses to accept when full. */
+  public IItemHandler itemHandler() {
+    return oilCakeHandler;
+  }
+
+  private IItemHandler createOilCakeHandler() {
+    return new IItemHandler() {
+      @Override
+      public int getSlots() {
+        return 1;
+      }
+
+      @Override
+      public ItemStack getStackInSlot(int slot) {
+        return slot == 0 && cakes > 0
+            ? new ItemStack(ModItems.OIL_CAKE.get(), cakes)
+            : ItemStack.EMPTY;
+      }
+
+      @Override
+      public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+        if (slot != 0 || !stack.is(ModItems.OIL_CAKE.get()) || cakes >= MAX_CAKES) return stack;
+        int accepted = Math.min(stack.getCount(), MAX_CAKES - cakes);
+        if (!simulate) {
+          cakes += accepted;
+          sync();
+        }
+        ItemStack remainder = stack.copy();
+        remainder.shrink(accepted);
+        return remainder;
+      }
+
+      @Override
+      public ItemStack extractItem(int slot, int amount, boolean simulate) {
+        return ItemStack.EMPTY;
+      }
+
+      @Override
+      public int getSlotLimit(int slot) {
+        return slot == 0 ? MAX_CAKES : 0;
+      }
+
+      @Override
+      public boolean isItemValid(int slot, ItemStack stack) {
+        return slot == 0 && stack.is(ModItems.OIL_CAKE.get());
+      }
+    };
   }
 
   public boolean addCake() {
@@ -153,7 +211,10 @@ public final class OilPressBlockEntity extends BlockEntity {
     OilPressContainerApi.TransferResult result =
         OilPressContainerApi.insertNearby(level, worldPosition, MAX_CAKES);
     if (result.success()) {
-      ejectResidue(MAX_CAKES);
+      ItemStack residueRemainder =
+          CreateCompat.insertResidue(
+              level, worldPosition, new ItemStack(ModItems.OIL_RESIDUE.get(), MAX_CAKES));
+      if (!residueRemainder.isEmpty()) ejectResidue(residueRemainder.getCount());
       cakes = 0;
       progress = 0;
       waitingForContainer = false;
@@ -203,17 +264,35 @@ public final class OilPressBlockEntity extends BlockEntity {
     return 4;
   }
 
+  @Override
+  public <T> @NotNull LazyOptional<T> getCapability(
+      @NotNull Capability<T> cap, @Nullable Direction side) {
+    if (cap == ForgeCapabilities.ITEM_HANDLER) return oilCakeCapability.cast();
+    return super.getCapability(cap, side);
+  }
+
+  @Override
+  public void invalidateCaps() {
+    super.invalidateCaps();
+    oilCakeCapability.invalidate();
+  }
+
+  @Override
+  public void reviveCaps() {
+    super.reviveCaps();
+    oilCakeCapability = LazyOptional.of(() -> oilCakeHandler);
+  }
+
   private void sync() {
     setChanged();
-    if (level == null) return;
+    if (level == null || level.isClientSide) return;
     BlockState oldState = getBlockState();
     BlockState newState =
         oldState
             .setValue(OilPressBlock.CAKE_COUNT, cakes)
             .setValue(OilPressBlock.PRESS_STAGE, visualStage(progress));
-    if (!level.isClientSide && newState != oldState)
-      level.setBlock(worldPosition, newState, Block.UPDATE_CLIENTS);
-    else level.sendBlockUpdated(worldPosition, oldState, oldState, Block.UPDATE_CLIENTS);
+    if (newState != oldState) level.setBlock(worldPosition, newState, Block.UPDATE_CLIENTS);
+    level.sendBlockUpdated(worldPosition, newState, newState, Block.UPDATE_CLIENTS);
   }
 
   @Override
@@ -240,6 +319,18 @@ public final class OilPressBlockEntity extends BlockEntity {
     residue = Math.max(0, tag.getInt("Residue"));
     completionDelay = Math.max(0, Math.min(PRESS_COOLDOWN_TICKS, tag.getInt("CompletionDelay")));
     waitingForContainer = tag.getBoolean("WaitingForContainer");
+  }
+
+  @Override
+  public CompoundTag getUpdateTag() {
+    CompoundTag tag = super.getUpdateTag();
+    saveAdditional(tag);
+    return tag;
+  }
+
+  @Override
+  public ClientboundBlockEntityDataPacket getUpdatePacket() {
+    return ClientboundBlockEntityDataPacket.create(this);
   }
 
   public enum InspectionResult {

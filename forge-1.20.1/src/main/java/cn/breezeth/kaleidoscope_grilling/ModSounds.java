@@ -21,6 +21,10 @@ public final class ModSounds {
       register("seasoning_bottle_place");
   public static final RegistryObject<SoundEvent> SEASONING_BOTTLE_STACK =
       register("seasoning_bottle_stack");
+  public static final RegistryObject<SoundEvent> THREE_SKEWER_EAT =
+      register("three_skewer_eat");
+  public static final RegistryObject<SoundEvent> FOUR_SKEWER_EAT =
+      register("four_skewer_eat");
 
   private static RegistryObject<SoundEvent> register(String name) {
     ResourceLocation id = new ResourceLocation(KaleidoscopeGrilling.MOD_ID, name);

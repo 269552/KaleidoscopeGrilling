@@ -26,10 +26,17 @@ abstract class AbstractContainerMenuHotMergeMixin {
       return;
     }
     Slot slot = menu.slots.get(slotId);
-    int merged = FoodState.mergeHot(slot.getItem(), menu.getCarried(), player.level());
+    if (!HotFoodMerge.isAllowedTarget(player, menu, slot)) {
+      cir.setReturnValue(false);
+      return;
+    }
+    var target = slot.getItem().copy();
+    var source = menu.getCarried().copy();
+    int merged = FoodState.mergeHot(target, source, player.level());
     if (merged > 0) {
+      slot.set(target);
+      menu.setCarried(source);
       slot.setChanged();
-      menu.setCarried(menu.getCarried());
       menu.broadcastChanges();
       cir.setReturnValue(true);
     } else cir.setReturnValue(false);

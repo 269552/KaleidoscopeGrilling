@@ -8,6 +8,7 @@ import cn.breezeth.kaleidoscope_grilling.RackKeyHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
@@ -16,8 +17,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.lwjgl.glfw.GLFW;
 
 @Mixin(AbstractContainerScreen.class)
 abstract class AbstractContainerScreenHotMergeMixin {
@@ -26,22 +25,6 @@ abstract class AbstractContainerScreenHotMergeMixin {
           "kaleidoscope_grilling:textures/gui/hot_food_merge_border.png");
 
   @Shadow protected AbstractContainerMenu menu;
-  @Shadow private Slot hoveredSlot;
-
-  @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-  private void grilling$mergeHotFood(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-    Minecraft minecraft = Minecraft.getInstance();
-    if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT
-        || !RackKeyHandler.isCapsHeld()
-        || hoveredSlot == null
-        || !hoveredSlot.hasItem()
-        || menu.getCarried().isEmpty()
-        || menu instanceof AdvancedRackMenu
-        || minecraft.gameMode == null) return;
-    minecraft.gameMode.handleInventoryButtonClick(
-        menu.containerId, HotFoodMerge.menuButtonForSlot(hoveredSlot.index));
-    cir.setReturnValue(true);
-  }
 
   @Inject(method = "renderSlot", at = @At("TAIL"))
   private void grilling$drawHotMergeHint(GuiGraphics graphics, Slot slot, CallbackInfo ci) {
@@ -51,6 +34,15 @@ abstract class AbstractContainerScreenHotMergeMixin {
         || menu instanceof AdvancedRackMenu
         || menu.getCarried().isEmpty()
         || slot.getItem().isEmpty()
+        || minecraft.player == null
+        || !(HotFoodMerge.isAllowedClientTarget(
+                minecraft.player,
+                menu,
+                slot,
+                ((AbstractContainerScreen<?>)(Object)this).getTitle())
+            || (minecraft.screen instanceof CreativeModeInventoryScreen
+                && HotFoodMerge.isAllowedCreativeInventoryTarget(
+                    minecraft.player, menu, slot)))
         || slot.getItem().getCount() >= slot.getItem().getMaxStackSize()
         || !FoodState.canMergeHot(slot.getItem(), menu.getCarried(), minecraft.level)) return;
     graphics.pose().pushPose();

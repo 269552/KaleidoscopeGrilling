@@ -39,3 +39,17 @@ type = "required"
 versionRange = "[1.4.1,)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[dependencies.kaleidoscope_grilling]]
+modId = "create"
+type = "optional"
+versionRange = "[6.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.kaleidoscope_grilling]]
+modId = "touhou_little_maid"
+type = "optional"
+versionRange = "[1.5.3,)"
+ordering = "AFTER"
+side = "BOTH"

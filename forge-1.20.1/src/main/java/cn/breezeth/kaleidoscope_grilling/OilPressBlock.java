@@ -1,10 +1,10 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -132,13 +132,12 @@ public final class OilPressBlock extends BaseEntityBlock {
 
   @Override
   public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
-    ItemStack out = new ItemStack(ModBlocks.OIL_PRESS_ITEM.get());
+    List<ItemStack> drops = new ArrayList<>();
+    drops.add(new ItemStack(ModBlocks.OIL_PRESS_ITEM.get()));
     BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
     if (blockEntity instanceof OilPressBlockEntity press) {
-      CompoundTag data = new CompoundTag();
-      press.saveAdditional(data);
-      out.addTagElement("BlockEntityTag", data);
+      if (press.cakes() > 0) drops.add(new ItemStack(ModItems.OIL_CAKE.get(), press.cakes()));
     }
-    return List.of(out);
+    return drops;
   }
 }

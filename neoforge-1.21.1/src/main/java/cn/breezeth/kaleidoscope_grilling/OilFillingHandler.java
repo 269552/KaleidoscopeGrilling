@@ -20,7 +20,9 @@ public final class OilFillingHandler {
     event.setCancellationResult(InteractionResult.SUCCESS);
     if (event.getLevel().isClientSide) return;
     String current = OilPotCompat.getType(pot);
-    if (OilPotCompat.getCount(pot) > 56 || (!current.isEmpty() && !current.equals(type))) {
+    int count = OilPotCompat.getCount(pot);
+    if (count > OilPotCompat.FLUID_CAPACITY - 8
+        || (current.isEmpty() ? count > 0 : !current.equals(type))) {
       event
           .getEntity()
           .displayClientMessage(
@@ -47,7 +49,9 @@ public final class OilFillingHandler {
     event.setCancellationResult(InteractionResult.SUCCESS);
     if (event.getLevel().isClientSide) return;
     String current = pot.grilling$getOilType();
-    if (pot.grilling$getOilCount() > 56 || (!current.isEmpty() && !current.equals(type))) {
+    int count = pot.grilling$getOilCount();
+    if (count > OilPotCompat.FLUID_CAPACITY - 8
+        || (current.isEmpty() ? count > 0 : !current.equals(type))) {
       event
           .getEntity()
           .displayClientMessage(
@@ -70,7 +74,10 @@ public final class OilFillingHandler {
             "premium_chili".equals(type) ? SoundEvents.BUCKET_EMPTY_LAVA : SoundEvents.BUCKET_EMPTY,
             SoundSource.PLAYERS,
             0.9F,
-            0.8F + 0.5F * Math.min(64, amount) / 64.0F);
+            0.8F
+                + 0.5F
+                    * Math.min(OilPotCompat.FLUID_CAPACITY, amount)
+                    / OilPotCompat.FLUID_CAPACITY);
   }
 
   private static void consumeBucket(PlayerInteractEvent event) {

@@ -13,6 +13,18 @@ base { archivesName = props.getProperty('archives_base_name') }
 repositories {
     maven { url = 'https://maven.blamejared.com' }
     exclusiveContent {
+        forRepository { maven { name = 'Create'; url = 'https://maven.createmod.net' } }
+        filter {
+            includeGroup 'com.simibubi.create'
+            includeGroup 'net.createmod.ponder'
+            includeGroup 'dev.engine-room.flywheel'
+        }
+    }
+    exclusiveContent {
+        forRepository { maven { name = 'Registrate'; url = 'https://maven.ithundxr.dev/snapshots' } }
+        filter { includeGroup 'com.tterrag.registrate' }
+    }
+    exclusiveContent {
         forRepository {
             maven {
                 name = 'Modrinth'
@@ -28,7 +40,8 @@ sourceSets.main.resources.srcDir rootProject.file('common/src/main/resources')
 neoForge {
     version = props.getProperty('neo_version')
     runs {
-        client { client(); gameDirectory = project.file('runs/client') }
+        client { client(); gameDirectory = project.file('runs/client'); programArgument('--username=Breezeth') }
+        client2 { client(); gameDirectory = project.file('runs/client2'); programArgument('--username=Player2') }
         server { server(); gameDirectory = project.file('runs/server'); programArgument('--nogui') }
     }
     mods {
@@ -49,9 +62,35 @@ tasks.withType(JavaCompile).configureEach {
 
 dependencies {
     implementation 'maven.modrinth:v17FatAc:TqaHu4Ma'
+    def localMaidJar = rootProject.file(".breezeth/dependencies/touhoulittlemaid-${props.getProperty('touhou_little_maid_version')}.jar")
+    if (localMaidJar.exists()) {
+        compileOnly files(localMaidJar)
+        if (!providers.gradleProperty('withoutMaid').isPresent()) {
+            runtimeOnly files(localMaidJar)
+        }
+    } else {
+        compileOnly "maven.modrinth:touhou-little-maid:${props.getProperty('touhou_little_maid_version')}"
+        if (!providers.gradleProperty('withoutMaid').isPresent()) {
+            runtimeOnly "maven.modrinth:touhou-little-maid:${props.getProperty('touhou_little_maid_version')}"
+        }
+    }
     compileOnly 'mezz.jei:jei-1.21.1-common-api:19.27.0.340'
     compileOnly 'mezz.jei:jei-1.21.1-neoforge-api:19.27.0.340'
     compileOnly 'maven.modrinth:jade:15.10.5+neoforge'
+    def createSlim = "com.simibubi.create:create-${props.getProperty('minecraft_version')}:${props.getProperty('create_version')}:slim"
+    def ponder = "net.createmod.ponder:ponder-neoforge:${props.getProperty('ponder_version')}+mc${props.getProperty('minecraft_version')}"
+    def flywheel = "dev.engine-room.flywheel:flywheel-neoforge-${props.getProperty('minecraft_version')}:${props.getProperty('flywheel_version')}"
+    def registrate = "com.tterrag.registrate:Registrate:${props.getProperty('registrate_version')}"
+    compileOnly(createSlim) { transitive = false }
+    compileOnly ponder
+    compileOnly "dev.engine-room.flywheel:flywheel-neoforge-api-${props.getProperty('minecraft_version')}:${props.getProperty('flywheel_version')}"
+    compileOnly registrate
+    if (!providers.gradleProperty('withoutCreate').isPresent()) {
+        runtimeOnly(createSlim) { transitive = false }
+        runtimeOnly ponder
+        runtimeOnly flywheel
+        runtimeOnly registrate
+    }
 }
 
 java { toolchain.languageVersion = JavaLanguageVersion.of(21) }

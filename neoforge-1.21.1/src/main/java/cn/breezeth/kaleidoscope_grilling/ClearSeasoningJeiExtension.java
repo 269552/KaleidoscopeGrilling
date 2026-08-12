@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
@@ -36,10 +37,10 @@ final class ClearSeasoningJeiExtension
     ItemStack pending = new ItemStack(ModItems.PENDING_SEASONING.get());
     SeasoningData.set(pending, BASE_SEASONINGS);
     inputs.add(pending);
-    for (int damage : new int[] {0, 8, 15}) {
+    for (int uses : new int[] {0, 8, 15}) {
       ItemStack special = new ItemStack(ModItems.SPECIAL_SEASONING.get());
       SeasoningData.set(special, BASE_SEASONINGS);
-      special.setDamageValue(damage);
+      SeasoningData.setUses(special, uses);
       inputs.add(special);
     }
     return inputs;

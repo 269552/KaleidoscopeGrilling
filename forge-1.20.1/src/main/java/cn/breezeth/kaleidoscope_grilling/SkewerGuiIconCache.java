@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -8,6 +9,7 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.logging.LogUtils;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -41,25 +43,67 @@ public final class SkewerGuiIconCache {
   private static final Set<String> PENDING_FIXED = new LinkedHashSet<>();
   private static final Set<String> PENDING_CUSTOM = new LinkedHashSet<>();
   private static final Set<String> FAILED = new HashSet<>();
+  private static final Map<String, Integer> FAILURE_COUNTS = new HashMap<>();
+  private static final Map<ItemStack, IngredientKeyData> INGREDIENT_KEY_CACHE =
+      new IdentityHashMap<>();
   private static long customTextureSequence;
   private static long budgetFrame = Long.MIN_VALUE;
   private static int fixedBudget;
   private static int customBudget;
 
   public static boolean render(GuiGraphics graphics, ItemStack stack, int x, int y) {
-    if (!isEnabled() || SkewerItemRenderContext.isCapturing() || SkewerOutlineRender.isActive())
+    if (SkewerItemRenderContext.isCapturing() || SkewerOutlineRender.isActive())
       return false;
     Minecraft minecraft = Minecraft.getInstance();
     if (minecraft.screen instanceof CreativeModeInventoryScreen && minecraft.level != null)
       stack = SkeweringHandler.creativePreviewFrame(stack, minecraft.level.getGameTime());
     boolean custom = isCompletedCustom(minecraft, stack);
+    boolean composedCustom =
+        !HotFoodConfig.USE_CUSTOM_SKEWER_64X_CACHE.get()
+            && isStartedCustom(minecraft, stack);
     boolean fixed = SkewerRecipes.isRawSkewer(stack) || SkewerRecipes.isCookedSkewer(stack);
-    if (!custom && !fixed) return false;
+    boolean failed =
+        stack.is(ModItems.MYSTERIOUS_SKEWER.get()) || stack.is(ModItems.DARK_GRILLING.get());
+    if (!custom && !composedCustom && !fixed && !failed) return false;
     ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
+    if (itemId == null) return false;
+    if (failed) {
+      if (HotFoodConfig.USE_FIXED_SKEWER_64X_CACHE.get()) return false;
+      renderStaticIcon(graphics, failedIcon(stack, minecraft), x, y);
+      return true;
+    }
     boolean cooked =
         SkewerRecipes.isCookedSkewer(stack)
             || stack.is(ModItems.SECRET_SKEWER.get()) && SecretSkewerItem.isCooked(stack);
     boolean hot = cooked && minecraft.level != null && FoodState.isHot(stack, minecraft.level);
+    if (fixed && !HotFoodConfig.USE_FIXED_SKEWER_64X_CACHE.get()) {
+      renderStaticIcon(graphics, fixedIcon(itemId, cooked, minecraft), x, y);
+      HotFoodGuiBadge.render(graphics, stack, minecraft.level, x, y);
+      return true;
+    }
+    if (composedCustom) {
+      if (!isEnabled()) return false;
+      String state = cooked ? "cooked" : "raw";
+      String key =
+          "16/"
+              + customKey(minecraft, stack, itemId, state)
+              + "/v"
+              + CustomSkewerGuiTexture.variantBits(stack);
+      ResourceLocation texture = CUSTOM_CACHE.get(key);
+      if (texture == null) {
+        ResourceLocation textureId =
+            new ResourceLocation(
+                KaleidoscopeGrilling.MOD_ID, "skewer_gui_cache/custom_" + customTextureSequence++);
+        texture = CustomSkewerGuiTexture.bake(stack, textureId);
+        if (texture == null) return false;
+        CUSTOM_CACHE.put(key, texture);
+        trimCustomCache(minecraft);
+      }
+      renderCachedIcon(graphics, texture, x, y, 16);
+      HotFoodGuiBadge.render(graphics, stack, minecraft.level, x, y);
+      return true;
+    }
+    if (custom ? !isEnabled() : !isFixedCacheEnabled()) return false;
     String state = cooked ? hot ? "hot" : "cooked" : "raw";
     if (cooked
         && itemId != null
@@ -92,17 +136,60 @@ public final class SkewerGuiIconCache {
                   "skewer_gui_cache/" + itemId.getPath() + "_" + state);
       texture = bake(graphics, stack, itemId, state, textureId, outlineColor(cooked, hot), size);
       if (texture == null) {
-        FAILED.add(key);
+        int failures = FAILURE_COUNTS.merge(key, 1, Integer::sum);
+        if (failures >= 2) FAILED.add(key);
         return false;
       }
+      FAILURE_COUNTS.remove(key);
       cache.put(key, texture);
       if (custom) trimCustomCache(minecraft);
     }
+    renderCachedIcon(graphics, texture, x, y, size);
+    HotFoodGuiBadge.render(graphics, stack, minecraft.level, x, y);
+    return true;
+  }
+
+  private static ResourceLocation fixedIcon(
+      ResourceLocation itemId, boolean cooked, Minecraft minecraft) {
+    String suffix = cooked ? "_cooked" : "_raw";
+    if (cooked
+        && "grilled_slime_skewer".equals(itemId.getPath())
+        && minecraft.level != null) {
+      suffix += "_frame_" + (minecraft.level.getGameTime() / 4L % 5L);
+    }
+    return new ResourceLocation(
+        KaleidoscopeGrilling.MOD_ID,
+        "textures/item/fixed_skewer_gui_16/" + itemId.getPath() + suffix + ".png");
+  }
+
+  private static ResourceLocation failedIcon(ItemStack stack, Minecraft minecraft) {
+    String name = "dark_grilling";
+    if (stack.is(ModItems.MYSTERIOUS_SKEWER.get())) {
+      long gameTime = minecraft.level == null ? 0L : minecraft.level.getGameTime();
+      name = "mysterious_skewer_frame_" + (gameTime / 4L % 5L);
+    }
+    return new ResourceLocation(
+        KaleidoscopeGrilling.MOD_ID,
+        "textures/item/fixed_skewer_gui_16/" + name + ".png");
+  }
+
+  private static void renderStaticIcon(
+      GuiGraphics graphics, ResourceLocation texture, int x, int y) {
+    graphics.pose().pushPose();
+    graphics.pose().translate(0.0F, 0.0F, GUI_ITEM_DEPTH);
+    RenderSystem.enableBlend();
+    RenderSystem.defaultBlendFunc();
+    graphics.blit(texture, x, y, 16, 16, 0.0F, 0.0F, 16, 16, 16, 16);
+    RenderSystem.disableBlend();
+    graphics.pose().popPose();
+  }
+
+  private static void renderCachedIcon(
+      GuiGraphics graphics, ResourceLocation texture, int x, int y, int size) {
     graphics.pose().pushPose();
     graphics.pose().translate(0.0F, 0.0F, GUI_ITEM_DEPTH);
     graphics.blit(texture, x, y, 16, 16, 0.0F, 0.0F, size, size, size, size);
     graphics.pose().popPose();
-    return true;
   }
 
   public static boolean hasCachedIcon(ItemStack stack) {
@@ -110,12 +197,81 @@ public final class SkewerGuiIconCache {
     Minecraft minecraft = Minecraft.getInstance();
     if (minecraft.screen instanceof CreativeModeInventoryScreen && minecraft.level != null)
       stack = SkeweringHandler.creativePreviewFrame(stack, minecraft.level.getGameTime());
-    if (!isCompletedCustom(minecraft, stack)) return false;
+    boolean use64 = HotFoodConfig.USE_CUSTOM_SKEWER_64X_CACHE.get();
+    if (use64 ? !isCompletedCustom(minecraft, stack) : !isStartedCustom(minecraft, stack)) {
+      return false;
+    }
     ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
     boolean cooked = stack.is(ModItems.SECRET_SKEWER.get()) && SecretSkewerItem.isCooked(stack);
     boolean hot = cooked && minecraft.level != null && FoodState.isHot(stack, minecraft.level);
-    String state = cooked ? hot ? "hot" : "cooked" : "raw";
-    return CUSTOM_CACHE.containsKey(customKey(minecraft, stack, itemId, state));
+    String state = cooked ? "cooked" : "raw";
+    String key = customKey(minecraft, stack, itemId, state);
+    if (!HotFoodConfig.USE_CUSTOM_SKEWER_64X_CACHE.get()) {
+      key = "16/" + key + "/v" + CustomSkewerGuiTexture.variantBits(stack);
+    }
+    else if (hot) key = customKey(minecraft, stack, itemId, "hot");
+    return CUSTOM_CACHE.containsKey(key);
+  }
+
+  static ResourceLocation recipeIcon16(ItemStack stack) {
+    Minecraft minecraft = Minecraft.getInstance();
+    ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
+    if (itemId == null) return null;
+    if ((SkewerRecipes.isRawSkewer(stack) || SkewerRecipes.isCookedSkewer(stack))
+        && !HotFoodConfig.USE_FIXED_SKEWER_64X_CACHE.get()) {
+      return fixedIcon(itemId, SkewerRecipes.isCookedSkewer(stack), minecraft);
+    }
+    if (HotFoodConfig.USE_CUSTOM_SKEWER_64X_CACHE.get()
+        || !isStartedCustom(minecraft, stack)
+        || !isEnabled()) return null;
+    String key =
+        "16/"
+            + customKey(minecraft, stack, itemId, "raw")
+            + "/v"
+            + CustomSkewerGuiTexture.variantBits(stack);
+    ResourceLocation texture = CUSTOM_CACHE.get(key);
+    if (texture != null) return texture;
+    ResourceLocation textureId =
+        new ResourceLocation(
+            KaleidoscopeGrilling.MOD_ID, "skewer_gui_cache/custom_" + customTextureSequence++);
+    texture = CustomSkewerGuiTexture.bake(stack, textureId);
+    if (texture == null) return null;
+    CUSTOM_CACHE.put(key, texture);
+    trimCustomCache(minecraft);
+    return texture;
+  }
+
+  /** Returns the authored/composed 16x16 icon without using an active bite animation stage. */
+  static ResourceLocation eatingHudIcon16(ItemStack stack) {
+    Minecraft minecraft = Minecraft.getInstance();
+    ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
+    if (itemId == null) return null;
+    if (stack.getItem() instanceof MultiBiteSkewerItem) {
+      boolean cooked = itemId.getPath().startsWith("grilled_");
+      return fixedIcon(itemId, cooked, minecraft);
+    }
+    if (stack.is(ModItems.MYSTERIOUS_SKEWER.get()) || stack.is(ModItems.DARK_GRILLING.get()))
+      return failedIcon(stack, minecraft);
+    if (SkewerRecipes.isRawSkewer(stack) || SkewerRecipes.isCookedSkewer(stack))
+      return fixedIcon(itemId, SkewerRecipes.isCookedSkewer(stack), minecraft);
+    if (!isStartedCustom(minecraft, stack) || !isEnabled()) return null;
+
+    boolean cooked = stack.is(ModItems.SECRET_SKEWER.get()) && SecretSkewerItem.isCooked(stack);
+    String key =
+        "eating_hud/"
+            + customKey(minecraft, stack, itemId, cooked ? "cooked" : "raw")
+            + "/v"
+            + CustomSkewerGuiTexture.variantBits(stack);
+    ResourceLocation texture = CUSTOM_CACHE.get(key);
+    if (texture != null) return texture;
+    ResourceLocation textureId =
+        new ResourceLocation(
+            KaleidoscopeGrilling.MOD_ID, "skewer_gui_cache/custom_" + customTextureSequence++);
+    texture = CustomSkewerGuiTexture.bake(stack, textureId);
+    if (texture == null) return null;
+    CUSTOM_CACHE.put(key, texture);
+    trimCustomCache(minecraft);
+    return texture;
   }
 
   public static void clear() {
@@ -127,6 +283,9 @@ public final class SkewerGuiIconCache {
     PENDING_FIXED.clear();
     PENDING_CUSTOM.clear();
     FAILED.clear();
+    FAILURE_COUNTS.clear();
+    INGREDIENT_KEY_CACHE.clear();
+    CustomSkewerGuiTexture.clearTemplates();
     customTextureSequence = 0;
     budgetFrame = Long.MIN_VALUE;
     fixedBudget = 0;
@@ -160,9 +319,7 @@ public final class SkewerGuiIconCache {
       blackCapture = capture(minecraft, target, stack, 0.0F);
       whiteCapture = capture(minecraft, target, stack, 1.0F);
       NativeImage transparent = recoverTransparency(blackCapture, whiteCapture, size);
-      int visiblePixels = countVisiblePixels(transparent);
-      if (visiblePixels == 0) {
-        LOGGER.warn("Skewer GUI cache captured a blank icon for {} ({})", itemId, state);
+      if (!isValidCapture(transparent, itemId, state)) {
         transparent.close();
         return null;
       }
@@ -267,10 +424,61 @@ public final class SkewerGuiIconCache {
     return image.getPixelRGBA(x, y) >>> 24;
   }
 
-  private static int countVisiblePixels(NativeImage image) {
-    int count = 0;
+  private static boolean isValidCapture(
+      NativeImage image, ResourceLocation itemId, String state) {
+    int width = image.getWidth();
+    int height = image.getHeight();
+    int visible = 0;
+    int minX = width;
+    int minY = height;
+    int maxX = -1;
+    int maxY = -1;
     for (int y = 0; y < image.getHeight(); y++) {
       for (int x = 0; x < image.getWidth(); x++) {
+        if (alpha(image, x, y) <= 16) continue;
+        visible++;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+    int boundsWidth = maxX < minX ? 0 : maxX - minX + 1;
+    int boundsHeight = maxY < minY ? 0 : maxY - minY + 1;
+    int cornerSize = Math.max(2, width / 16);
+    boolean pollutedCorner =
+        countVisiblePixels(image, 0, 0, cornerSize, cornerSize) > cornerSize * cornerSize / 2
+            || countVisiblePixels(
+                    image,
+                    width - cornerSize,
+                    height - cornerSize,
+                    width,
+                    height)
+                > cornerSize * cornerSize / 2;
+    boolean valid =
+        visible >= width
+            && visible <= width * height * 3 / 4
+            && boundsWidth >= width / 4
+            && boundsHeight >= height / 4
+            && !pollutedCorner;
+    if (!valid) {
+      LOGGER.warn(
+          "Rejected invalid skewer GUI cache for {} ({}): visible={}, bounds={}x{}, corner={}",
+          itemId,
+          state,
+          visible,
+          boundsWidth,
+          boundsHeight,
+          pollutedCorner);
+    }
+    return valid;
+  }
+
+  private static int countVisiblePixels(
+      NativeImage image, int minX, int minY, int maxX, int maxY) {
+    int count = 0;
+    for (int y = minY; y < maxY; y++) {
+      for (int x = minX; x < maxX; x++) {
         if (alpha(image, x, y) > 16) count++;
       }
     }
@@ -291,17 +499,34 @@ public final class SkewerGuiIconCache {
             .append(SkeweringHandler.modelState(stack))
             .append('/')
             .append(SecretSkewerItem.getVisualStage(stack));
+    return key.append(ingredientKey(minecraft, stack)).toString();
+  }
+
+  private static String ingredientKey(Minecraft minecraft, ItemStack stack) {
+    Object ingredientToken =
+        stack.hasTag() ? stack.getTag().get("SkewerIngredientStacks") : null;
+    Object cookedToken = stack.hasTag() ? stack.getTag().get("CookedIngredientStacks") : null;
+    IngredientKeyData cached = INGREDIENT_KEY_CACHE.get(stack);
+    if (cached != null
+        && cached.ingredientToken() == ingredientToken
+        && cached.cookedToken() == cookedToken) return cached.key();
+
+    StringBuilder key = new StringBuilder();
     List<ItemStack> ingredients =
         minecraft.level == null
             ? SkewerRecipes.displayIngredients(stack)
-            : SkeweringHandler.readIngredientStacks(stack);
+            : SkeweringHandler.readEffectiveIngredientStacks(stack);
     for (ItemStack ingredient : ingredients) {
       key.append('|')
           .append(ForgeRegistries.ITEMS.getKey(ingredient.getItem()))
           .append('@')
           .append(ingredient.hasTag() ? ingredient.getTag().hashCode() : 0);
     }
-    return key.toString();
+    if (INGREDIENT_KEY_CACHE.size() >= 256) INGREDIENT_KEY_CACHE.clear();
+    String resolved = key.toString();
+    INGREDIENT_KEY_CACHE.put(
+        stack, new IngredientKeyData(ingredientToken, cookedToken, resolved));
+    return resolved;
   }
 
   private static void trimCustomCache(Minecraft minecraft) {
@@ -315,7 +540,14 @@ public final class SkewerGuiIconCache {
   private static boolean isCompletedCustom(Minecraft minecraft, ItemStack stack) {
     return stack.is(ModItems.SECRET_SKEWER.get())
         && minecraft.level != null
-        && SkeweringHandler.readIngredientStacks(stack).size() >= 3;
+        && SkeweringHandler.ingredientCount(stack) >= 3;
+  }
+
+  private static boolean isStartedCustom(Minecraft minecraft, ItemStack stack) {
+    return (stack.is(ModItems.UNFINISHED_SKEWER.get())
+            || stack.is(ModItems.SECRET_SKEWER.get()))
+        && minecraft.level != null
+        && SkeweringHandler.ingredientCount(stack) > 0;
   }
 
   private static void refreshBudgets(Minecraft minecraft) {
@@ -335,6 +567,12 @@ public final class SkewerGuiIconCache {
   private static boolean isEnabled() {
     return !JVM_DISABLED && HotFoodConfig.ENABLE_SKEWER_GUI_CACHE.get();
   }
+
+  private static boolean isFixedCacheEnabled() {
+    return !JVM_DISABLED && HotFoodConfig.USE_FIXED_SKEWER_64X_CACHE.get();
+  }
+
+  private record IngredientKeyData(Object ingredientToken, Object cookedToken, String key) {}
 
   private SkewerGuiIconCache() {}
 }

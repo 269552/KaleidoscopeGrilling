@@ -1,5 +1,10 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
+import cn.breezeth.kaleidoscope_grilling.HotFoodConfig;
+import cn.breezeth.kaleidoscope_grilling.SeasonedPotAccess;
+import cn.breezeth.kaleidoscope_grilling.SeasoningAnimation;
+import cn.breezeth.kaleidoscope_grilling.SeasoningData;
+
 import cn.breezeth.kaleidoscope_grilling.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,13 +43,13 @@ public abstract class StockpotBlockEntityMixin implements SeasonedPotAccess {
     if (user instanceof Player player) SeasoningAnimation.start(player);
     grilling$seasoning = new ArrayList<>(SeasoningData.get(stack));
     if (user instanceof Player player && !player.getAbilities().instabuild) {
-      int next = stack.getDamageValue() + 1;
-      if (next >= stack.getMaxDamage()) {
+      int next = SeasoningData.getUses(stack) + 1;
+      if (next >= SeasoningData.MAX_USES) {
         stack.setCount(0);
         player.setItemInHand(
             InteractionHand.MAIN_HAND, new ItemStack(ModItems.EMPTY_SEASONING_BOTTLE.get()));
       } else {
-        stack.setDamageValue(next);
+        SeasoningData.setUses(stack, next);
       }
     }
     if (!result.isEmpty()) {

@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.world.effect.MobEffectInstance;

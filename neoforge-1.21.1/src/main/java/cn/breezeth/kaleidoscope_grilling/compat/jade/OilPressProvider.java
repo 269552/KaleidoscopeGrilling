@@ -1,6 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.compat.jade;
 
 import cn.breezeth.kaleidoscope_grilling.BigVatBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.CreateCompat;
 import cn.breezeth.kaleidoscope_grilling.OilPressBlockEntity;
 import cn.breezeth.kaleidoscope_grilling.OilPressContainerApi;
 import net.minecraft.network.chat.Component;
@@ -48,7 +49,16 @@ enum OilPressProvider implements IBlockComponentProvider {
               BigVatBlockEntity.CAPACITY_BUCKETS);
     } else {
       String key = result.status() == OilPressContainerApi.TransferStatus.FULL ? "full" : "ready";
-      container = Component.translatable("jade.kaleidoscope_grilling.press.container." + key);
+      long[] tank =
+          result.containerPos() != null
+              ? CreateCompat.fluidTankCapacity(accessor.getLevel(), result.containerPos())
+              : null;
+      if (tank != null) {
+        container =
+            Component.translatable("jade.kaleidoscope_grilling.press.tank." + key, tank[0], tank[1]);
+      } else {
+        container = Component.translatable("jade.kaleidoscope_grilling.press.container." + key);
+      }
     }
     tooltip.add(container);
   }

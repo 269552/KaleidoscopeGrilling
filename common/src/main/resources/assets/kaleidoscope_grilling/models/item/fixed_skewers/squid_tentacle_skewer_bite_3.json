@@ -1,0 +1,83 @@
+{
+    "parent":  "kaleidoscope_grilling:item/fixed_skewers/squid_tentacle_skewer_cooked",
+    "elements":  [
+                     {
+                         "name":  "wood",
+                         "from":  [
+                                      7.75,
+                                      0.75,
+                                      0
+                                  ],
+                         "to":  [
+                                    8.25,
+                                    1.25,
+                                    12.5
+                                ],
+                         "rotation":  {
+                                          "angle":  0,
+                                          "axis":  "y",
+                                          "origin":  [
+                                                         8,
+                                                         1,
+                                                         6
+                                                     ]
+                                      },
+                         "faces":  {
+                                       "north":  {
+                                                     "uv":  [
+                                                                2,
+                                                                2,
+                                                                3,
+                                                                3
+                                                            ],
+                                                     "texture":  "#3"
+                                                 },
+                                       "east":  {
+                                                    "uv":  [
+                                                               0,
+                                                               0,
+                                                               13,
+                                                               1
+                                                           ],
+                                                    "texture":  "#3"
+                                                },
+                                       "south":  {
+                                                     "uv":  [
+                                                                2,
+                                                                3,
+                                                                3,
+                                                                4
+                                                            ],
+                                                     "texture":  "#3"
+                                                 },
+                                       "west":  {
+                                                    "uv":  [
+                                                               0,
+                                                               1,
+                                                               13,
+                                                               2
+                                                           ],
+                                                    "texture":  "#3"
+                                                },
+                                       "up":  {
+                                                  "uv":  [
+                                                             1,
+                                                             15,
+                                                             0,
+                                                             2
+                                                         ],
+                                                  "texture":  "#3"
+                                              },
+                                       "down":  {
+                                                    "uv":  [
+                                                               2,
+                                                               2,
+                                                               1,
+                                                               15
+                                                           ],
+                                                    "texture":  "#3"
+                                                }
+                                   }
+                     }
+                 ]
+}

@@ -5,6 +5,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
 public final class CommonSetup {
   public static void onSetup(FMLCommonSetupEvent event) {
+    CreateCompat.register();
     event.enqueueWork(
         () -> {
           ComposterBlock.COMPOSTABLES.put(ModItems.CANOLA_SEEDS.get(), 0.30F);

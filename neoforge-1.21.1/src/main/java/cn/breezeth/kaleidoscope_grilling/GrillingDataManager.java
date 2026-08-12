@@ -58,6 +58,12 @@ public final class GrillingDataManager extends SimpleJsonResourceReloadListener 
     return values.stream().filter(id -> kind.equals(kinds.get(id))).count();
   }
 
+  public static boolean isSeasoningIngredient(String id) {
+    Map<String, String> loaded = KINDS;
+    Map<String, String> kinds = loaded.isEmpty() ? BUILT_IN_KINDS : loaded;
+    return kinds.containsKey(id);
+  }
+
   @Override
   protected void apply(
       Map<ResourceLocation, JsonElement> files, ResourceManager manager, ProfilerFiller profiler) {

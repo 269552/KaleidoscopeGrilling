@@ -70,12 +70,15 @@ public final class SkewerRecipeCraftingRecipe extends CustomRecipe {
 
   private static boolean isRecordableSkewer(ItemStack stack, HolderLookup.Provider registries) {
     return stack.is(RAW_SKEWERS)
+        || stack.is(ModItems.ORDINARY_SKEWER.get())
         || stack.is(ModItems.SECRET_SKEWER.get())
             && SkeweringHandler.readIngredientStacks(stack, registries).size() == 3;
   }
 
   private static boolean isRecordableSkewer(ItemStack stack) {
-    return stack.is(RAW_SKEWERS) || stack.is(ModItems.SECRET_SKEWER.get());
+    return stack.is(RAW_SKEWERS)
+        || stack.is(ModItems.ORDINARY_SKEWER.get())
+        || stack.is(ModItems.SECRET_SKEWER.get());
   }
 
   private static boolean hasExactlyOneBlankRecipe(CraftingInput input) {

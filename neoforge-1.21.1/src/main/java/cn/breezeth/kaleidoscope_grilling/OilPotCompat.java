@@ -9,6 +9,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
 public final class OilPotCompat {
+  public static final int FAT_CAPACITY = 256;
+  public static final int FLUID_CAPACITY = 64;
+
   private static final ResourceLocation COUNT_ID =
       ResourceLocation.fromNamespaceAndPath("kaleidoscope_cookery", "oil_pot_oil_count");
 
@@ -17,6 +20,13 @@ public final class OilPotCompat {
         .getKey(stack.getItem())
         .toString()
         .equals("kaleidoscope_cookery:oil_pot");
+  }
+
+  public static boolean isCookeryFat(ItemStack stack) {
+    return BuiltInRegistries.ITEM
+        .getKey(stack.getItem())
+        .toString()
+        .equals("kaleidoscope_cookery:oil");
   }
 
   @SuppressWarnings("unchecked")
@@ -28,7 +38,15 @@ public final class OilPotCompat {
     DataComponentType<Integer> type = countType();
     if (type == null) return 0;
     Integer count = stack.get(type);
-    return count == null ? 0 : Math.min(64, count);
+    return count == null ? 0 : Math.min(capacity(getType(stack)), count);
+  }
+
+  public static int capacity(ItemStack stack) {
+    return capacity(getType(stack));
+  }
+
+  public static int capacity(String type) {
+    return type == null || type.isEmpty() ? FAT_CAPACITY : FLUID_CAPACITY;
   }
 
   public static boolean consume(ItemStack stack, int amount) {
@@ -50,14 +68,21 @@ public final class OilPotCompat {
     CompoundTag tag = d == null ? new CompoundTag() : d.copyTag();
     tag.putString("grilling_oil_type", type);
     stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-    stack.set(countType(), Math.min(64, getCount(stack) + points));
+    stack.set(countType(), Math.min(FLUID_CAPACITY, getCount(stack) + points));
   }
 
   public static void setType(ItemStack stack, String type) {
+    Integer storedCount = stack.get(countType());
     CustomData d = stack.get(DataComponents.CUSTOM_DATA);
     CompoundTag tag = d == null ? new CompoundTag() : d.copyTag();
     tag.putString("grilling_oil_type", type);
     stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+    if (type != null
+        && !type.isEmpty()
+        && storedCount != null
+        && storedCount > FLUID_CAPACITY) {
+      stack.set(countType(), FLUID_CAPACITY);
+    }
   }
 
   public static int heatDuration(ItemStack stack) {

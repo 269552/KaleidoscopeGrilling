@@ -17,11 +17,11 @@ public final class SeasoningUse {
         .playSound(
             null, player.blockPosition(), ModSounds.SEASON.get(), SoundSource.PLAYERS, 0.85F, 1.0F);
     if (player.getAbilities().instabuild) return true;
-    int next = seasoning.getDamageValue() + 1;
-    if (next >= seasoning.getMaxDamage()) {
+    int next = SeasoningData.getUses(seasoning) + 1;
+    if (next >= SeasoningData.MAX_USES) {
       player.setItemInHand(hand, new ItemStack(ModItems.EMPTY_SEASONING_BOTTLE.get()));
     } else {
-      seasoning.setDamageValue(next);
+      SeasoningData.setUses(seasoning, next);
     }
     return true;
   }

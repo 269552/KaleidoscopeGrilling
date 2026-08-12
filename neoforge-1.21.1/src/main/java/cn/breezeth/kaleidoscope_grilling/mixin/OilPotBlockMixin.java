@@ -12,6 +12,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -19,24 +20,18 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(targets = "com.github.ysbbbbbb.kaleidoscopecookery.block.kitchen.OilPotBlock")
 public abstract class OilPotBlockMixin {
-  @ModifyConstant(method = "useItemOn", constant = @Constant(intValue = 256), remap = false)
-  private int grilling$capFillCapacity(int value) {
-    return 64;
-  }
-
   @Inject(method = "useItemOn", at = @At("HEAD"), cancellable = true)
-  private void grilling$blockWrongOilExtraction(
+  private void grilling$blockWrongOilInteraction(
       ItemStack held,
       BlockState state,
       Level level,
@@ -46,9 +41,13 @@ public abstract class OilPotBlockMixin {
       BlockHitResult hit,
       CallbackInfoReturnable<ItemInteractionResult> cir) {
     if (hand == InteractionHand.MAIN_HAND
-        && player.getMainHandItem().isEmpty()
         && level.getBlockEntity(pos) instanceof TypedOilPotAccess access
-        && !access.grilling$getOilType().isEmpty()) {
+        && !access.grilling$getOilType().isEmpty()
+        && (held.isEmpty() || OilPotCompat.isCookeryFat(held))) {
+      if (!level.isClientSide && !held.isEmpty()) {
+        player.displayClientMessage(
+            Component.translatable("message.kaleidoscope_grilling.oil_type_mismatch"), true);
+      }
       cir.setReturnValue(ItemInteractionResult.SUCCESS);
     }
   }
@@ -83,6 +82,19 @@ public abstract class OilPotBlockMixin {
     }
   }
 
+  @Inject(method = "getCloneItemStack", at = @At("RETURN"))
+  private void grilling$copyOilType(
+      BlockState state,
+      HitResult target,
+      LevelReader level,
+      BlockPos pos,
+      Player player,
+      CallbackInfoReturnable<ItemStack> cir) {
+    if (level.getBlockEntity(pos) instanceof TypedOilPotAccess access) {
+      OilPotCompat.setType(cir.getReturnValue(), access.grilling$getOilType());
+    }
+  }
+
   @Inject(method = "useItemOn", at = @At("RETURN"))
   private void grilling$showFullMessage(
       ItemStack held,
@@ -97,8 +109,8 @@ public abstract class OilPotBlockMixin {
         && (cir.getReturnValue() == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
             || cir.getReturnValue() == ItemInteractionResult.FAIL)
         && !player.getMainHandItem().isEmpty()
-        && level.getBlockEntity(pos) instanceof com.github.ysbbbbbb.kaleidoscopecookery.blockentity.decoration.OilPotBlockEntity pot
-        && pot.getOilCount() >= 64) {
+        && level.getBlockEntity(pos) instanceof TypedOilPotAccess pot
+        && pot.grilling$getOilCount() >= OilPotCompat.capacity(pot.grilling$getOilType())) {
       player.displayClientMessage(
           Component.translatable("message.kaleidoscope_grilling.oil_type_mismatch"), true);
     }

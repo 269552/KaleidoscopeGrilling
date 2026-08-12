@@ -19,7 +19,7 @@ An expansion for Kaleidoscope Cookery featuring hot food, flavorful oils, new in
 [[dependencies.kaleidoscope_grilling]]
 modId = "forge"
 mandatory = true
-versionRange = "[47.4.0,48)"
+versionRange = "[47.3.0,48)"
 ordering = "NONE"
 side = "BOTH"
 
@@ -34,5 +34,19 @@ side = "BOTH"
 modId = "kaleidoscope_cookery"
 mandatory = true
 versionRange = "[1.4.1,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.kaleidoscope_grilling]]
+modId = "create"
+mandatory = false
+versionRange = "[0.5.1,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.kaleidoscope_grilling]]
+modId = "touhou_little_maid"
+mandatory = false
+versionRange = "[1.5.3,)"
 ordering = "AFTER"
 side = "BOTH"

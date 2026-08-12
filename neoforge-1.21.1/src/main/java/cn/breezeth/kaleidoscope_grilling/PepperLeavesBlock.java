@@ -7,9 +7,12 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -19,10 +22,17 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class PepperLeavesBlock extends LeavesBlock {
   public static final MapCodec<PepperLeavesBlock> CODEC = simpleCodec(PepperLeavesBlock::new);
   public static final BooleanProperty HAS_PEPPER = BooleanProperty.create("has_pepper");
+  private static final String LAST_STING_TAG = "KaleidoscopeGrillingPepperSting";
+  private static final VoxelShape TOP_COLLISION_SHAPE = Block.box(0, 15, 0, 16, 16, 16);
+  private static final int STING_INTERVAL_TICKS = 20;
 
   public PepperLeavesBlock(BlockBehaviour.Properties properties) {
     super(properties);
@@ -62,6 +72,42 @@ public final class PepperLeavesBlock extends LeavesBlock {
       level.setBlock(pos, state.setValue(HAS_PEPPER, true), 3);
     }
     super.randomTick(state, level, pos, random);
+  }
+
+  @Override
+  protected VoxelShape getCollisionShape(
+      BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    return context.isAbove(TOP_COLLISION_SHAPE, pos, true)
+        ? TOP_COLLISION_SHAPE
+        : Shapes.empty();
+  }
+
+  @Override
+  protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
+    if (!(entity instanceof LivingEntity)
+        || entity.getType() == EntityType.FOX
+        || entity.getType() == EntityType.BEE) return;
+    entity.makeStuckInBlock(state, new Vec3(0.8, 0.75, 0.8));
+    sting(level, entity);
+  }
+
+  @Override
+  public void stepOn(Level level, BlockPos pos, BlockState state, Entity entity) {
+    sting(level, entity);
+    super.stepOn(level, pos, state, entity);
+  }
+
+  private static void sting(Level level, Entity entity) {
+    if (level.isClientSide
+        || !(entity instanceof LivingEntity)
+        || entity.getType() == EntityType.FOX
+        || entity.getType() == EntityType.BEE) return;
+    long now = level.getGameTime();
+    long lastSting = entity.getPersistentData().getLong(LAST_STING_TAG);
+    if (now - lastSting < STING_INTERVAL_TICKS) return;
+    if (entity.hurt(level.damageSources().sweetBerryBush(), 1.0F)) {
+      entity.getPersistentData().putLong(LAST_STING_TAG, now);
+    }
   }
 
   @Override

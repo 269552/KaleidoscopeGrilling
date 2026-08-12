@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import cn.breezeth.kaleidoscope_grilling.mixin.FoodDataAccessor;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -33,20 +34,25 @@ public final class SecretSkewerItem extends Item {
 
   public static boolean isCooked(ItemStack stack) {
     CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-    return data != null && data.copyTag().getBoolean(COOKED_TAG);
+    return data != null && data.getUnsafe().getBoolean(COOKED_TAG);
   }
 
   @Override
   public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
     ItemStack stack = player.getItemInHand(hand);
-    return player.isShiftKeyDown()
-        ? InteractionResultHolder.pass(stack)
-        : super.use(level, player, hand);
+    if (player.isShiftKeyDown()) return InteractionResultHolder.pass(stack);
+    if (HotFoodConfig.ALLOW_SKEWERS_AT_FULL_HUNGER.get()
+        && !player.getFoodData().needsFood()) {
+      player.startUsingItem(hand);
+      return InteractionResultHolder.consume(stack);
+    }
+    return super.use(level, player, hand);
   }
 
   public static void setCooked(ItemStack stack, boolean cooked) {
     CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-    tag.putBoolean(COOKED_TAG, cooked);
+    if (cooked) tag.putBoolean(COOKED_TAG, true);
+    else tag.remove(COOKED_TAG);
     stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
   }
 
@@ -58,7 +64,7 @@ public final class SecretSkewerItem extends Item {
 
   static int getVisualStage(ItemStack stack) {
     CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-    return data == null ? 0 : data.copyTag().getInt(VISUAL_STAGE_TAG);
+    return data == null ? 0 : data.getUnsafe().getInt(VISUAL_STAGE_TAG);
   }
 
   public static void setCreator(ItemStack stack, Player player) {
@@ -71,7 +77,7 @@ public final class SecretSkewerItem extends Item {
   public static String getCreator(ItemStack stack) {
     CustomData data = stack.get(DataComponents.CUSTOM_DATA);
     if (data != null) {
-      CompoundTag tag = data.copyTag();
+      CompoundTag tag = data.getUnsafe();
       if (tag.contains(CREATOR_NAME_TAG)) return tag.getString(CREATOR_NAME_TAG);
       if (tag.contains(CREATOR_TAG)) return tag.getString(CREATOR_TAG);
     }
@@ -87,7 +93,7 @@ public final class SecretSkewerItem extends Item {
   public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
     ItemStack consumed = stack.copy();
     List<ItemStack> ingredients =
-        SkeweringHandler.readIngredientStacks(consumed, level.registryAccess());
+        SkeweringHandler.readEffectiveIngredientStacks(consumed, level.registryAccess());
     ItemStack result = super.finishUsingItem(stack, level, entity);
     if (!level.isClientSide) {
       for (ItemStack ingredient : ingredients) {
@@ -116,41 +122,34 @@ public final class SecretSkewerItem extends Item {
     if (entity == null)
       return new FoodProperties.Builder().nutrition(1).saturationModifier(0).build();
     List<ItemStack> ingredients =
+        SkeweringHandler.readEffectiveIngredientStacks(stack, entity.level().registryAccess());
+    List<ItemStack> rawIngredients =
         SkeweringHandler.readIngredientStacks(stack, entity.level().registryAccess());
     if (ingredients.isEmpty()) {
       return new FoodProperties.Builder().nutrition(1).saturationModifier(0).build();
     }
 
     int totalNutrition = 0;
-    int minNutrition = Integer.MAX_VALUE;
-    float totalSaturation = 0;
+    float weightedSaturation = 0;
     int count = 0;
-    boolean hasDuplicate = false;
 
-    for (int i = 0; i < ingredients.size(); i++) {
-      ItemStack ingredient = ingredients.get(i);
+    for (ItemStack ingredient : ingredients) {
       FoodProperties fp = ingredient.getItem().getFoodProperties(ingredient, entity);
       if (fp == null) continue;
       int n = fp.nutrition();
       totalNutrition += n;
-      minNutrition = Math.min(minNutrition, n);
-      totalSaturation += fp.saturation();
+      // In 1.21 FoodProperties stores actual saturation points, not the builder modifier.
+      weightedSaturation += fp.saturation() * 0.5F;
       count++;
-      for (int j = 0; j < i; j++) {
-        if (ItemStack.isSameItemSameComponents(ingredients.get(j), ingredient)) {
-          hasDuplicate = true;
-          break;
-        }
-      }
     }
 
-    if (count == 0) {
+    if (count == 0 || totalNutrition <= 0) {
       return new FoodProperties.Builder().nutrition(1).saturationModifier(0).build();
     }
 
-    float coefficient = hasDuplicate ? 0.5F : 0.6F;
-    int nutrition = Math.max(1, (int) Math.floor((totalNutrition - minNutrition) * coefficient));
-    float saturation = Math.min(0.8F, Math.max(0, (totalSaturation / count) * coefficient));
+    float coefficient = 0.6F * (hasDuplicateIngredients(rawIngredients) ? 0.8F : 1.0F);
+    int nutrition = Math.max(1, (int) Math.floor(totalNutrition * coefficient));
+    float saturation = Math.max(0, weightedSaturation / totalNutrition);
     if (!isCooked(stack)) {
       nutrition = Math.max(1, (int) Math.floor(nutrition * 0.5F));
       saturation *= 0.5F;
@@ -187,6 +186,20 @@ public final class SecretSkewerItem extends Item {
                       : "tooltip.kaleidoscope_grilling.secret_skewer.raw")
               .withStyle(cooked ? ChatFormatting.GOLD : ChatFormatting.DARK_GRAY));
     }
+    if (hasDuplicateIngredients(ingredients)) {
+      tooltip.add(
+          Component.translatable("tooltip.kaleidoscope_grilling.secret_skewer.duplicate_penalty")
+              .withStyle(ChatFormatting.DARK_GRAY));
+    }
+  }
+
+  private static boolean hasDuplicateIngredients(List<ItemStack> ingredients) {
+    for (int i = 1; i < ingredients.size(); i++) {
+      for (int j = 0; j < i; j++) {
+        if (ItemStack.isSameItemSameComponents(ingredients.get(i), ingredients.get(j))) return true;
+      }
+    }
+    return false;
   }
 
   private record FoodSnapshot(int food, float saturation, float exhaustion) {

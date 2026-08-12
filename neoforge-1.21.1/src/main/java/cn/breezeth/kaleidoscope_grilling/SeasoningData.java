@@ -10,8 +10,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
 public final class SeasoningData {
+  public static final int MAX_USES = 16;
   private static final String KEY = "SeasoningIngredients";
   private static final String VARIANT_KEY = "SeasoningVariant";
+  private static final String USES_KEY = "SeasoningUses";
 
   public static List<String> get(ItemStack stack) {
     List<String> out = new ArrayList<>();
@@ -47,6 +49,19 @@ public final class SeasoningData {
 
   public static void setRandomVariant(ItemStack stack) {
     setVariant(stack, net.minecraft.util.RandomSource.create().nextInt(8));
+  }
+
+  public static int getUses(ItemStack stack) {
+    CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+    return data == null
+        ? 0
+        : net.minecraft.util.Mth.clamp(data.copyTag().getInt(USES_KEY), 0, MAX_USES);
+  }
+
+  public static void setUses(ItemStack stack, int uses) {
+    CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+    tag.putInt(USES_KEY, net.minecraft.util.Mth.clamp(uses, 0, MAX_USES));
+    stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
   }
 
   private SeasoningData() {}

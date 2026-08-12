@@ -2,6 +2,8 @@ package cn.breezeth.kaleidoscope_grilling.mixin;
 
 import cn.breezeth.kaleidoscope_grilling.SkewerGuiIconCache;
 import cn.breezeth.kaleidoscope_grilling.SkewerItemRenderContext;
+import cn.breezeth.kaleidoscope_grilling.HotFoodGuiBadge;
+import cn.breezeth.kaleidoscope_grilling.SkewerOutlineRender;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -54,6 +56,8 @@ public abstract class GuiGraphicsContextMixin {
       CallbackInfo ci) {
     int active = grilling$activeGuiRenders.get();
     if (active <= 0) return;
+    if (!SkewerItemRenderContext.isCapturing() && !SkewerOutlineRender.isActive())
+      HotFoodGuiBadge.render((GuiGraphics) (Object) this, stack, level, x, y);
     if (active == 1) grilling$activeGuiRenders.remove();
     else grilling$activeGuiRenders.set(active - 1);
     SkewerItemRenderContext.pop();

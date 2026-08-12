@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -32,6 +33,7 @@ public final class OilPotHud {
     Minecraft minecraft = Minecraft.getInstance();
     String type = oil.grilling$getOilType();
     int count = oil.grilling$getOilCount();
+    int capacity = OilPotCompat.capacity(type);
     String state = type.isEmpty() ? (count > 0 ? "fat" : "empty") : type;
     int accent =
         switch (state) {
@@ -60,13 +62,15 @@ public final class OilPotHud {
         false);
     graphics.drawString(
         minecraft.font,
-        Component.translatable("hud.kaleidoscope_grilling.oil_pot.capacity", count, 64, 64 - count),
+        Component.translatable(
+            "hud.kaleidoscope_grilling.oil_pot.capacity", count, capacity, capacity - count),
         x + 12,
         y + 36,
         0xFFAAB7B8,
         false);
     graphics.fill(x + 12, y + 52, x + WIDTH - 12, y + 57, 0xFF303B3D);
-    graphics.fill(x + 12, y + 52, x + 12 + (WIDTH - 24) * count / 64, y + 57, accent);
+    graphics.fill(
+        x + 12, y + 52, x + 12 + (WIDTH - 24) * count / capacity, y + 57, accent);
   }
 
   static int panelX(Minecraft minecraft, int width) {

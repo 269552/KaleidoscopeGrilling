@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -156,6 +157,7 @@ public final class GrillBlock extends BaseEntityBlock {
     }
     if (held.is(EXTINGUISH_TOOLS) && state.getValue(LIT)) {
       if (!level.isClientSide) {
+        if (player.isShiftKeyDown()) GrillAutomationApi.forceUnlock(level, pos);
         level.setBlock(pos, state.setValue(LIT, false), Block.UPDATE_ALL);
         level.playSound(
             null,

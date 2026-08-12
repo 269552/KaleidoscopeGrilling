@@ -7,8 +7,10 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.world.item.ItemStack;
 
 public final class SeasoningData {
+  public static final int MAX_USES = 16;
   private static final String KEY = "SeasoningIngredients";
   private static final String VARIANT_KEY = "SeasoningVariant";
+  private static final String USES_KEY = "SeasoningUses";
 
   public static List<String> get(ItemStack stack) {
     List<String> out = new ArrayList<>();
@@ -36,6 +38,16 @@ public final class SeasoningData {
 
   public static void setRandomVariant(ItemStack stack) {
     setVariant(stack, net.minecraft.util.RandomSource.create().nextInt(8));
+  }
+
+  public static int getUses(ItemStack stack) {
+    return stack.hasTag()
+        ? net.minecraft.util.Mth.clamp(stack.getTag().getInt(USES_KEY), 0, MAX_USES)
+        : 0;
+  }
+
+  public static void setUses(ItemStack stack, int uses) {
+    stack.getOrCreateTag().putInt(USES_KEY, net.minecraft.util.Mth.clamp(uses, 0, MAX_USES));
   }
 
   private SeasoningData() {}

@@ -73,9 +73,11 @@ public final class SkewerPlateBlock extends BaseEntityBlock {
       Player player,
       InteractionHand hand,
       BlockHitResult hit) {
-    if (!(level.getBlockEntity(pos) instanceof SkewerPlateBlockEntity plate)
-        || !SkewerPlateItem.isSkewer(held))
+    if (!(level.getBlockEntity(pos) instanceof SkewerPlateBlockEntity plate))
       return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    // Stop non-skewer items from using themselves and then reaching useWithoutItem, which could
+    // replace the held stack with a skewer removed from the plate.
+    if (!SkewerPlateItem.isSkewer(held)) return ItemInteractionResult.CONSUME;
     if (player.isShiftKeyDown() && hand != InteractionHand.MAIN_HAND)
       return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     boolean canAdd = plate.size() < SkewerPlateBlockEntity.CAPACITY;

@@ -11,11 +11,11 @@ import net.minecraft.world.item.ItemStack;
 
 public final class SkewerPlateRenderer implements BlockEntityRenderer<SkewerPlateBlockEntity> {
   private static final float[][] SLOTS = {
-    {8F, 3F, 6.25F, 0F},
+    {8F, 3.125F, 6.375F, 0F},
     {12F, 3F, 6.25F, 0F},
     {4F, 3F, 6.25F, 0F},
     {6F, 5.5F, 6.25F, -22.5F},
-    {10F, 5.5F, 6.25F, -22.5F}
+    {10F, 5.625F, 6.25F, -22.5F}
   };
 
   public SkewerPlateRenderer(BlockEntityRendererProvider.Context context) {}

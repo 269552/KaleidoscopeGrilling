@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -79,6 +80,8 @@ public final class SkewerPlateItem extends Item {
     ItemStack stack = player.getItemInHand(hand);
     if (player.isShiftKeyDown() || read(stack).isEmpty())
       return InteractionResultHolder.pass(stack);
+    if (!HotFoodConfig.ALLOW_SKEWERS_AT_FULL_HUNGER.get()
+        && !player.getFoodData().needsFood()) return InteractionResultHolder.pass(stack);
     player.startUsingItem(hand);
     return InteractionResultHolder.consume(stack);
   }

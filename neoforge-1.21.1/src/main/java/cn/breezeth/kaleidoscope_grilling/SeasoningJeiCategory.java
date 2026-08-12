@@ -58,7 +58,7 @@ final class SeasoningJeiCategory implements IRecipeCategory<GrillingJeiRecipes.S
 
   @Override
   public int getHeight() {
-    return 74;
+    return CreateCompat.loaded() ? 110 : 74;
   }
 
   @Override
@@ -90,6 +90,20 @@ final class SeasoningJeiCategory implements IRecipeCategory<GrillingJeiRecipes.S
     Component label = Component.translatable("jei.kaleidoscope_grilling.seasoning.optional");
     var font = Minecraft.getInstance().font;
     graphics.drawString(font, label, 46 - font.width(label) / 2, 64, 0xFF777777, false);
+    if (CreateCompat.loaded()) {
+      Component automation =
+          Component.translatable("jei.kaleidoscope_grilling.seasoning.create_automation");
+      graphics.drawString(
+          font, automation, 110 - font.width(automation) / 2, 77, 0xFF777777, false);
+      Component filterHint =
+          Component.translatable("jei.kaleidoscope_grilling.seasoning.create_filter");
+      graphics.drawString(
+          font, filterHint, 110 - font.width(filterHint) / 2, 88, 0xFF777777, false);
+      Component deployerHint =
+          Component.translatable("jei.kaleidoscope_grilling.seasoning.create_deployer");
+      graphics.drawString(
+          font, deployerHint, 110 - font.width(deployerHint) / 2, 99, 0xFF777777, false);
+    }
   }
 
   private static List<ItemStack> rotated(List<ItemStack> choices, int offset) {

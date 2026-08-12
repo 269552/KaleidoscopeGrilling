@@ -2,7 +2,6 @@ package cn.breezeth.kaleidoscope_grilling;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -17,16 +16,6 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class SeasoningBottleBlockEntity extends BlockEntity {
   public static final int CAPACITY = 8;
   public static final int MAX_BOTTLES = 4;
-  private static final Set<String> VALID =
-      Set.of(
-          "kaleidoscope_grilling:green_chili_powder",
-          "kaleidoscope_grilling:sichuan_pepper",
-          "kaleidoscope_grilling:onion_powder",
-          "minecraft:redstone",
-          "minecraft:gunpowder",
-          "kaleidoscope_grilling:houttuynia_powder",
-          "kaleidoscope_grilling:totem_powder",
-          "kaleidoscope_grilling:dragon_egg_powder");
   private NonNullList<ItemStack> bottles = NonNullList.withSize(MAX_BOTTLES, ItemStack.EMPTY);
 
   public SeasoningBottleBlockEntity(BlockPos pos, BlockState state) {
@@ -59,7 +48,7 @@ public final class SeasoningBottleBlockEntity extends BlockEntity {
   }
 
   public int damage() {
-    return isFinished() ? top().getDamageValue() : 0;
+    return isFinished() ? SeasoningData.getUses(top()) : 0;
   }
 
   public int variant() {
@@ -74,7 +63,12 @@ public final class SeasoningBottleBlockEntity extends BlockEntity {
   }
 
   public boolean canAdd(String id) {
-    return !isFinished() && ingredients().size() < CAPACITY && VALID.contains(id);
+    net.minecraft.world.item.Item item =
+        net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
+            new net.minecraft.resources.ResourceLocation(id));
+    return !isFinished()
+        && ingredients().size() < CAPACITY
+        && SeasoningAutomationApi.isValidIngredient(new ItemStack(item));
   }
 
   public boolean add(String id) {
@@ -174,7 +168,7 @@ public final class SeasoningBottleBlockEntity extends BlockEntity {
                     : ModItems.PENDING_SEASONING.get());
     SeasoningData.set(stack, ingredients);
     if (stack.is(ModItems.SPECIAL_SEASONING.get())) {
-      stack.setDamageValue(tag.getInt("Damage"));
+      SeasoningData.setUses(stack, tag.getInt("Damage"));
       SeasoningData.setVariant(stack, tag.getInt("Variant"));
     }
     bottles.set(0, stack);

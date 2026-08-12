@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -443,11 +444,18 @@ public final class AdvancedRackBlockEntity extends BlockEntity implements Contai
   }
 
   private static boolean canShareCategory(ItemStack a, ItemStack b) {
+    if (isSeasoningBottle(a) && isSeasoningBottle(b)) return true;
     if (!a.isStackable() && !b.isStackable() && a.isDamageableItem() && b.isDamageableItem())
       return a.getItem() == b.getItem();
     if (OilPotCompat.isOilPot(a) && OilPotCompat.isOilPot(b))
       return a.getItem() == b.getItem() && OilPotCompat.getType(a).equals(OilPotCompat.getType(b));
     return ItemStack.isSameItemSameTags(a, b);
+  }
+
+  private static boolean isSeasoningBottle(ItemStack stack) {
+    return stack.is(ModItems.EMPTY_SEASONING_BOTTLE.get())
+        || stack.is(ModItems.PENDING_SEASONING.get())
+        || stack.is(ModItems.SPECIAL_SEASONING.get());
   }
 
   private record RackBinding(BlockPos pos, int slot) {}

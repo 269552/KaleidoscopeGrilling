@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -33,6 +34,8 @@ public final class ClientSetup {
       new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "skewer_hot");
   private static final ResourceLocation SKEWER_COOKING_STAGE =
       new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "skewer_cooking_stage");
+  private static final ResourceLocation SKEWER_BITE_STAGE =
+      new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "skewer_bite_stage");
   private static final ResourceLocation SLIME_SKEWER_FRAME =
       new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "slime_skewer_frame");
   private static final ResourceLocation FAILED_SKEWER_SOURCE =
@@ -129,7 +132,10 @@ public final class ClientSetup {
               ModItems.SPECIAL_SEASONING.get(),
               SEASONING_REMAINING,
               (stack, level, entity, seed) ->
-                  Math.min(8, (stack.getMaxDamage() - stack.getDamageValue() + 1) / 2) / 8.0F);
+                  Math.min(
+                          8,
+                          (SeasoningData.MAX_USES - SeasoningData.getUses(stack) + 1) / 2)
+                      / 8.0F);
           ItemProperties.register(
               ModItems.SPECIAL_SEASONING.get(),
               SEASONING_VARIANT,
@@ -159,6 +165,9 @@ public final class ClientSetup {
   @SubscribeEvent
   public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
     event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "item/skewer_plate_base"));
+    event.register(
+        new ResourceLocation(
+            KaleidoscopeGrilling.MOD_ID, "item/fixed_skewers/ender_pearl_bite_piece"));
     event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "block/pot_oil_default"));
     event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "block/pot_oil_canola"));
     event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "block/pot_oil_secret_chili"));
@@ -197,6 +206,11 @@ public final class ClientSetup {
         item,
         SKEWER_COOKING_STAGE,
         (stack, level, entity, seed) -> SecretSkewerItem.getVisualStage(stack) / 5.0F);
+    if (item instanceof MultiBiteSkewerItem)
+      ItemProperties.register(
+          item,
+          SKEWER_BITE_STAGE,
+          (stack, level, entity, seed) -> MultiBiteSkewerItem.visualBiteStage(stack, entity));
   }
 
   private static float oilTypeModelValue(String type) {

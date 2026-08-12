@@ -9,17 +9,25 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.jetbrains.annotations.Nullable;
 
 public final class SkeweringHandler {
   private static final String INGREDIENTS_TAG = "SkewerIngredients";
   private static final String INGREDIENT_STACKS_TAG = "SkewerIngredientStacks";
+  private static final String COOKED_INGREDIENT_STACKS_TAG = "CookedIngredientStacks";
   private static final String VARIANTS_TAG = "SkewerModelVariants";
   private static final String CREATIVE_PREVIEW_TAG = "CreativeSkewerPreview";
+  private static final int GUI_VARIANT_OFFSET = 4;
+  private static final int GUI_VARIANT_COUNT = 6;
 
   public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
     ItemStack offhand = event.getEntity().getOffhandItem();
@@ -61,7 +69,7 @@ public final class SkeweringHandler {
 
     insertedStacks.add(food.copyWithCount(1));
     List<Integer> variants = readVariants(offhand);
-    variants.add(event.getEntity().getRandom().nextInt(3) + 1);
+    variants.add(event.getEntity().getRandom().nextInt(GUI_VARIANT_COUNT) + GUI_VARIANT_OFFSET);
     ResourceLocation resultId = SkewerRecipes.completedResult(insertedStacks);
     ItemStack next;
     if (resultId != null) {
@@ -75,17 +83,15 @@ public final class SkeweringHandler {
       next = new ItemStack(ModItems.UNFINISHED_SKEWER.get());
       write(next, insertedStacks, variants);
     }
-    if (offhand.is(Items.STICK)
-        && (offhand.getCount() > 1 || event.getEntity().getAbilities().instabuild)) {
-      ItemStack remainingSticks = offhand.copy();
-      remainingSticks.setCount(
-          event.getEntity().getAbilities().instabuild
-              ? offhand.getCount()
-              : offhand.getCount() - 1);
-      event.getEntity().getInventory().placeItemBackInInventory(remainingSticks);
+    ItemStack remainingSticks = ItemStack.EMPTY;
+    if (offhand.is(Items.STICK)) {
+      remainingSticks = offhand.copy();
+      if (!event.getEntity().getAbilities().instabuild) remainingSticks.shrink(1);
     }
     if (!event.getEntity().getAbilities().instabuild) food.shrink(1);
     event.getEntity().setItemInHand(InteractionHand.OFF_HAND, next);
+    if (!remainingSticks.isEmpty())
+      event.getEntity().getInventory().placeItemBackInInventory(remainingSticks);
     if (resultId != null || insertedStacks.size() >= 3)
       ModAdvancements.skewerCompleted(event.getEntity());
     event
@@ -104,17 +110,65 @@ public final class SkeweringHandler {
   }
 
   public static List<ItemStack> readIngredientStacks(ItemStack stack) {
+    return readStackList(stack, INGREDIENT_STACKS_TAG, true);
+  }
+
+  static List<ItemStack> readEffectiveIngredientStacks(ItemStack stack) {
+    if (SecretSkewerItem.isCooked(stack) || SecretSkewerItem.getVisualStage(stack) >= 4) {
+      List<ItemStack> cooked = readStackList(stack, COOKED_INGREDIENT_STACKS_TAG, false);
+      if (!cooked.isEmpty()) return cooked;
+    }
+    return readIngredientStacks(stack);
+  }
+
+  static boolean hasCookedIngredientStacks(ItemStack stack) {
+    return stack.hasTag()
+        && !stack.getTag().getList(COOKED_INGREDIENT_STACKS_TAG, 10).isEmpty();
+  }
+
+  static void ensureCookedIngredientStacks(ItemStack stack, Level level) {
+    if (!stack.is(ModItems.SECRET_SKEWER.get())
+        || level.isClientSide
+        || hasCookedIngredientStacks(stack)) return;
+    List<ItemStack> cooked = new ArrayList<>();
+    for (ItemStack ingredient : readIngredientStacks(stack)) {
+      ItemStack resolved = ingredient.copyWithCount(1);
+      SimpleContainer input = new SimpleContainer(resolved);
+      level
+          .getRecipeManager()
+          .getRecipeFor(RecipeType.SMOKING, input, level)
+          .ifPresent(
+              recipe -> {
+                ItemStack result = recipe.assemble(input, level.registryAccess());
+                if (!result.isEmpty() && result.isEdible()) {
+                  resolved.setCount(0);
+                  cooked.add(result.copyWithCount(1));
+                }
+              });
+      if (!resolved.isEmpty()) cooked.add(resolved);
+    }
+    if (!cooked.isEmpty()) writeStackList(stack, COOKED_INGREDIENT_STACKS_TAG, cooked);
+  }
+
+  private static List<ItemStack> readStackList(ItemStack stack, String key, boolean legacyFallback) {
     List<ItemStack> result = new ArrayList<>();
     if (!stack.hasTag()) return result;
-    ListTag stacks = stack.getTag().getList(INGREDIENT_STACKS_TAG, 10);
+    ListTag stacks = stack.getTag().getList(key, 10);
     for (int i = 0; i < stacks.size(); i++) result.add(ItemStack.of(stacks.getCompound(i)));
-    if (!result.isEmpty()) return result;
+    if (!result.isEmpty() || !legacyFallback) return result;
     ListTag legacy = stack.getTag().getList(INGREDIENTS_TAG, 8);
     for (int i = 0; i < legacy.size(); i++) {
       Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(legacy.getString(i)));
       if (item != null) result.add(new ItemStack(item));
     }
     return result;
+  }
+
+  private static void writeStackList(ItemStack stack, String key, List<ItemStack> ingredients) {
+    ListTag list = new ListTag();
+    for (ItemStack ingredient : ingredients)
+      list.add(ingredient.copyWithCount(1).save(new CompoundTag()));
+    stack.getOrCreateTag().put(key, list);
   }
 
   private static List<String> ids(List<ItemStack> stacks) {
@@ -138,6 +192,10 @@ public final class SkeweringHandler {
     return read(stack);
   }
 
+  static int ingredientCount(ItemStack stack) {
+    return stack.hasTag() ? stack.getTag().getList(INGREDIENTS_TAG, 8).size() : 0;
+  }
+
   static int modelState(ItemStack stack) {
     List<Integer> variants = readVariants(stack);
     if (variants.isEmpty()) {
@@ -145,10 +203,38 @@ public final class SkeweringHandler {
       int hash = ForgeRegistries.ITEMS.getKey(stack.getItem()).hashCode();
       for (int i = 0; i < fixed.size(); i++) variants.add(1 + Math.floorMod(hash + i * 31, 3));
     }
-    int first = variants.size() > 0 ? variants.get(0) : 0;
-    int second = variants.size() > 1 ? variants.get(1) : 0;
-    int third = variants.size() > 2 ? variants.get(2) : 0;
+    int first = variants.size() > 0 ? modelVariant(variants.get(0)) : 0;
+    int second = variants.size() > 1 ? modelVariant(variants.get(1)) : 0;
+    int third = variants.size() > 2 ? modelVariant(variants.get(2)) : 0;
     return first * 16 + second * 4 + third;
+  }
+
+  static int guiVariantBits(ItemStack stack) {
+    List<Integer> variants = readVariants(stack);
+    List<String> ingredients = read(stack);
+    int bits = 0;
+    for (int slot = 0; slot < 3; slot++) {
+      int value = slot < variants.size() ? variants.get(slot) : 0;
+      int bit;
+      if (value >= GUI_VARIANT_OFFSET && value < GUI_VARIANT_OFFSET + GUI_VARIANT_COUNT) {
+        bit = (value - GUI_VARIANT_OFFSET) / 3;
+      } else {
+        int hash = 31 * (slot + 1) + value;
+        if (slot < ingredients.size()) hash = 31 * hash + ingredients.get(slot).hashCode();
+        hash ^= hash >>> 16;
+        hash *= 0x7FEB352D;
+        hash ^= hash >>> 15;
+        bit = hash & 1;
+      }
+      bits |= bit << slot;
+    }
+    return bits;
+  }
+
+  private static int modelVariant(int value) {
+    if (value >= GUI_VARIANT_OFFSET && value < GUI_VARIANT_OFFSET + GUI_VARIANT_COUNT)
+      return (value - GUI_VARIANT_OFFSET) % 3 + 1;
+    return value >= 1 && value <= 3 ? value : 0;
   }
 
   static ItemStack popLast(ItemStack stack) {
@@ -179,6 +265,48 @@ public final class SkeweringHandler {
         || stack.is(ModItems.SECRET_SKEWER.get()) && !SecretSkewerItem.isCooked(stack);
   }
 
+  /**
+   * Appends a food item to an existing skewer (stick, unfinished skewer, or uncooked secret skewer).
+   * Player-independent, for mechanical (Create Deployer) contexts; player may be null.
+   *
+   * @return the resulting skewer ItemStack, or {@link ItemStack#EMPTY} if the food cannot be appended.
+   */
+  public static ItemStack appendToSkewer(
+      ItemStack skewer,
+      ItemStack food,
+      net.minecraft.util.RandomSource random,
+      @Nullable Player player) {
+    List<ItemStack> insertedStacks = readIngredientStacks(skewer);
+    if (food.isEmpty() || insertedStacks.size() >= 3) return ItemStack.EMPTY;
+    if (!SkewerRecipes.canAppend(insertedStacks, food)
+        && !SkewerRecipes.isConfiguredIngredient(food)
+        && !SkewerCompatApi.canSkewer(food, player)) return ItemStack.EMPTY;
+
+    insertedStacks.add(food.copyWithCount(1));
+    ResourceLocation resultId = SkewerRecipes.completedResult(insertedStacks);
+    ItemStack next;
+    if (resultId != null) {
+      // 固定串模型固定、无变体：确定性 variants，保证同食材组合可堆叠
+      List<Integer> fixedVariants = new ArrayList<>();
+      for (int i = 0; i < insertedStacks.size(); i++)
+        fixedVariants.add(GUI_VARIANT_OFFSET);
+      next = new ItemStack(ForgeRegistries.ITEMS.getValue(resultId));
+      write(next, insertedStacks, fixedVariants);
+    } else {
+      List<Integer> variants = readVariants(skewer);
+      variants.add(random.nextInt(GUI_VARIANT_COUNT) + GUI_VARIANT_OFFSET);
+      if (insertedStacks.size() >= 3) {
+        next = new ItemStack(ModItems.SECRET_SKEWER.get());
+        write(next, insertedStacks, variants);
+        if (player != null) SecretSkewerItem.setCreator(next, player);
+      } else {
+        next = new ItemStack(ModItems.UNFINISHED_SKEWER.get());
+        write(next, insertedStacks, variants);
+      }
+    }
+    return next;
+  }
+
   static ItemStack finishAsSecret(
       ItemStack stack, net.minecraft.world.entity.player.Player player) {
     List<ItemStack> ingredients = readIngredientStacks(stack);
@@ -191,7 +319,7 @@ public final class SkeweringHandler {
 
   static ItemStack jeiSecretSkewer(List<ItemStack> ingredients, boolean cooked) {
     ItemStack result = new ItemStack(ModItems.SECRET_SKEWER.get());
-    write(result, ingredients, List.of(1, 2, 3));
+    write(result, ingredients, List.of(4, 8, 6));
     SecretSkewerItem.setCooked(result, cooked);
     return result;
   }

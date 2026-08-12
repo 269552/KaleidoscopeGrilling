@@ -12,6 +12,7 @@ import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaPlugin;
 import snownee.jade.api.Identifiers;
 import snownee.jade.api.WailaPlugin;
+import net.minecraftforge.fml.ModList;
 
 @WailaPlugin
 public final class GrillingJadePlugin implements IWailaPlugin {
@@ -33,6 +34,10 @@ public final class GrillingJadePlugin implements IWailaPlugin {
     registration.registerBlockComponent(TypedOilPotProvider.INSTANCE, OilPotBlock.class);
     registration.registerBlockComponent(SkewerRecipeProvider.INSTANCE, SkewerRecipeBlock.class);
     registration.registerBlockComponent(SkewerPlateProvider.INSTANCE, SkewerPlateBlock.class);
+    if (ModList.get().isLoaded("touhou_little_maid")) {
+      cn.breezeth.kaleidoscope_grilling.compat.touhoulittlemaid.MaidGrillingJadeCompat.register(
+          registration);
+    }
     registration.addTooltipCollectedCallback(
         (box, accessor) -> {
           if (accessor instanceof snownee.jade.api.BlockAccessor blockAccessor

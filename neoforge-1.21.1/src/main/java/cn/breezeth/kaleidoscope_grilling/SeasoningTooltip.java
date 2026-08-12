@@ -47,12 +47,12 @@ public final class SeasoningTooltip {
   }
 
   public static void appendFinished(ItemStack stack, List<Component> tooltip) {
-    int remaining = Math.max(0, stack.getMaxDamage() - stack.getDamageValue());
+    int remaining = Math.max(0, SeasoningData.MAX_USES - SeasoningData.getUses(stack));
     tooltip.add(
         Component.translatable(
                 "tooltip.kaleidoscope_grilling.seasoning.uses_full",
                 remaining,
-                stack.getMaxDamage())
+                SeasoningData.MAX_USES)
             .withStyle(ChatFormatting.GRAY));
     tooltip.add(
         Component.translatable("tooltip.kaleidoscope_grilling.seasoning.shift_details")

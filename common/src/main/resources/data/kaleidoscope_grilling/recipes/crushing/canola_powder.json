@@ -1,0 +1,14 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [{"type": "forge:mod_loaded", "modid": "create"}],
+      "recipe": {
+        "type": "create:crushing",
+        "ingredients": [{"tag": "kaleidoscope_grilling:ingredients/canola_seeds"}],
+        "results": [{"item": "kaleidoscope_grilling:canola_powder", "count": 1}],
+        "processingTime": 200
+      }
+    }
+  ]
+}

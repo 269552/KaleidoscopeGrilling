@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import com.mojang.serialization.MapCodec;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -15,7 +16,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -147,34 +147,24 @@ public final class GrillBlock extends BaseEntityBlock {
       BlockHitResult hit) {
     if (stack.is(Items.FLINT_AND_STEEL)) {
       if (!state.getValue(LIT)) {
-        if (!level.isClientSide) {
-          level.setBlock(pos, state.setValue(LIT, true), Block.UPDATE_ALL);
-          level.playSound(
-              null,
+        if (!level.isClientSide)
+          GrillAutomationApi.ignite(
+              level,
               pos,
-              SoundEvents.FLINTANDSTEEL_USE,
-              SoundSource.BLOCKS,
-              1.0F,
-              level.random.nextFloat() * 0.4F + 0.8F);
-          stack.hurtAndBreak(
-              1,
+              stack,
               player,
-              hand == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
-        }
+              hand == InteractionHand.MAIN_HAND
+                  ? net.minecraft.world.entity.EquipmentSlot.MAINHAND
+                  : net.minecraft.world.entity.EquipmentSlot.OFFHAND,
+              false);
         return ItemInteractionResult.SUCCESS;
       }
       return ItemInteractionResult.CONSUME;
     }
     if (stack.is(EXTINGUISH_TOOLS) && state.getValue(LIT)) {
       if (!level.isClientSide) {
-        level.setBlock(pos, state.setValue(LIT, false), Block.UPDATE_ALL);
-        level.playSound(
-            null,
-            pos,
-            SoundEvents.FIRE_EXTINGUISH,
-            SoundSource.BLOCKS,
-            0.5F,
-            2.6F + (level.random.nextFloat() - level.random.nextFloat()) * 0.8F);
+        if (player.isShiftKeyDown()) GrillAutomationApi.forceUnlock(level, pos);
+        GrillAutomationApi.extinguish(level, pos, false);
       }
       return ItemInteractionResult.SUCCESS;
     }

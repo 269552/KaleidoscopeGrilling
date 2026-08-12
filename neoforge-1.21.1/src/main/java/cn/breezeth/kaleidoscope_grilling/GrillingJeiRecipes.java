@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -103,6 +104,7 @@ final class GrillingJeiRecipes {
         cooked = raw.copy();
         SecretSkewerItem.setCooked(cooked, true);
       } else {
+        if (!SkewerRecipes.isRawSkewer(raw)) continue;
         cooked = SkewerRecipes.cookedResult(raw);
       }
       if (!cooked.isEmpty()) result.add(new Grilling(List.of(raw), List.of(cooked)));

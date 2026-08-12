@@ -15,6 +15,20 @@ repositories {
     maven { url = 'https://maven.minecraftforge.net/' }
     mavenCentral()
     maven { url = 'https://maven.blamejared.com' }
+    exclusiveContent {
+        forRepositories(fg.repository)
+        forRepository { maven { name = 'Create'; url = 'https://maven.createmod.net' } }
+        filter {
+            includeGroup 'com.simibubi.create'
+            includeGroup 'net.createmod.ponder'
+            includeGroup 'dev.engine-room.flywheel'
+        }
+    }
+    exclusiveContent {
+        forRepositories(fg.repository)
+        forRepository { maven { name = 'Registrate'; url = 'https://maven.ithundxr.dev/mirror' } }
+        filter { includeGroup 'com.tterrag.registrate' }
+    }
     maven { url = 'https://api.modrinth.com/maven' }
     exclusiveContent {
         forRepositories(fg.repository)
@@ -57,6 +71,27 @@ dependencies {
     compileOnly fg.deobf('mezz.jei:jei-1.20.1-forge-api:15.20.0.105')
     compileOnly fg.deobf('maven.modrinth:jade:11.13.1+forge')
     runtimeOnly fg.deobf('maven.modrinth:jade:11.13.1+forge')
+    def maid = "maven.modrinth:touhou-little-maid:${props.getProperty('touhou_little_maid_version')}"
+    compileOnly fg.deobf(maid)
+    if (!providers.gradleProperty('withoutMaid').isPresent()) {
+        runtimeOnly fg.deobf(maid)
+    }
+    def createSlim = "com.simibubi.create:create-${props.getProperty('minecraft_version')}:${props.getProperty('create_version')}:slim"
+    def ponder = "net.createmod.ponder:Ponder-Forge-${props.getProperty('minecraft_version')}:${props.getProperty('ponder_version')}"
+    def flywheel = "dev.engine-room.flywheel:flywheel-forge-${props.getProperty('minecraft_version')}:${props.getProperty('flywheel_version')}"
+    def registrate = "com.tterrag.registrate:Registrate:${props.getProperty('registrate_version')}"
+    compileOnly(fg.deobf(createSlim)) { transitive = false }
+    compileOnly fg.deobf(ponder)
+    compileOnly fg.deobf("dev.engine-room.flywheel:flywheel-forge-api-${props.getProperty('minecraft_version')}:${props.getProperty('flywheel_version')}")
+    compileOnly fg.deobf(registrate)
+    if (!providers.gradleProperty('withoutCreate').isPresent()) {
+        runtimeOnly(fg.deobf(createSlim)) { transitive = false }
+        runtimeOnly fg.deobf(ponder)
+        runtimeOnly fg.deobf(flywheel)
+        runtimeOnly fg.deobf(registrate)
+    }
+    compileOnly annotationProcessor('io.github.llamalad7:mixinextras-common:0.4.1')
+    implementation 'io.github.llamalad7:mixinextras-forge:0.4.1'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 

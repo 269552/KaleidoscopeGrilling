@@ -56,6 +56,15 @@ public final class BigVatBlockEntity extends BlockEntity {
     return BuiltInRegistries.FLUID.getKey(fluid).toString();
   }
 
+  public String oilType() {
+    if (tank.isEmpty()) return "";
+    Fluid fluid = tank.getFluid().getFluid();
+    if (fluid == ModFluids.CANOLA_SOURCE.get()) return "canola";
+    if (fluid == ModFluids.SECRET_SOURCE.get()) return "secret_chili";
+    if (fluid == ModFluids.PREMIUM_SOURCE.get()) return "premium_chili";
+    return "";
+  }
+
   public boolean canAccept(String type) {
     Fluid fluid = fluidFor(type);
     return fluid != Fluids.EMPTY && (tank.isEmpty() || tank.getFluid().getFluid() == fluid);

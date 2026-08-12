@@ -1,7 +1,9 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -30,6 +32,10 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
   private boolean seasoned;
   private boolean failed;
   private int heatDurationTicks;
+  private UUID automationOwner;
+  private long automationHeartbeat;
+  private UUID automationBlockedOwner;
+  private long automationBlockedUntil;
   private final List<String> seasoningIngredients = new ArrayList<>();
   public final FlipAnimationData flipAnimationData = new FlipAnimationData();
 
@@ -38,6 +44,12 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
   }
 
   public static void tick(Level level, BlockPos pos, BlockState state, GrillBlockEntity grill) {
+    if (grill.automationOwner != null
+        && grill.automationExpired(
+            level.getGameTime(), GrillAutomationApi.DEFAULT_LEASE_TIMEOUT_TICKS)) {
+      grill.clearAutomation();
+      GrillAutomationApi.untrackExpiredLease(level, pos);
+    }
     if (grill.flipCooldown > 0) grill.flipCooldown--;
     if (!state.getValue(GrillBlock.LIT)) return;
     if (grill.isEmpty()) return;
@@ -99,6 +111,9 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     if (flips >= 4) {
       phase = 2;
       failed = false;
+      if (level != null && !level.isClientSide) {
+        for (ItemStack item : items) SkeweringHandler.ensureCookedIngredientStacks(item, level);
+      }
     }
     sync();
   }
@@ -165,6 +180,9 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
       Block.popResource(level, worldPosition, output);
     }
     items = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY);
+    GrillAutomationApi.untrackExpiredLease(level, worldPosition);
+    automationOwner = null;
+    automationHeartbeat = 0;
     resetProcess();
     sync();
   }
@@ -176,6 +194,7 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     else if (input.is(ModItems.SECRET_SKEWER.get())) {
       output = input.copy();
       if (input.hasTag()) output.setTag(input.getTag().copy());
+      if (level != null) SkeweringHandler.ensureCookedIngredientStacks(output, level);
       SecretSkewerItem.setCooked(output, true);
       SeasoningData.set(output, seasoningIngredients);
       if (level != null) FoodState.setHot(output, level.getGameTime() + heatDurationTicks);
@@ -217,6 +236,63 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     return (int) items.stream().filter(s -> !s.isEmpty()).count();
   }
 
+  public boolean tryAcquireAutomation(UUID owner, long gameTime, int timeoutTicks) {
+    if (owner == null) return false;
+    if (automationBlockedOwner != null && gameTime >= automationBlockedUntil) {
+      automationBlockedOwner = null;
+      automationBlockedUntil = 0;
+    }
+    if (owner.equals(automationBlockedOwner)) return false;
+    if (automationOwner == null
+        || automationOwner.equals(owner)
+        || automationExpired(gameTime, timeoutTicks)) {
+      automationOwner = owner;
+      automationHeartbeat = gameTime;
+      sync();
+      return true;
+    }
+    return false;
+  }
+
+  public boolean heartbeatAutomation(UUID owner, long gameTime) {
+    if (owner == null || !owner.equals(automationOwner)) return false;
+    automationHeartbeat = gameTime;
+    setChanged();
+    return true;
+  }
+
+  public boolean releaseAutomation(UUID owner) {
+    if (owner == null || !owner.equals(automationOwner)) return false;
+    clearAutomation();
+    return true;
+  }
+
+  public boolean forceReleaseAutomation(long gameTime, int blockTicks) {
+    if (automationOwner == null) return false;
+    automationBlockedOwner = automationOwner;
+    automationBlockedUntil = gameTime + Math.max(1, blockTicks);
+    clearAutomation();
+    return true;
+  }
+
+  public UUID getAutomationOwner(long gameTime, int timeoutTicks) {
+    if (automationExpired(gameTime, timeoutTicks)) {
+      clearAutomation();
+      if (level != null) GrillAutomationApi.untrackExpiredLease(level, worldPosition);
+    }
+    return automationOwner;
+  }
+
+  private boolean automationExpired(long gameTime, int timeoutTicks) {
+    return automationOwner != null && gameTime - automationHeartbeat > Math.max(1, timeoutTicks);
+  }
+
+  private void clearAutomation() {
+    automationOwner = null;
+    automationHeartbeat = 0;
+    sync();
+  }
+
   private void resetProcess() {
     phase = phaseTicks = flips = flipCooldown = heatDurationTicks = 0;
     seasoned = failed = false;
@@ -237,6 +313,10 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     tag.putInt("Flips", flips);
     tag.putInt("FlipCooldown", flipCooldown);
     tag.putInt("HeatDuration", heatDurationTicks);
+    if (automationOwner != null) tag.putUUID("AutomationOwner", automationOwner);
+    tag.putLong("AutomationHeartbeat", automationHeartbeat);
+    if (automationBlockedOwner != null) tag.putUUID("AutomationBlockedOwner", automationBlockedOwner);
+    tag.putLong("AutomationBlockedUntil", automationBlockedUntil);
     tag.putBoolean("Seasoned", seasoned);
     tag.putBoolean("Failed", failed);
     ItemStack data = new ItemStack(ModItems.SPECIAL_SEASONING.get());
@@ -254,6 +334,11 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     flips = tag.getInt("Flips");
     flipCooldown = tag.getInt("FlipCooldown");
     heatDurationTicks = tag.getInt("HeatDuration");
+    automationOwner = tag.hasUUID("AutomationOwner") ? tag.getUUID("AutomationOwner") : null;
+    automationHeartbeat = tag.getLong("AutomationHeartbeat");
+    automationBlockedOwner =
+        tag.hasUUID("AutomationBlockedOwner") ? tag.getUUID("AutomationBlockedOwner") : null;
+    automationBlockedUntil = tag.getLong("AutomationBlockedUntil");
     seasoned = tag.getBoolean("Seasoned");
     failed = tag.getBoolean("Failed");
     seasoningIngredients.clear();
@@ -311,6 +396,14 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     CompoundTag tag = super.getUpdateTag();
     saveAdditional(tag);
     return tag;
+  }
+
+  @Override
+  public void onLoad() {
+    super.onLoad();
+    if (level != null && automationOwner != null) {
+      GrillAutomationApi.trackLoadedLease(level, worldPosition);
+    }
   }
 
   @Override

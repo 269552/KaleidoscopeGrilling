@@ -2,16 +2,23 @@ package cn.breezeth.kaleidoscope_grilling.mixin;
 
 import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimation;
 import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimationAccess;
+import cn.breezeth.kaleidoscope_grilling.EnderPearlEatingAnimation;
+import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
 import cn.breezeth.kaleidoscope_grilling.ModItems;
+import cn.breezeth.kaleidoscope_grilling.MultiBiteSkewerItem;
 import cn.breezeth.kaleidoscope_grilling.OilBrushAnimation;
 import cn.breezeth.kaleidoscope_grilling.OilPotCompat;
 import cn.breezeth.kaleidoscope_grilling.OilPressTools;
+import cn.breezeth.kaleidoscope_grilling.SkewerEatingAnimation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.ArmedModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
@@ -25,6 +32,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemInHandLayer.class)
 public abstract class ItemInHandLayerAnvilPressMixin {
+  private static final ResourceLocation ENDER_PEARL_PIECE =
+      ResourceLocation.fromNamespaceAndPath(
+          KaleidoscopeGrilling.MOD_ID, "item/fixed_skewers/ender_pearl_bite_piece");
+
   private static final String RENDER_ITEM =
       "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V";
 
@@ -128,6 +139,10 @@ public abstract class ItemInHandLayerAnvilPressMixin {
       MultiBufferSource buffers,
       int packedLight,
       CallbackInfo ci) {
+    if (grilling$renderEatingSkewer(entity, stack, arm, pose, buffers, packedLight)) {
+      ci.cancel();
+      return;
+    }
     if (!(entity instanceof Player player)
         || arm != player.getMainArm()
         || OilPressTools.progress(stack) <= 0
@@ -161,5 +176,87 @@ public abstract class ItemInHandLayerAnvilPressMixin {
             entity.getId());
     pose.popPose();
     ci.cancel();
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private boolean grilling$renderEatingSkewer(
+      LivingEntity entity,
+      ItemStack stack,
+      HumanoidArm arm,
+      PoseStack pose,
+      MultiBufferSource buffers,
+      int packedLight) {
+    if (!(entity instanceof Player player)
+        || !player.isUsingItem()
+        || !(player.getUseItem().getItem() instanceof MultiBiteSkewerItem animated)) return false;
+
+    HumanoidArm activeArm =
+        player.getUsedItemHand() == net.minecraft.world.InteractionHand.MAIN_HAND
+            ? player.getMainArm()
+            : player.getMainArm().getOpposite();
+    float partialTick =
+        Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
+    ArmedModel model = (ArmedModel) ((ItemInHandLayer) (Object) this).getParentModel();
+    if (animated.uses(MultiBiteSkewerItem.AnimationProfile.RAW_ENDER_PEARL)) {
+      EnderPearlEatingAnimation.Pose animation =
+          EnderPearlEatingAnimation.sample(player, partialTick);
+      pose.pushPose();
+      model.translateToHand(arm, pose);
+      if (activeArm == arm) {
+        EnderPearlEatingAnimation.transformMainItem(pose, arm, animation.mainItem());
+        Minecraft.getInstance()
+            .getItemRenderer()
+            .renderStatic(
+                entity,
+                player.getUseItem(),
+                ItemDisplayContext.NONE,
+                arm == HumanoidArm.LEFT,
+                pose,
+                buffers,
+                entity.level(),
+                packedLight,
+                OverlayTexture.NO_OVERLAY,
+                entity.getId());
+      } else if (animation.secondItem().scale() > 0.001F) {
+        EnderPearlEatingAnimation.transformSecondItem(pose, arm, animation.secondItem());
+        Minecraft.getInstance()
+            .getItemRenderer()
+            .render(
+                player.getUseItem(),
+                ItemDisplayContext.NONE,
+                arm == HumanoidArm.LEFT,
+                pose,
+                buffers,
+                packedLight,
+                OverlayTexture.NO_OVERLAY,
+                Minecraft.getInstance()
+                    .getModelManager()
+                    .getModel(ModelResourceLocation.standalone(ENDER_PEARL_PIECE)));
+      }
+      pose.popPose();
+      return true;
+    }
+    if (activeArm != arm || !(stack.getItem() instanceof MultiBiteSkewerItem)) return false;
+
+    SkewerEatingAnimation.ArmPose animation =
+        SkewerEatingAnimation.sample(player, partialTick, animated.animationProfile());
+    pose.pushPose();
+    model.translateToHand(arm, pose);
+    SkewerEatingAnimation.transformItem(pose, arm, animation);
+    Minecraft.getInstance()
+        .getItemRenderer()
+        .renderStatic(
+            entity,
+            stack,
+            ItemDisplayContext.NONE,
+            arm == HumanoidArm.LEFT,
+            pose,
+            buffers,
+            entity.level(),
+            packedLight,
+            OverlayTexture.NO_OVERLAY,
+            entity.getId());
+    pose.popPose();
+    return true;
   }
 }

@@ -47,11 +47,6 @@ public final class SweetPotatoCropBlock extends CropBlock {
   }
 
   @Override
-  protected int getBonemealAgeIncrease(net.minecraft.world.level.Level l) {
-    return 1;
-  }
-
-  @Override
   protected void createBlockStateDefinition(
       StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState> b) {
     b.add(AGE);

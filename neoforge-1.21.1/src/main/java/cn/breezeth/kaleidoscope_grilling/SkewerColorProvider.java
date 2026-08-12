@@ -4,6 +4,7 @@ import cn.breezeth.kaleidoscope_grilling.mixin.SpriteContentsAccessor;
 import com.mojang.blaze3d.platform.NativeImage;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,9 +12,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
 public final class SkewerColorProvider {
   private static final int GRID_SIZE = 4;
@@ -22,6 +25,7 @@ public final class SkewerColorProvider {
   private static final int SLOT_STRIDE = 128;
   private static final int FALLBACK = 0xB86B45;
   private static final Map<PaletteKey, int[]> CACHE = new ConcurrentHashMap<>();
+  private static final Map<ItemStack, RenderData> RENDER_CACHE = new IdentityHashMap<>();
 
   public static int color(ItemStack skewer, int tintIndex) {
     if (tintIndex < 0) return -1;
@@ -34,21 +38,37 @@ public final class SkewerColorProvider {
 
     Minecraft minecraft = Minecraft.getInstance();
     if (minecraft.level == null) return opaque(stageColor(skewer, FALLBACK, 5));
-    List<ItemStack> ingredients =
-        SkeweringHandler.readIngredientStacks(skewer, minecraft.level.registryAccess());
-    if (ingredients.isEmpty()) ingredients = SkewerRecipes.displayIngredients(skewer);
-    if (slot >= ingredients.size()) return -1;
-    ItemStack ingredient = ingredients.get(slot);
-    ResourceLocation id = BuiltInRegistries.ITEM.getKey(ingredient.getItem());
-    PaletteKey key = new PaletteKey(id, ingredient.getComponents().hashCode());
-    if (CACHE.size() > 512) CACHE.clear();
-    int[] palette = CACHE.computeIfAbsent(key, ignored -> sample(minecraft, ingredient));
+    RenderData renderData = renderData(minecraft, skewer);
+    if (slot >= renderData.palettes().size()) return -1;
+    int[] palette = renderData.palettes().get(slot);
     int color = shadeForFace(palette[cell], face);
     return opaque(stageColor(skewer, color, cell));
   }
 
   public static void clearCache() {
     CACHE.clear();
+    RENDER_CACHE.clear();
+  }
+
+  private static RenderData renderData(Minecraft minecraft, ItemStack skewer) {
+    CustomData dataToken = skewer.get(DataComponents.CUSTOM_DATA);
+    RenderData cached = RENDER_CACHE.get(skewer);
+    if (cached != null && cached.dataToken() == dataToken) return cached;
+
+    List<ItemStack> ingredients =
+        SkeweringHandler.readEffectiveIngredientStacks(skewer, minecraft.level.registryAccess());
+    if (ingredients.isEmpty()) ingredients = SkewerRecipes.displayIngredients(skewer);
+    List<int[]> palettes = new ArrayList<>(ingredients.size());
+    for (ItemStack ingredient : ingredients) {
+      ResourceLocation id = BuiltInRegistries.ITEM.getKey(ingredient.getItem());
+      PaletteKey key = new PaletteKey(id, ingredient.getComponents().hashCode());
+      if (CACHE.size() > 512) CACHE.clear();
+      palettes.add(CACHE.computeIfAbsent(key, ignored -> sample(minecraft, ingredient)));
+    }
+    if (RENDER_CACHE.size() >= 256) RENDER_CACHE.clear();
+    RenderData resolved = new RenderData(dataToken, List.copyOf(palettes));
+    RENDER_CACHE.put(skewer, resolved);
+    return resolved;
   }
 
   private static int[] sample(Minecraft minecraft, ItemStack ingredient) {
@@ -244,6 +264,10 @@ public final class SkewerColorProvider {
     if (stage == 2) return blend(rgb, 0xB96A32, edge ? 0.27F : 0.18F, edge ? 0.96F : 1.0F);
     if (stage == 3) return blend(rgb, 0x9D4825, edge ? 0.40F : 0.28F, edge ? 0.88F : 0.94F);
     if (stage >= 5) return blend(rgb, 0x17110E, edge ? 0.88F : 0.76F, edge ? 0.42F : 0.52F);
+    if (SkeweringHandler.hasCookedIngredientStacks(stack)) {
+      int glazed = blend(rgb, 0xC84F3B, edge ? 0.04F : 0.08F, 1.02F);
+      return blend(glazed, 0x713A22, edge ? 0.14F : 0.06F, edge ? 0.97F : 1.0F);
+    }
     int glazed = blend(rgb, 0xB94A35, edge ? 0.10F : 0.16F, 1.0F);
     return blend(glazed, 0x713A22, edge ? 0.34F : 0.18F, edge ? 0.91F : 0.98F);
   }
@@ -322,6 +346,8 @@ public final class SkewerColorProvider {
   }
 
   private record PaletteKey(ResourceLocation item, int componentsHash) {}
+
+  private record RenderData(CustomData dataToken, List<int[]> palettes) {}
 
   private static final class ColorCluster {
     private int count;

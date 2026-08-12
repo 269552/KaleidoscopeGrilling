@@ -69,6 +69,7 @@ public final class SkewerRecipeCraftingRecipe extends CustomRecipe {
 
   private static boolean isRecordableSkewer(ItemStack stack) {
     return stack.is(RAW_SKEWERS)
+        || stack.is(ModItems.ORDINARY_SKEWER.get())
         || stack.is(ModItems.SECRET_SKEWER.get())
             && SkeweringHandler.readIngredientStacks(stack).size() == 3;
   }

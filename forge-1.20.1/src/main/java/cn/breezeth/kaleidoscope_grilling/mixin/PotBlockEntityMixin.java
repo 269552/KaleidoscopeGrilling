@@ -1,5 +1,14 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
+import cn.breezeth.kaleidoscope_grilling.FoodState;
+import cn.breezeth.kaleidoscope_grilling.HotFoodConfig;
+import cn.breezeth.kaleidoscope_grilling.OilPotCompat;
+import cn.breezeth.kaleidoscope_grilling.PotHudAccess;
+import cn.breezeth.kaleidoscope_grilling.PotOilAccess;
+import cn.breezeth.kaleidoscope_grilling.SeasonedPotAccess;
+import cn.breezeth.kaleidoscope_grilling.SeasoningAnimation;
+import cn.breezeth.kaleidoscope_grilling.SeasoningData;
+
 import cn.breezeth.kaleidoscope_grilling.*;
 import com.github.ysbbbbbb.kaleidoscopecookery.blockentity.kitchen.PotBlockEntity;
 import java.util.ArrayList;
@@ -68,14 +77,14 @@ public abstract class PotBlockEntityMixin implements SeasonedPotAccess, PotOilAc
     if (user instanceof Player player) SeasoningAnimation.start(player);
     grilling$setSeasoning(SeasoningData.get(stack));
     if (!(user instanceof Player player) || !player.getAbilities().instabuild) {
-      int next = stack.getDamageValue() + 1;
-      if (next >= stack.getMaxDamage()) {
+      int next = SeasoningData.getUses(stack) + 1;
+      if (next >= SeasoningData.MAX_USES) {
         stack.setCount(0);
         if (user instanceof Player p)
           p.setItemInHand(
               net.minecraft.world.InteractionHand.MAIN_HAND,
               new ItemStack(ModItems.EMPTY_SEASONING_BOTTLE.get()));
-      } else stack.setDamageValue(next);
+      } else SeasoningData.setUses(stack, next);
     }
     cir.setReturnValue(true);
   }

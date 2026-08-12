@@ -2,10 +2,13 @@ package cn.breezeth.kaleidoscope_grilling.mixin;
 
 import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimation;
 import cn.breezeth.kaleidoscope_grilling.AnvilPressAnimationAccess;
+import cn.breezeth.kaleidoscope_grilling.EnderPearlEatingAnimation;
 import cn.breezeth.kaleidoscope_grilling.ModEffects;
 import cn.breezeth.kaleidoscope_grilling.ModItems;
+import cn.breezeth.kaleidoscope_grilling.MultiBiteSkewerItem;
 import cn.breezeth.kaleidoscope_grilling.OilBrushAnimation;
 import cn.breezeth.kaleidoscope_grilling.SeasoningAnimation;
+import cn.breezeth.kaleidoscope_grilling.SkewerEatingAnimation;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
@@ -82,6 +85,30 @@ public abstract class HumanoidAnvilPressMixin<T extends LivingEntity> {
       arm.xRot = -1.75F - 0.35F * arc + 0.18F * wave;
       arm.yRot = side * (0.35F + 0.95F * wave);
       arm.zRot = side * (0.55F + 0.55F * arc + 0.25F * wave);
+      return;
+    }
+    if (player.isUsingItem()
+        && player.getUseItem().getItem() instanceof MultiBiteSkewerItem animated) {
+      HumanoidArm eatingArm =
+          player.getUsedItemHand() == InteractionHand.MAIN_HAND
+              ? player.getMainArm()
+              : player.getMainArm().getOpposite();
+      ModelPart eatingArmPart = eatingArm == HumanoidArm.RIGHT ? rightArm : leftArm;
+      if (animated.uses(MultiBiteSkewerItem.AnimationProfile.RAW_ENDER_PEARL)) {
+        HumanoidArm helperArm = eatingArm.getOpposite();
+        ModelPart helperArmPart = helperArm == HumanoidArm.RIGHT ? rightArm : leftArm;
+        EnderPearlEatingAnimation.Pose eating =
+            EnderPearlEatingAnimation.sample(player, partial);
+        EnderPearlEatingAnimation.applyActiveArm(
+            eatingArmPart, eatingArm, eating.activeArm());
+        EnderPearlEatingAnimation.applyHelperArm(
+            helperArmPart, helperArm, eating.helperArm());
+      } else {
+        SkewerEatingAnimation.applyToArm(
+            eatingArmPart,
+            eatingArm,
+            SkewerEatingAnimation.sample(player, partial, animated.animationProfile()));
+      }
       return;
     }
     if (!player.hasEffect(ModEffects.NUMB)) return;

@@ -1,5 +1,9 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
+import cn.breezeth.kaleidoscope_grilling.HotFoodConfig;
+import cn.breezeth.kaleidoscope_grilling.SeasonedPotAccess;
+import cn.breezeth.kaleidoscope_grilling.SeasoningUse;
+
 import cn.breezeth.kaleidoscope_grilling.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;

@@ -1,11 +1,10 @@
 package cn.breezeth.kaleidoscope_grilling;
 
 import com.mojang.serialization.MapCodec;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -13,7 +12,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -160,14 +158,12 @@ public final class OilPressBlock extends BaseEntityBlock {
 
   @Override
   protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
-    ItemStack out = new ItemStack(ModBlocks.OIL_PRESS_ITEM.get());
+    List<ItemStack> drops = new ArrayList<>();
+    drops.add(new ItemStack(ModBlocks.OIL_PRESS_ITEM.get()));
     BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
     if (blockEntity instanceof OilPressBlockEntity press) {
-      CompoundTag data = new CompoundTag();
-      press.saveAdditional(data, params.getLevel().registryAccess());
-      data.putString("id", KaleidoscopeGrilling.MOD_ID + ":oil_press");
-      out.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(data));
+      if (press.cakes() > 0) drops.add(new ItemStack(ModItems.OIL_CAKE.get(), press.cakes()));
     }
-    return List.of(out);
+    return drops;
   }
 }

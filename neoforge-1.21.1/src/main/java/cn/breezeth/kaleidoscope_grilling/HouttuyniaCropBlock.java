@@ -12,6 +12,7 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -82,20 +83,15 @@ public final class HouttuyniaCropBlock extends CropBlock {
   }
 
   @Override
-  protected int getBonemealAgeIncrease(Level level) {
-    return 1;
-  }
-
-  @Override
   protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
     BlockState ground = level.getBlockState(pos.below());
     return ground.is(Blocks.SOUL_SAND)
-        || (ground.is(Blocks.FARMLAND) && level.getRawBrightness(pos, 0) >= 8);
+        || (ground.getBlock() instanceof FarmBlock && level.getRawBrightness(pos, 0) >= 8);
   }
 
   @Override
   protected boolean mayPlaceOn(BlockState state, BlockGetter level, BlockPos pos) {
-    return state.is(Blocks.FARMLAND) || state.is(Blocks.SOUL_SAND);
+    return state.getBlock() instanceof FarmBlock || state.is(Blocks.SOUL_SAND);
   }
 
   @Override

@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -69,6 +71,9 @@ public final class ModCreativeTabs {
     Item canolaBrush = ModItems.CANOLA_OIL_BRUSH.get();
     Item secretBrush = ModItems.SECRET_CHILI_OIL_BRUSH.get();
     Item premiumBrush = ModItems.PREMIUM_CHILI_OIL_BRUSH.get();
+    Item potatoBeefStew = ModItems.POTATO_BEEF_STEW.get();
+    Item sourSpicyNoodles = ModItems.SOUR_SPICY_NOODLES.get();
+    boolean hasTavern = ModList.get().isLoaded("kaleidoscope_tavern");
     ModItems.ITEMS
         .getEntries()
         .forEach(
@@ -81,7 +86,12 @@ public final class ModCreativeTabs {
                   && item != canolaBrush
                   && item != secretBrush
                   && item != premiumBrush
-                  && added.add(item)) output.accept(item);
+                  && item != sourSpicyNoodles
+                  && added.add(item)) {
+                output.accept(item);
+                if (item == potatoBeefStew && hasTavern)
+                  add(output, added, new ItemStack(sourSpicyNoodles));
+              }
             });
   }
 

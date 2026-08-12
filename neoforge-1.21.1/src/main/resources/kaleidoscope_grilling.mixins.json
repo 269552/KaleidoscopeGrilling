@@ -2,8 +2,9 @@
   "required": true,
   "minVersion": "0.8",
   "package": "cn.breezeth.kaleidoscope_grilling.mixin",
+  "plugin": "cn.breezeth.kaleidoscope_grilling.mixin.GrillingMixinPlugin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["ChoppingBoardBlockEntityMixin", "OilPotBlockEntityMixin", "OilPotBlockMixin", "OilPotItemMixin", "PotBlockEntityMixin", "StockpotBlockEntityMixin", "PotBlockUseMixin", "StockpotBlockUseMixin", "PotBlockEntityRenderMixin", "FoodDataAccessor", "PlayerAnvilPressMixin", "MillstoneRecipeMixin", "ItemEntityHotFoodExpiryMixin", "AbstractContainerMenuHotMergeMixin"],
-  "client": ["GuiGraphicsContextMixin", "HumanoidAnvilPressMixin", "ItemInHandLayerAnvilPressMixin", "ItemRendererContextMixin", "NumbCrosshairMixin", "SpriteContentsAccessor", "SkewerPlateEatingParticlesMixin", "AbstractContainerScreenHotMergeMixin"],
+  "mixins": ["ChoppingBoardBlockEntityMixin", "OilPotBlockEntityMixin", "OilPotBlockMixin", "PotBlockEntityMixin", "StockpotBlockEntityMixin", "PotBlockUseMixin", "StockpotBlockUseMixin", "PotBlockEntityRenderMixin", "FoodDataAccessor", "PlayerAnvilPressMixin", "ItemEntityHotFoodExpiryMixin", "LivingEntitySkewerEatingSoundMixin", "AbstractContainerMenuHotMergeMixin", "PressingBehaviourMixin", "BeltDeployerCallbacksMixin", "BasinOperatingBlockEntityAccessor", "MechanicalMixerSeasoningMixin", "BasinRecipeSeasoningMixin", "WirelessIOBaubleMixin", "WirelessIOItemMixin"],
+  "client": ["GuiGraphicsContextMixin", "HumanoidAnvilPressMixin", "ItemInHandLayerAnvilPressMixin", "ItemInHandSkewerEatingMixin", "ItemRendererContextMixin", "NumbCrosshairMixin", "SpriteContentsAccessor", "SkewerPlateEatingParticlesMixin", "AbstractContainerScreenHotMergeMixin", "WirelessIOContainerGuiMixin"],
   "injectors": { "defaultRequire": 1 }
 }

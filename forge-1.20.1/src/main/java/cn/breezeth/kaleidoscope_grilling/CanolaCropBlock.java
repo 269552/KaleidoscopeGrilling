@@ -40,11 +40,6 @@ public final class CanolaCropBlock extends CropBlock {
   }
 
   @Override
-  protected int getBonemealAgeIncrease(net.minecraft.world.level.Level level) {
-    return 1;
-  }
-
-  @Override
   protected void createBlockStateDefinition(
       StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState> builder) {
     builder.add(AGE);

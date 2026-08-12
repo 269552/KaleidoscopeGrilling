@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
@@ -18,6 +19,5 @@ public final class ModMenus {
   public static final DeferredHolder<MenuType<?>, MenuType<RackShortcutMenu>> RACK_SHORTCUT =
       MENUS.register(
           "rack_shortcut", () -> new MenuType<>(RackShortcutMenu::new, FeatureFlags.VANILLA_SET));
-
   private ModMenus() {}
 }

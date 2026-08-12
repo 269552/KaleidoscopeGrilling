@@ -44,6 +44,16 @@ NeoForge 1.21.1：
 | 调料材料 | `data/<namespace>/grilling/*.json` | 将第三方物品映射到已有调料效果种类 |
 | 大缸自动化 | 标准 `IFluidHandler` | 通过管道、泵或其他流体容器输入输出 |
 
+## Touhou Little Maid 可选兼容
+
+烟火在 Forge 1.20.1 与 NeoForge 1.21.1 均内置“烧烤”女仆任务。Touhou Little Maid 是可选依赖，未安装时不会加载相关任务、网络消息、Jade 组件或 Mixin。
+
+- 女仆通过启用“烧烤模式”的进货/出货隙间连接容器；烧烤模式会暂停隙间原本的自动搬运。
+- 油壶、特制调料和打火石优先从 24 格内的高级厨具架借用，并在进入水平 1 格、上下 3 格的操作范围后实际取还。
+- 女仆调用公开的 `GrillAutomationApi`，与其他自动化共享烧烤架租约，不伪造玩家右键。
+- 服务器可使用 `/kg grill unlockall` 清理残留租约；玩家可注视烧烤架使用 `/kg grill unlock`。
+- Forge 开发依赖版本为 `1.5.3-forge+mc1.20.1`；NeoForge 开发依赖版本为 `1.5.3-neoforge+mc1.21.1`。
+
 ## 调用时机
 
 所有 `register...` 方法都应只调用一次，建议在物品注册完成后的公共初始化阶段执行。
@@ -79,6 +89,25 @@ GrillAutomationApi.Result seasoned =
 GrillAutomationApi.Result extracted =
         GrillAutomationApi.extract(level, grillPos, false);
 ```
+
+自动化控制器还可以通过快照判断当前步骤，并在跨 tick 工作时申请独占租约：
+
+```java
+UUID controllerId = machineController.getUUID();
+if (GrillAutomationApi.acquire(level, grillPos, controllerId)) {
+    GrillAutomationApi.Snapshot state = GrillAutomationApi.snapshot(level, grillPos);
+    // 工作期间至少每 10 秒调用一次；默认租约超时为 200 tick。
+    GrillAutomationApi.heartbeat(level, grillPos, controllerId);
+
+    // 批次结束或主动取消时释放。
+    GrillAutomationApi.release(level, grillPos, controllerId);
+}
+```
+
+- `snapshot` 返回点燃、阶段、翻面次数、占用槽位、翻面冷却、调料、失败状态和当前自动化持有者。
+- `ignite` 与 `extinguish` 提供不伪造玩家的点火/熄火入口；执行版本仍会播放对应世界声音并正确损耗打火石。
+- 租约只协调自动化控制器，不限制玩家手动右键。第三方自动化若跨多个 tick 操作，必须使用 `acquire`、`heartbeat` 和 `release`，避免与女仆或其他机器争抢。
+- `forceUnlock`/`forceUnlockAll` 仅供管理和故障恢复，不应作为普通工作流程的一部分。
 
 所有动作均保留烧烤架原有顺序和限制，不能绕过点火、刷油、翻面次数、翻面冷却、撒料或完成状态直接修改阶段。
 
@@ -430,6 +459,36 @@ level.getCapability(Capabilities.FluidHandler.BLOCK, pos, side);
 
 标准能力支持原版水、本模组油类及其他模组注册的流体。实际传输量使用加载器标准流体单位。
 
+## 调料瓶自动化 API
+
+类：`cn.breezeth.kaleidoscope_grilling.SeasoningAutomationApi`
+
+该接口用于机械或其他模组复用烟火的调料容量、基础材料和成品数据规则。调用方应先把可用库存按稳定槽位顺序组成列表，再生成本轮计划：
+
+```java
+SeasoningAutomationApi.MixPlan plan =
+        SeasoningAutomationApi.plan(machineInventorySnapshot);
+if (plan != null && machineInventory.canExtract(plan.takes())) {
+    ItemStack result = SeasoningAutomationApi.finish(plan, level.random);
+    // 先确认输出空间，再按 plan.takes() 原子扣除输入并插入 result。
+}
+```
+
+- `plan` 优先处理列表中第一个有效的“待摇晃的调料”；否则选择第一个空调料瓶。
+- `plan(stacks, targets)` 按目标列表顺序寻找第一份当前库存能够完整满足的调料配方；材料按物品 ID 和数量匹配，不要求放入顺序一致。
+- `appendIngredient(bottle, ingredient)` 向空调料瓶或待摇晃调料中加入一份有效材料，并返回更新后的单个瓶子；容量已满或材料无效时返回空堆。集齐三种基础调料后会自动转换为待摇晃状态，但不会跳过最终摇晃步骤。
+- 使用空瓶时，先锁定绿辣椒粉、花椒粉和洋葱粉各一份，再按槽位顺序选取其他有效材料，单瓶最多 8 份。
+- 无效物品不参与计划，也不会阻止计划生成。超过容量的有效材料不进入本轮计划，应原样留在调用方库存中。
+- `SlotTake` 指明应从哪个槽位扣除多少物品。调用方必须先模拟输出空间与全部扣除，再一次性提交，不能逐项失败后留下半成品事务。
+- `finish` 生成携带完整材料、Buff 映射、随机内容物外观和 16 次初始用量的特制调料。
+- `isValidIngredient` 和 `hasBase` 可用于机器过滤器、HUD 或状态提示。调料效果映射继续来自 `data/<namespace>/grilling/*.json`。
+
+安装机械动力时，烟火已经内置工作盆与动力搅拌器实现：配方处理时长为 80 tick；无效材料及超过容量的有效材料保留在工作盆中。三种基础料各固定消耗一个，其他有效调料优先于多余基础料进入剩余容量。机械手持特制调料作用于烧烤架时，会进入 `GrillAutomationApi.season` 的统一事务规则。
+
+列表过滤器可以进一步指定自动调制配方：将一瓶已经调制完成的特制调料作为虚影样品放入列表过滤器，设置为白名单并开启“匹配数据”，再把过滤器安装到工作盆。系统只比较样品保存的材料种类和数量，不比较调料瓶随机颜色、剩余使用次数或材料放入顺序。过滤器中可以放置多个样品，系统按照槽位顺序制作第一份材料齐全的配方；材料不足时不会启动或消耗物品，多余材料继续留在工作盆中。关闭“匹配数据”时仍使用原有的自动选择有效材料规则。
+
+机械手也可以逐次装料：把空调料瓶或待摇晃调料放上传送带，让机械手依次手持所需调料材料作用于瓶子。每次动作只处理一瓶并加入一份材料；无效材料、满容量瓶和成品特制调料不会触发，也不会消耗机械手物品。装料完成后仍需由玩家摇晃，或送入工作盆使用动力搅拌器完成调制。
+
 ## 兼容实现检查表
 
 1. 确认 `kaleidoscope_grilling` 已加载后再引用 Java API。
@@ -444,4 +503,4 @@ level.getCapability(Capabilities.FluidHandler.BLOCK, pos, side);
 
 ## 稳定性说明
 
-上述类和数据入口是计划保留的公开兼容面。当前接口文档对应 v0.8；发布前若必须调整签名，应同步更新本文并在版本说明中标记破坏性变更。第三方模组不应调用未在本文列出的内部类或直接读写本模组私有 NBT/数据组件键。
+上述类和数据入口是计划保留的公开兼容面。当前接口文档对应 v1.1 开发线；发布前若必须调整签名，应同步更新本文并在版本说明中标记破坏性变更。第三方模组不应调用未在本文列出的内部类或直接读写本模组私有 NBT/数据组件键。

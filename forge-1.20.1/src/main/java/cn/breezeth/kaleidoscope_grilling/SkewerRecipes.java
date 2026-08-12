@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -26,6 +27,7 @@ public final class SkewerRecipes {
     String configured = entry.getValue().cookedResult();
     ResourceLocation cooked =
         configured.isEmpty() ? inferCooked(raw) : ResourceLocation.tryParse(configured);
+    if (cooked == null && !raw.getPath().startsWith("raw_")) cooked = raw;
     return cooked == null ? null : new Recipe(raw, cooked, entry.getValue().ingredients());
   }
 
@@ -71,7 +73,8 @@ public final class SkewerRecipes {
   public static boolean isRawSkewer(ItemStack stack) {
     if (stack.is(SkewerCompatApi.RAW_SKEWERS)) return true;
     ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
-    return recipes().stream().anyMatch(recipe -> recipe.rawResult().equals(id));
+    return recipes().stream()
+        .anyMatch(recipe -> recipe.rawResult().equals(id) && !recipe.rawResult().equals(recipe.cookedResult()));
   }
 
   public static boolean isCookedSkewer(ItemStack stack) {

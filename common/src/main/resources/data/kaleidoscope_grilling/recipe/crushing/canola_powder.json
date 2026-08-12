@@ -1,0 +1,7 @@
+{
+  "type": "create:crushing",
+  "neoforge:conditions": [{"type": "neoforge:mod_loaded", "modid": "create"}],
+  "ingredients": [{"tag": "kaleidoscope_grilling:ingredients/canola_seeds"}],
+  "results": [{"id": "kaleidoscope_grilling:canola_powder", "amount": 1}],
+  "processingTime": 200
+}

@@ -4,6 +4,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public final class OilPotCompat {
+  public static final int FAT_CAPACITY = 256;
+  public static final int FLUID_CAPACITY = 64;
+
   private static final String OIL_COUNT = "oil_count";
   private static final String OIL_TYPE = "grilling_oil_type";
 
@@ -12,8 +15,23 @@ public final class OilPotCompat {
     return id != null && id.toString().equals("kaleidoscope_cookery:oil_pot");
   }
 
+  public static boolean isCookeryFat(ItemStack stack) {
+    var id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+    return id != null && id.toString().equals("kaleidoscope_cookery:oil");
+  }
+
   public static int getCount(ItemStack stack) {
-    return stack.hasTag() ? Math.min(64, stack.getTag().getInt(OIL_COUNT)) : 0;
+    return stack.hasTag()
+        ? Math.min(capacity(getType(stack)), stack.getTag().getInt(OIL_COUNT))
+        : 0;
+  }
+
+  public static int capacity(ItemStack stack) {
+    return capacity(getType(stack));
+  }
+
+  public static int capacity(String type) {
+    return type == null || type.isEmpty() ? FAT_CAPACITY : FLUID_CAPACITY;
   }
 
   public static boolean consume(ItemStack stack, int amount) {
@@ -31,11 +49,16 @@ public final class OilPotCompat {
 
   public static void fill(ItemStack stack, String type, int points) {
     stack.getOrCreateTag().putString(OIL_TYPE, type);
-    stack.getOrCreateTag().putInt(OIL_COUNT, Math.min(64, getCount(stack) + points));
+    stack
+        .getOrCreateTag()
+        .putInt(OIL_COUNT, Math.min(FLUID_CAPACITY, getCount(stack) + points));
   }
 
   public static void setType(ItemStack stack, String type) {
     stack.getOrCreateTag().putString(OIL_TYPE, type);
+    if (type != null && !type.isEmpty() && stack.getOrCreateTag().getInt(OIL_COUNT) > FLUID_CAPACITY) {
+      stack.getOrCreateTag().putInt(OIL_COUNT, FLUID_CAPACITY);
+    }
   }
 
   public static int heatDuration(ItemStack stack) {

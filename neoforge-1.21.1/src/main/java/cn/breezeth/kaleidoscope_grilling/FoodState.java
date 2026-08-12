@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import java.util.List;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +12,10 @@ import net.minecraft.world.level.Level;
 
 public final class FoodState {
   private static final String HOT_UNTIL = "HotUntil";
+  private static final String MODEL_VARIANTS = "SkewerModelVariants";
+  private static final String CREATOR = "Creator";
+  private static final String CREATOR_NAME = "CreatorName";
+  private static final String CREATOR_UUID = "CreatorUuid";
   private static final long HEAT_BUCKET_TICKS = 5L * 20L;
 
   public static void setHot(ItemStack s, long until) {
@@ -38,20 +43,26 @@ public final class FoodState {
   }
 
   public static boolean canMergeHot(ItemStack first, ItemStack second, Level level) {
-    return isHot(first, level) && isHot(second, level) && sameExceptHeat(first, second);
+    return isHot(first, level) == isHot(second, level) && sameForManualMerge(first, second);
   }
 
   public static int mergeHot(ItemStack target, ItemStack source, Level level) {
     if (!canMergeHot(target, source, level)) return 0;
     int moved = Math.min(target.getMaxStackSize() - target.getCount(), source.getCount());
     if (moved <= 0) return 0;
-    long now = level.getGameTime();
-    long targetHeat = hotUntil(target) - now;
-    long sourceHeat = hotUntil(source) - now;
-    long averaged = (targetHeat * target.getCount() + sourceHeat * moved) / (target.getCount() + moved);
-    target.grow(moved);
-    source.shrink(moved);
-    setHot(target, now + averaged);
+    // 双方都是热食：buff 时间按数量加权平均；生食/熟食（非热食）直接合并，不做平均
+    if (isHot(target, level) && isHot(source, level)) {
+      long now = level.getGameTime();
+      long targetHeat = hotUntil(target) - now;
+      long sourceHeat = hotUntil(source) - now;
+      long averaged = (targetHeat * target.getCount() + sourceHeat * moved) / (target.getCount() + moved);
+      target.grow(moved);
+      source.shrink(moved);
+      setHot(target, now + averaged);
+    } else {
+      target.grow(moved);
+      source.shrink(moved);
+    }
     return moved;
   }
 
@@ -59,19 +70,23 @@ public final class FoodState {
     return stack.get(DataComponents.CUSTOM_DATA).copyTag().getLong(HOT_UNTIL);
   }
 
-  private static boolean sameExceptHeat(ItemStack first, ItemStack second) {
+  private static boolean sameForManualMerge(ItemStack first, ItemStack second) {
     ItemStack firstCopy = first.copy();
     ItemStack secondCopy = second.copy();
-    removeHeat(firstCopy);
-    removeHeat(secondCopy);
+    removeMergeIgnoredData(firstCopy);
+    removeMergeIgnoredData(secondCopy);
     return ItemStack.isSameItemSameComponents(firstCopy, secondCopy);
   }
 
-  private static void removeHeat(ItemStack stack) {
+  private static void removeMergeIgnoredData(ItemStack stack) {
     CustomData data = stack.get(DataComponents.CUSTOM_DATA);
     if (data == null) return;
     CompoundTag tag = data.copyTag();
     tag.remove(HOT_UNTIL);
+    tag.remove(MODEL_VARIANTS);
+    tag.remove(CREATOR);
+    tag.remove(CREATOR_NAME);
+    tag.remove(CREATOR_UUID);
     if (tag.isEmpty()) stack.remove(DataComponents.CUSTOM_DATA);
     else stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
   }

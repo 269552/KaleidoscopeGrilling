@@ -1,6 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.compat.jade;
 
 import cn.breezeth.kaleidoscope_grilling.SeasoningBottleBlockEntity;
+import cn.breezeth.kaleidoscope_grilling.SeasoningData;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -29,7 +30,8 @@ enum SeasoningBottleProvider implements IBlockComponentProvider {
     }
     if (!ingredients.isEmpty()) JadeElements.appendItems(tooltip, ingredients);
     if (bottle.isFinished()) {
-      int uses = Math.max(0, bottle.top().getMaxDamage() - bottle.top().getDamageValue());
+      int uses =
+          Math.max(0, SeasoningData.MAX_USES - SeasoningData.getUses(bottle.top()));
       tooltip.add(Component.translatable("jade.kaleidoscope_grilling.seasoning.uses", uses));
     } else {
       tooltip.add(

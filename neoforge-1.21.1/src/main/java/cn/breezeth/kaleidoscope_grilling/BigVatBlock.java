@@ -57,8 +57,9 @@ public final class BigVatBlock extends BaseEntityBlock {
       BlockHitResult hit) {
     if (!(level.getBlockEntity(pos) instanceof BigVatBlockEntity vat))
       return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-    if (OilPotCompat.isOilPot(held) && vat.content().equals("canola"))
-      return fillOilPot(level, player, held, vat);
+    String vatOilType = vat.oilType();
+    if (OilPotCompat.isOilPot(held) && !vatOilType.isEmpty())
+      return fillOilPot(level, player, held, vat, vatOilType);
     String oilType = OilFillingHandler.type(held);
     if (oilType != null) return fillFromOilBucket(level, pos, player, hand, vat, oilType);
     if (FluidUtil.interactWithFluidHandler(player, hand, vat.fluidHandler()))
@@ -102,22 +103,29 @@ public final class BigVatBlock extends BaseEntityBlock {
   }
 
   private static ItemInteractionResult fillOilPot(
-      Level level, Player player, ItemStack pot, BigVatBlockEntity vat) {
+      Level level, Player player, ItemStack pot, BigVatBlockEntity vat, String oilType) {
     if (!level.isClientSide) {
       String current = OilPotCompat.getType(pot);
-      int needed = Math.min(vat.buckets(), (64 - OilPotCompat.getCount(pot)) / 8);
-      if ((!current.isEmpty() && !current.equals("canola")) || needed <= 0)
+      int count = OilPotCompat.getCount(pot);
+      int needed =
+          Math.min(vat.buckets(), (OilPotCompat.FLUID_CAPACITY - count) / 8);
+      if ((current.isEmpty() ? count > 0 : !current.equals(oilType)) || needed <= 0)
         player.displayClientMessage(
             Component.translatable("message.kaleidoscope_grilling.big_vat_reject"), true);
-      else if (vat.extract("canola", needed)) {
-        OilPotCompat.fill(pot, "canola", needed * 8);
+      else if (vat.extract(oilType, needed)) {
+        OilPotCompat.fill(pot, oilType, needed * 8);
         level.playSound(
             null,
             player.blockPosition(),
-            SoundEvents.BUCKET_EMPTY,
+            "premium_chili".equals(oilType)
+                ? SoundEvents.BUCKET_EMPTY_LAVA
+                : SoundEvents.BUCKET_EMPTY,
             SoundSource.PLAYERS,
             0.9F,
-            0.8F + 0.5F * OilPotCompat.getCount(pot) / 64.0F);
+            0.8F
+                + 0.5F
+                    * OilPotCompat.getCount(pot)
+                    / OilPotCompat.FLUID_CAPACITY);
       }
     }
     return ItemInteractionResult.SUCCESS;

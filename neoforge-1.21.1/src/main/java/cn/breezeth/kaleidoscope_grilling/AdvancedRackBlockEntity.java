@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling;
 
+
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -437,15 +438,22 @@ public final class AdvancedRackBlockEntity extends BaseContainerBlockEntity {
   }
 
   private static boolean canShareCategory(ItemStack first, ItemStack second) {
+    if (OilPotCompat.isOilPot(first) && OilPotCompat.isOilPot(second))
+      return first.getItem() == second.getItem();
+    if (isSeasoningBottle(first) && isSeasoningBottle(second)) return true;
     if (!first.isStackable()
         && !second.isStackable()
         && first.isDamageableItem()
         && second.isDamageableItem()) {
       return first.getItem() == second.getItem();
     }
-    if (OilPotCompat.isOilPot(first) && OilPotCompat.isOilPot(second))
-      return first.getItem() == second.getItem() && OilPotCompat.getType(first).equals(OilPotCompat.getType(second));
     return ItemStack.isSameItemSameComponents(first, second);
+  }
+
+  private static boolean isSeasoningBottle(ItemStack stack) {
+    return stack.is(ModItems.EMPTY_SEASONING_BOTTLE.get())
+        || stack.is(ModItems.PENDING_SEASONING.get())
+        || stack.is(ModItems.SPECIAL_SEASONING.get());
   }
 
   private record RackBinding(BlockPos pos, int slot) {}
