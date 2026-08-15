@@ -80,6 +80,7 @@ public final class ModCreativeTabs {
     Item premiumBrush = ModItems.PREMIUM_CHILI_OIL_BRUSH.get();
     Item potatoBeefStew = ModItems.POTATO_BEEF_STEW.get();
     Item sourSpicyNoodles = ModItems.SOUR_SPICY_NOODLES.get();
+    Item weddingCandy = ModItems.WEDDING_CANDY.get();
     boolean hasTavern = ModList.get().isLoaded("kaleidoscope_tavern");
     ModItems.ITEMS
         .getEntries()
@@ -94,6 +95,7 @@ public final class ModCreativeTabs {
                   && item != secretBrush
                   && item != premiumBrush
                   && item != sourSpicyNoodles
+                  && item != weddingCandy
                   && added.add(item)) {
                 output.accept(item);
                 if (item == potatoBeefStew && hasTavern)

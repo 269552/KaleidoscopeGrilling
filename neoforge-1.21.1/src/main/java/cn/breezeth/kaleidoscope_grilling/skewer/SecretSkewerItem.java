@@ -24,7 +24,7 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
-public final class SecretSkewerItem extends Item {
+public final class SecretSkewerItem extends MultiBiteSkewerItem {
   private static final String COOKED_TAG = "Cooked";
   private static final String CREATOR_TAG = "Creator";
   private static final String CREATOR_NAME_TAG = "CreatorName";
@@ -32,24 +32,21 @@ public final class SecretSkewerItem extends Item {
   private static final String VISUAL_STAGE_TAG = "ClientVisualStage";
 
   public SecretSkewerItem(Properties properties) {
-    super(properties);
-  }
-
-  public static boolean isCooked(ItemStack stack) {
-    CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-    return data != null && data.getUnsafe().getBoolean(COOKED_TAG);
+    super(properties, null, null, 0, AnimationProfile.THREE_RANDOM);
   }
 
   @Override
   public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
     ItemStack stack = player.getItemInHand(hand);
-    if (player.isShiftKeyDown()) return InteractionResultHolder.pass(stack);
-    if (HotFoodConfig.ALLOW_SKEWERS_AT_FULL_HUNGER.get()
-        && !player.getFoodData().needsFood()) {
-      player.startUsingItem(hand);
-      return InteractionResultHolder.consume(stack);
+    if (SkeweringHandler.ingredientCount(stack) != 3) {
+      return InteractionResultHolder.fail(stack);
     }
     return super.use(level, player, hand);
+  }
+
+  public static boolean isCooked(ItemStack stack) {
+    CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+    return data != null && data.getUnsafe().getBoolean(COOKED_TAG);
   }
 
   public static void setCooked(ItemStack stack, boolean cooked) {
@@ -88,16 +85,11 @@ public final class SecretSkewerItem extends Item {
   }
 
   @Override
-  public int getUseDuration(ItemStack stack, LivingEntity entity) {
-    return 16;
-  }
-
-  @Override
-  public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+  protected ItemStack finishFoodAndEffect(ItemStack stack, Level level, LivingEntity entity) {
     ItemStack consumed = stack.copy();
     List<ItemStack> ingredients =
         SkeweringHandler.readEffectiveIngredientStacks(consumed, level.registryAccess());
-    ItemStack result = super.finishUsingItem(stack, level, entity);
+    ItemStack result = super.finishFoodAndEffect(stack, level, entity);
     if (!level.isClientSide) {
       for (ItemStack ingredient : ingredients) {
         if (ingredient.getItem().getFoodProperties(ingredient, entity) == null) continue;
@@ -109,13 +101,6 @@ public final class SecretSkewerItem extends Item {
             && !ItemStack.isSameItemSameComponents(remainder, ingredient))
           player.getInventory().placeItemBackInInventory(remainder);
       }
-      level.playSound(
-          null,
-          entity.blockPosition(),
-          SoundEvents.PLAYER_BURP,
-          SoundSource.PLAYERS,
-          0.5F,
-          level.random.nextFloat() * 0.1F + 0.9F);
     }
     return result;
   }

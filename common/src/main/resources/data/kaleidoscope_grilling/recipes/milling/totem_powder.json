@@ -1,0 +1,1 @@
+{"type":"forge:conditional","recipes":[{"conditions":[{"type":"forge:mod_loaded","modid":"create"}],"recipe":{"type":"create:milling","ingredients":[{"item":"minecraft:totem_of_undying"}],"processingTime":100,"results":[{"item":"kaleidoscope_grilling:totem_powder","count":1}]}}]}

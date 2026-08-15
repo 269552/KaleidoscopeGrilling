@@ -6,6 +6,7 @@ import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 
 
 import java.util.List;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -17,6 +18,7 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -66,10 +68,28 @@ public class SkewerItem extends Item {
     return result;
   }
 
-  /** Applies nutrition and the skewer's own effect without the completion sound. */
+  /** Applies nutrition and the skewer's own effect without any eat or completion sound. */
   protected ItemStack finishFoodAndEffect(ItemStack stack, Level level, LivingEntity entity) {
-    ItemStack result = super.finishUsingItem(stack, level, entity);
-    if (level.isClientSide) return result;
+    if (stack.isEdible()) {
+      if (entity instanceof Player player) {
+        FoodProperties food = stack.getFoodProperties(entity);
+        if (food != null)
+          player.getFoodData().eat(food.getNutrition(), food.getSaturationModifier());
+      }
+      if (!level.isClientSide) {
+        FoodProperties food = stack.getFoodProperties(entity);
+        if (food != null) {
+          for (Pair<MobEffectInstance, Float> pair : food.getEffects()) {
+            if (pair.getFirst() != null && level.random.nextFloat() < pair.getSecond())
+              entity.addEffect(new MobEffectInstance(pair.getFirst()));
+          }
+        }
+      }
+      if (!(entity instanceof Player player) || !player.getAbilities().instabuild) {
+        stack.shrink(1);
+      }
+    }
+    if (level.isClientSide) return stack;
     ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
     var data = itemId == null ? null : GrillingDataManager.skewer(itemId.toString());
     ResourceLocation resolved =
@@ -77,7 +97,7 @@ public class SkewerItem extends Item {
     int duration = data != null ? data.effectSeconds() * 20 : effectDuration;
     MobEffect effect = resolved == null ? null : ForgeRegistries.MOB_EFFECTS.getValue(resolved);
     if (effect != null) entity.addEffect(new MobEffectInstance(effect, duration));
-    return result;
+    return stack;
   }
 
   protected void playBurp(Level level, LivingEntity entity) {

@@ -1,7 +1,0 @@
-{
-    "parent":  "kaleidoscope_grilling:item/fixed_skewers/squid_tentacle_skewer",
-    "textures":  {
-                     "particle":  "#1",
-                     "1":  "kaleidoscope_grilling:item/fixed_skewers/squid_tentacle_skewer_stage_2"
-                 }
-}

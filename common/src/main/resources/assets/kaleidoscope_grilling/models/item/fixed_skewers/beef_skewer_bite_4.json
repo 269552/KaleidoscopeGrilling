@@ -1,7 +1,0 @@
-{
-  "parent": "kaleidoscope_grilling:item/fixed_skewers/beef_skewer",
-  "textures": { "food": "kaleidoscope_grilling:item/fixed_skewers/beef_skewer_cooked" },
-  "elements": [
-    { "from": [7.75, 0.75, 0], "to": [8.25, 1.25, 12.5], "faces": { "north": { "uv": [2, 2, 3, 3], "texture": "#stick" }, "east": { "uv": [0, 0, 13, 1], "texture": "#stick" }, "south": { "uv": [2, 3, 3, 4], "texture": "#stick" }, "west": { "uv": [0, 1, 13, 2], "texture": "#stick" }, "up": { "uv": [1, 15, 0, 2], "texture": "#stick" }, "down": { "uv": [2, 2, 1, 15], "texture": "#stick" } } }
-  ]
-}

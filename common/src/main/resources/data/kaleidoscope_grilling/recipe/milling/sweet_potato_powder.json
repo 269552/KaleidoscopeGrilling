@@ -1,0 +1,1 @@
+{"type":"create:milling","neoforge:conditions":[{"type":"neoforge:mod_loaded","modid":"create"}],"ingredients":[{"tag":"kaleidoscope_grilling:ingredients/sweet_potatoes"}],"processing_time":100,"results":[{"id":"kaleidoscope_grilling:sweet_potato_powder","count":1}]}

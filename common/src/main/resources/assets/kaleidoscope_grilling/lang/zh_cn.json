@@ -500,5 +500,12 @@
   "advancement.kaleidoscope_grilling.strongest_spear.description": "未能成功抵挡“普通”烤串的诅咒",
   "tooltip.kaleidoscope_grilling.acquisition.onion": "佩戴森罗厨房的草帽破坏草时有概率获得",
   "tooltip.kaleidoscope_grilling.acquisition.sweet_potato": "佩戴森罗厨房的草帽破坏草时有概率获得",
-  "tooltip.kaleidoscope_grilling.acquisition.canola_seeds": "佩戴森罗厨房的草帽破坏草时有概率获得"
+  "tooltip.kaleidoscope_grilling.acquisition.canola_seeds": "佩戴森罗厨房的草帽破坏草时有概率获得",
+  "item.kaleidoscope_grilling.wedding_candy": "喜糖",
+  "tooltip.kaleidoscope_grilling.wedding_candy.1": "一颗来自微风 Breezeth 的喜糖。",
+  "tooltip.kaleidoscope_grilling.wedding_candy.2": "2026年9月12日，他将与此生挚爱携手步入婚姻。",
+  "tooltip.kaleidoscope_grilling.wedding_candy.3": "这份甜蜜，也想与你一同分享。",
+  "message.kaleidoscope_grilling.wedding_candy.received": "今日的喜糖已送达：共 %s 颗，愿你也沾沾喜气！",
+  "advancement.kaleidoscope_grilling.wedding_candy.title": "请你吃喜糖！",
+  "advancement.kaleidoscope_grilling.wedding_candy.description": "2026年9月12日，森罗物语：烟火的作者微风 Breezeth 将与此生挚爱步入婚姻。收下这颗喜糖，一同分享他们的幸福吧！"
 }

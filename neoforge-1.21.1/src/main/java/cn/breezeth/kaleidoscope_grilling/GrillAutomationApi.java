@@ -7,6 +7,7 @@ import cn.breezeth.kaleidoscope_grilling.grill.GrillBlockEntity;
 import cn.breezeth.kaleidoscope_grilling.oil.OilPotCompat;
 import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningData;
 import cn.breezeth.kaleidoscope_grilling.skewer.SecretSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
 
 
@@ -310,7 +311,9 @@ public final class GrillAutomationApi {
   private static boolean isRawSkewer(ItemStack stack) {
     return !stack.isEmpty()
         && (SkewerRecipes.isRawSkewer(stack)
-            || (stack.is(ModItems.SECRET_SKEWER.get()) && !SecretSkewerItem.isCooked(stack)));
+            || (stack.is(ModItems.SECRET_SKEWER.get())
+                && !SecretSkewerItem.isCooked(stack)
+                && SkeweringHandler.ingredientCount(stack) == 3));
   }
 
   public static boolean acceptsRawSkewer(ItemStack stack) {

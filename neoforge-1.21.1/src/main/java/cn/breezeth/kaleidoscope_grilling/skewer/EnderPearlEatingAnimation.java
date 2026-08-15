@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.skewer;
 
+import cn.breezeth.kaleidoscope_grilling.client.SkewerAnimationDebug;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.model.geom.ModelPart;
@@ -101,9 +102,28 @@ public final class EnderPearlEatingAnimation {
   private static final float[] SECOND_ITEM_SCALE_TIMES = {3.5F, 3.54167F, 4.16667F, 4.20833F};
   private static final float[] SECOND_ITEM_SCALE = {0.0F, 1.0F, 1.0F, 0.0F};
 
+  private static final float[] ONE_RIGHT_TIMES = {0F, .75F, 1F, 1.16667F, 1.54167F, 1.91667F, 2.5F, 2.70833F, 2.83333F, 3.25F, 3.375F, 3.75F, 4.125F};
+  private static final float[] ONE_RIGHT_X = {3F, 8F, 8F, 8.8F, 8F, 8F, 8F, 8F, 6F, 6F, 7F, 8F, 17F};
+  private static final float[] ONE_RIGHT_Y = {-7F, -7F, -6F, -5.86F, -6F, -6F, -6F, -6F, -5F, -5F, -5F, -6F, -17F};
+  private static final float[] ONE_RIGHT_Z = {-5F, -7F, -9F, -8.15F, -9F, -9F, -15F, -16F, -10F, -10F, -14F, -9F, -5F};
+  private static final float[] ONE_RIGHT_ROT_X = {83.7983F,114.0944F,120.9509F,108.7506F,120.9509F,120.9509F,170.9509F,170.9509F,178.4509F,178.4509F,160.9509F,120.9509F,119.9402F};
+  private static final float[] ONE_RIGHT_ROT_Y = {9.8513F,-3.7751F,-7.6725F,-16.0773F,-7.6725F,-7.6725F,-7.6725F,-7.6725F,-7.6725F,-7.6725F,-7.6725F,-7.6725F,-8.674F};
+  private static final float[] ONE_RIGHT_ROT_Z = {16.6457F,53.8578F,60.299F,73.684F,60.299F,60.299F,60.299F,60.299F,60.299F,60.299F,60.299F,60.299F,56.6086F};
+  private static final float[] ONE_LEFT_TIMES = {.58333F,.75F,1F,1.125F,1.16667F,1.20833F,1.54167F,1.75F,2F,2.16667F,2.75F};
+  private static final float[] ONE_LEFT_X = {0F,-10F,-5F,-4.24F,-3.24F,-4.24F,-5F,-5F,-5F,-7F,-11F};
+  private static final float[] ONE_LEFT_Y = {-1F,-9F,-3F,-2.58F,-2.58F,-2.58F,-3F,-3F,-3F,-3F,-11F};
+  private static final float[] ONE_LEFT_Z = {0F,-6F,-6F,-6.46F,-7.46F,-6.46F,-6F,-6F,-6F,-5F,-1F};
+  private static final float[] ONE_LEFT_ROT_X = {0F,102.5307F,112.5307F,113.2593F,113.2593F,113.2593F,94.6483F,102.1653F,107.1653F,107.1653F,105.9851F};
+  private static final float[] ONE_LEFT_ROT_Y = {0F,-36.835F,-36.835F,-36.358F,-36.358F,-36.358F,-31.4733F,-56.3504F,-56.3504F,-56.3504F,-27.8382F};
+  private static final float[] ONE_LEFT_ROT_Z = {0F,-7.5897F,-7.5897F,-6.1189F,-6.1189F,-6.1189F,17.4133F,13.8699F,13.8699F,13.8699F,-5.2621F};
+
   private EnderPearlEatingAnimation() {}
 
   public static Pose sample(Player player, float partialTick) {
+    return sample(player, partialTick, MultiBiteSkewerItem.AnimationProfile.THREE);
+  }
+
+  public static Pose sample(Player player, float partialTick, MultiBiteSkewerItem.AnimationProfile profile) {
     float seconds =
         Mth.clamp(
             (player.getUseItem().getUseDuration(player)
@@ -112,7 +132,23 @@ public final class EnderPearlEatingAnimation {
                 / 20.0F,
             0.0F,
             LENGTH_SECONDS);
-    return sample(seconds);
+    seconds = SkewerAnimationDebug.seconds(player, seconds);
+    return profile == MultiBiteSkewerItem.AnimationProfile.ONE ? sampleOne(seconds) : sample(seconds);
+  }
+
+  private static Pose sampleOne(float seconds) {
+    float time = Mth.clamp(seconds, 0.0F, 4.5F);
+    ArmPose activeArm = new ArmPose(
+        catmullRom(time, ONE_RIGHT_TIMES, ONE_RIGHT_X), catmullRom(time, ONE_RIGHT_TIMES, ONE_RIGHT_Y), catmullRom(time, ONE_RIGHT_TIMES, ONE_RIGHT_Z),
+        catmullRom(time, ONE_RIGHT_TIMES, ONE_RIGHT_ROT_X), catmullRom(time, ONE_RIGHT_TIMES, ONE_RIGHT_ROT_Y), catmullRom(time, ONE_RIGHT_TIMES, ONE_RIGHT_ROT_Z));
+    ArmPose helperArm = new ArmPose(
+        catmullRom(time, ONE_LEFT_TIMES, ONE_LEFT_X), catmullRom(time, ONE_LEFT_TIMES, ONE_LEFT_Y), catmullRom(time, ONE_LEFT_TIMES, ONE_LEFT_Z),
+        catmullRom(time, ONE_LEFT_TIMES, ONE_LEFT_ROT_X), catmullRom(time, ONE_LEFT_TIMES, ONE_LEFT_ROT_Y), catmullRom(time, ONE_LEFT_TIMES, ONE_LEFT_ROT_Z));
+    ItemPose mainItem = new ItemPose(0F, catmullRom(time, new float[]{0F,.45833F,1.29167F}, new float[]{0F,0F,-3F}), 0F,
+        catmullRom(time, new float[]{.20833F,.45833F,1.29167F}, new float[]{12.5F,0F,29.5F}), 0F, 0F, 1F);
+    float secondScale = time >= 1.16667F ? 1F : 0F;
+    ItemPose secondItem = new ItemPose(-9F, -2F, 5F, 75F, 0F, -275F, secondScale);
+    return new Pose(activeArm, helperArm, mainItem, secondItem);
   }
 
   public static Pose sample(float seconds) {
@@ -154,19 +190,47 @@ public final class EnderPearlEatingAnimation {
     return new Pose(activeArm, helperArm, mainItem, secondItem);
   }
 
-  public static void applyActiveArm(ModelPart arm, HumanoidArm actualSide, ArmPose pose) {
+  public static void applyActiveArm(
+      ModelPart arm,
+      HumanoidArm actualSide,
+      ArmPose pose,
+      MultiBiteSkewerItem.AnimationProfile profile) {
     applyArm(arm, actualSide, true, pose);
+    if (profile == MultiBiteSkewerItem.AnimationProfile.ONE) {
+      arm.y += 3.8F;
+      arm.zRot -= (actualSide == HumanoidArm.RIGHT ? 1.0F : -1.0F) * 7.5F * Mth.DEG_TO_RAD;
+      moveTowardHand(arm, 1.0F);
+    }
   }
 
-  public static void applyHelperArm(ModelPart arm, HumanoidArm actualSide, ArmPose pose) {
+  public static void applyHelperArm(
+      ModelPart arm,
+      HumanoidArm actualSide,
+      ArmPose pose,
+      MultiBiteSkewerItem.AnimationProfile profile) {
     applyArm(arm, actualSide, false, pose);
+    if (profile == MultiBiteSkewerItem.AnimationProfile.ONE) {
+      arm.y += 3.8F;
+    }
+  }
+
+  private static void moveTowardHand(ModelPart arm, float distance) {
+    float sinX = Mth.sin(arm.xRot);
+    float cosX = Mth.cos(arm.xRot);
+    float sinY = Mth.sin(arm.yRot);
+    float cosY = Mth.cos(arm.yRot);
+    float sinZ = Mth.sin(arm.zRot);
+    float cosZ = Mth.cos(arm.zRot);
+    arm.x += distance * (cosZ * sinY * sinX - sinZ * cosX);
+    arm.y += distance * (sinZ * sinY * sinX + cosZ * cosX);
+    arm.z += distance * cosY * sinX;
   }
 
   public static void transformMainItem(
       PoseStack poseStack, HumanoidArm actualSide, ItemPose pose) {
     float side = actualSide == HumanoidArm.RIGHT ? 1.0F : -1.0F;
     translateChildFromAuthoredArm(
-        poseStack, actualSide, true, 2.0F, -9.0F, -6.0F, pose);
+        poseStack, actualSide, true, 1.975F, -8.925F, -7.575F, pose);
     poseStack.mulPose(Axis.XP.rotationDegrees(180.0F + pose.rotationX()));
     poseStack.mulPose(Axis.YP.rotationDegrees(side * pose.rotationY()));
     poseStack.mulPose(Axis.ZP.rotationDegrees(side * pose.rotationZ()));
@@ -174,13 +238,19 @@ public final class EnderPearlEatingAnimation {
   }
 
   public static void transformSecondItem(
-      PoseStack poseStack, HumanoidArm actualSide, ItemPose pose) {
+      PoseStack poseStack,
+      HumanoidArm actualSide,
+      ItemPose pose,
+      MultiBiteSkewerItem.AnimationProfile profile) {
     float side = actualSide == HumanoidArm.RIGHT ? 1.0F : -1.0F;
     translateChildFromAuthoredArm(
         poseStack, actualSide, false, 10.0F, -8.875F, -5.75F, pose);
     poseStack.mulPose(Axis.ZP.rotationDegrees(pose.rotationZ()));
     poseStack.mulPose(Axis.YP.rotationDegrees(side * pose.rotationY()));
     poseStack.mulPose(Axis.XP.rotationDegrees(-pose.rotationX()));
+    if (profile == MultiBiteSkewerItem.AnimationProfile.ONE) {
+      poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
+    }
     poseStack.mulPose(Axis.ZP.rotationDegrees(95.0F));
     poseStack.scale(pose.scale(), pose.scale(), pose.scale());
   }

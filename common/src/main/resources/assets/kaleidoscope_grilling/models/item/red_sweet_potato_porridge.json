@@ -1,1 +1,6 @@
-{"parent":"minecraft:item/generated","textures":{"layer0":"kaleidoscope_grilling:item/red_sweet_potato_porridge"}}
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "kaleidoscope_grilling:item/red_sweet_potato_porridge"
+  }
+}

@@ -1,0 +1,1 @@
+{"type":"forge:conditional","recipes":[{"conditions":[{"type":"forge:mod_loaded","modid":"create"}],"recipe":{"type":"create:milling","ingredients":[{"item":"kaleidoscope_cookery:green_chili"}],"processingTime":100,"results":[{"item":"kaleidoscope_grilling:green_chili_powder","count":1}]}}]}

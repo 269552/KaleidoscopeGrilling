@@ -2,6 +2,7 @@ package cn.breezeth.kaleidoscope_grilling.skewer;
 
 import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
@@ -41,7 +42,7 @@ public final class SkewerEatingHud {
     int duration = skewer.getUseDuration(stack);
     float elapsed = duration - player.getUseItemRemainingTicks() + minecraft.getPartialTick();
     float progress = Math.min(1.0F, Math.max(0.0F, elapsed / duration));
-    boolean committed = elapsed >= MultiBiteSkewerItem.MINIMUM_EAT_TICKS;
+    boolean ready = elapsed >= MultiBiteSkewerItem.MINIMUM_EAT_TICKS;
     int screenWidth = minecraft.getWindow().getGuiScaledWidth();
     int screenHeight = minecraft.getWindow().getGuiScaledHeight();
     int x = screenWidth / 2 + 50 - WIDTH / 2;
@@ -55,7 +56,7 @@ public final class SkewerEatingHud {
     graphics.blit(BASE, x, y, 0, 0, WIDTH, HEIGHT, WIDTH, HEIGHT);
     if (fillWidth > 0)
       graphics.blit(
-          committed ? GREEN : YELLOW,
+          ready ? GREEN : YELLOW,
           x,
           y,
           0,
@@ -64,17 +65,19 @@ public final class SkewerEatingHud {
           HEIGHT,
           WIDTH,
           HEIGHT);
-    ResourceLocation readyIcon = committed ? SkewerGuiIconCache.eatingHudIcon16(stack) : null;
-    graphics.blit(
-        committed && readyIcon != null ? readyIcon : committed ? READY : PENDING,
-        iconX,
-        iconY,
-        0,
-        0,
-        ICON_SIZE,
-        ICON_SIZE,
-        ICON_SIZE,
-        ICON_SIZE);
+    ResourceLocation readyIcon = SkewerGuiIconCache.eatingHudIcon16(stack);
+    if (readyIcon != null) {
+      if (!ready) {
+        // Preserve the icon's highlights and shadows while clearly showing it as pending.
+        RenderSystem.setShaderColor(0.36F, 0.36F, 0.36F, 0.86F);
+        graphics.blit(readyIcon, iconX, iconY, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+      } else {
+        graphics.blit(readyIcon, iconX, iconY, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+      }
+    } else {
+      graphics.blit(ready ? READY : PENDING, iconX, iconY, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+    }
   }
 
   private static ResourceLocation texture(String file) {

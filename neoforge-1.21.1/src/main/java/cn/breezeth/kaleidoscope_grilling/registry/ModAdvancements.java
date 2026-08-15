@@ -140,6 +140,10 @@ public final class ModAdvancements {
     if (entity instanceof ServerPlayer player) award(player, "strongest_spear");
   }
 
+  public static void weddingCandy(ServerPlayer player) {
+    award(player, "wedding_candy");
+  }
+
   private static boolean has(Player player, Item item) {
     return player.getInventory().contains(new ItemStack(item));
   }

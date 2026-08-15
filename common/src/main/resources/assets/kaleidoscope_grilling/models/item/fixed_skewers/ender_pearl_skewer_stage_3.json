@@ -1,7 +1,0 @@
-{
-    "parent":  "kaleidoscope_grilling:item/fixed_skewers/ender_pearl_skewer",
-    "textures":  {
-                     "5":  "kaleidoscope_grilling:item/fixed_skewers/ender_pearl_skewer_stage_3",
-                     "particle":  "#5"
-                 }
-}

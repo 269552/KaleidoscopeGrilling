@@ -500,5 +500,12 @@
   "advancement.kaleidoscope_grilling.strongest_spear.description": "Fail to resist the curse of an \"Ordinary\" Skewer",
   "tooltip.kaleidoscope_grilling.acquisition.onion": "May drop when breaking grass while wearing a Kaleidoscope Cookery straw hat",
   "tooltip.kaleidoscope_grilling.acquisition.sweet_potato": "May drop when breaking grass while wearing a Kaleidoscope Cookery straw hat",
-  "tooltip.kaleidoscope_grilling.acquisition.canola_seeds": "May drop when breaking grass while wearing a Kaleidoscope Cookery straw hat"
+  "tooltip.kaleidoscope_grilling.acquisition.canola_seeds": "May drop when breaking grass while wearing a Kaleidoscope Cookery straw hat",
+  "item.kaleidoscope_grilling.wedding_candy": "Wedding Candy",
+  "tooltip.kaleidoscope_grilling.wedding_candy.1": "A wedding candy from Breezeth.",
+  "tooltip.kaleidoscope_grilling.wedding_candy.2": "On September 12, 2026, he will marry the love of his life.",
+  "tooltip.kaleidoscope_grilling.wedding_candy.3": "He would like to share this sweetness with you.",
+  "message.kaleidoscope_grilling.wedding_candy.received": "Today's wedding candy has arrived: %s pieces. May some of the happiness find you too!",
+  "advancement.kaleidoscope_grilling.wedding_candy.title": "Wedding Candy for You!",
+  "advancement.kaleidoscope_grilling.wedding_candy.description": "On September 12, 2026, Breezeth, the creator of Kaleidoscope Grilling, will marry the love of his life. Take this candy and share in their happiness!"
 }

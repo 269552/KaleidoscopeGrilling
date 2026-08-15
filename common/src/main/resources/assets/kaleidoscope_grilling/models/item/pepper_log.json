@@ -1,1 +1,3 @@
-{ "parent": "kaleidoscope_grilling:block/pepper_log" }
+{
+  "parent": "kaleidoscope_grilling:block/pepper_log"
+}

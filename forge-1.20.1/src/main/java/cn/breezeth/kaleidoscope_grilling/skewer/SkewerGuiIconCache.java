@@ -253,10 +253,6 @@ public final class SkewerGuiIconCache {
     Minecraft minecraft = Minecraft.getInstance();
     ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
     if (itemId == null) return null;
-    if (stack.getItem() instanceof MultiBiteSkewerItem) {
-      boolean cooked = itemId.getPath().startsWith("grilled_");
-      return fixedIcon(itemId, cooked, minecraft);
-    }
     if (stack.is(ModItems.MYSTERIOUS_SKEWER.get()) || stack.is(ModItems.DARK_GRILLING.get()))
       return failedIcon(stack, minecraft);
     if (SkewerRecipes.isRawSkewer(stack) || SkewerRecipes.isCookedSkewer(stack))

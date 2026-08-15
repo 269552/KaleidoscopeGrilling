@@ -15,19 +15,26 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import org.jetbrains.annotations.Nullable;
 
 /** A skewer whose visible bites are completed before its food value is awarded. */
-public final class MultiBiteSkewerItem extends SkewerItem {
-  /** Holding a skewer for this long commits the meal even when the animation is released early. */
-  public static final int MINIMUM_EAT_TICKS = 20;
-  private static final Map<LivingEntity, Boolean> COMMITTED_EATS = new WeakHashMap<>();
+public class MultiBiteSkewerItem extends SkewerItem {
+  /** Holding a skewer for this long makes an interrupted use eligible for settlement. */
+  public static final int MINIMUM_EAT_TICKS = 25;
+  private static final String ACTIVE_PROFILE_TAG = "SkewerEatingProfile";
+  private static final Map<LivingEntity, ItemStack> READY_EATS = new WeakHashMap<>();
+  private static final Map<LivingEntity, Boolean> SETTLED_EATS = new WeakHashMap<>();
   public enum AnimationProfile {
-    BEEF(90, 0.95833F, 2.33333F, 3.45833F, 4.08333F),
-    RAW_ENDER_PEARL(100, 0.95833F, 2.33333F, 3.54167F),
-    SQUID_TENTACLE(90, 0.95833F, 2.16667F, 3.5F);
+    ONE(90, 1.16667F, 3.08333F),
+    TWO(90, 0.95833F, 4.0F),
+    THREE(100, 0.95833F, 2.33333F, 3.54167F),
+    THREE_ALT(90, 0.95833F, 2.16667F, 3.5F),
+    THREE_RANDOM(100, 0.95833F, 2.33333F, 3.54167F),
+    FOUR(90, 0.95833F, 2.33333F, 3.45833F, 4.08333F);
 
     private final int duration;
     private final float[] biteSeconds;
@@ -54,20 +61,28 @@ public final class MultiBiteSkewerItem extends SkewerItem {
     return animationProfile;
   }
 
+  public AnimationProfile animationProfile(ItemStack stack) {
+    if (animationProfile != AnimationProfile.THREE_RANDOM || !stack.hasTag())
+      return animationProfile == AnimationProfile.THREE_RANDOM ? AnimationProfile.THREE : animationProfile;
+    String value = stack.getTag().getString(ACTIVE_PROFILE_TAG);
+    return AnimationProfile.THREE_ALT.name().equals(value)
+        ? AnimationProfile.THREE_ALT
+        : AnimationProfile.THREE;
+  }
+
   public boolean uses(AnimationProfile profile) {
     return animationProfile == profile;
   }
 
-  /** Returns the visible food-removal stage selected by the active animation profile. */
   public static float visualBiteStage(ItemStack stack, @Nullable LivingEntity entity) {
     if (entity == null
         || !entity.isUsingItem()
         || !ItemStack.isSameItemSameTags(stack, entity.getUseItem())
         || !(stack.getItem() instanceof MultiBiteSkewerItem animated)) return 0.0F;
-    float elapsedSeconds =
-        (animated.animationProfile.duration - entity.getUseItemRemainingTicks()) / 20.0F;
+    AnimationProfile profile = animated.animationProfile(stack);
+    float elapsedSeconds = (profile.duration - entity.getUseItemRemainingTicks()) / 20.0F;
     int completedBites = 0;
-    for (float biteSecond : animated.animationProfile.biteSeconds) {
+    for (float biteSecond : profile.biteSeconds) {
       if (elapsedSeconds < biteSecond) break;
       completedBites++;
     }
@@ -76,73 +91,152 @@ public final class MultiBiteSkewerItem extends SkewerItem {
 
   @Override
   public int getUseDuration(ItemStack stack) {
-    return animationProfile.duration;
+    return animationProfile(stack).duration;
+  }
+
+  @Override
+  public UseAnim getUseAnimation(ItemStack stack) {
+    return UseAnim.EAT;
   }
 
   @Override
   public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
     ItemStack stack = player.getItemInHand(hand);
     if (player.isShiftKeyDown()) return InteractionResultHolder.pass(stack);
+    if (!level.isClientSide) {
+      READY_EATS.remove(player);
+      SETTLED_EATS.remove(player);
+    }
+    AnimationProfile selected =
+        animationProfile == AnimationProfile.THREE_RANDOM
+            ? (player.getRandom().nextBoolean() ? AnimationProfile.THREE : AnimationProfile.THREE_ALT)
+            : animationProfile;
 
-    // The complete animation always consumes a single serving, regardless of bite count.
     InteractionResultHolder<ItemStack> result;
     if (stack.getCount() > 1) {
       ItemStack serving = stack.copyWithCount(1);
+      setActiveProfile(serving, selected);
       if (!level.isClientSide) {
         ItemStack remainder = stack.copy();
+        clearActiveProfile(remainder);
         remainder.shrink(1);
         player.setItemInHand(hand, serving);
         player.getInventory().placeItemBackInInventory(remainder);
       }
       result = super.use(level, player, hand);
     } else {
+      setActiveProfile(stack, selected);
       result = super.use(level, player, hand);
     }
-    if (result.getResult().consumesAction() && player instanceof ServerPlayer serverPlayer)
-      GrillingNetwork.setSkewerEatingSound(serverPlayer, animationProfile, true);
+    if (result.getResult().consumesAction() && player instanceof ServerPlayer serverPlayer) {
+      GrillingNetwork.setSkewerEatingSound(serverPlayer, selected, true);
+    } else if (!result.getResult().consumesAction()) {
+      clearActiveProfile(player.getItemInHand(hand));
+    }
     return result;
   }
 
   @Override
   public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
     stopCustomSound(entity);
-    if (!level.isClientSide && consumeCommitted(stack, level, entity)) {
+    if (!level.isClientSide && settleIfEligible(stack, level, entity, timeLeft)) {
       return;
     }
+    READY_EATS.remove(entity);
+    clearActiveProfile(stack);
     super.releaseUsing(stack, level, entity, timeLeft);
   }
 
   @Override
   public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
     stopCustomSound(entity);
-    if (!level.isClientSide && consumeCommitted(stack, level, entity)) return stack;
-    return super.finishUsingItem(stack, level, entity);
+    READY_EATS.remove(entity);
+    if (!level.isClientSide && SETTLED_EATS.containsKey(entity)) return stack;
+    if (!level.isClientSide) SETTLED_EATS.put(entity, Boolean.TRUE);
+    ItemStack consumed = stack.copyWithCount(1);
+    ItemStack result = super.finishUsingItem(stack, level, entity);
+    clearActiveProfile(result);
+    if (!level.isClientSide) afterFoodCommitted(consumed, level, entity);
+    return result;
   }
 
-  /** Completes the food effect exactly at the one-second mark while the visual animation continues. */
+  /** Marks the use as eligible; nutrition and effects are deferred until it actually settles. */
   public static void onUseTick(LivingEntityUseItemEvent.Tick event) {
     if (event.getEntity().level().isClientSide
         || !(event.getItem().getItem() instanceof MultiBiteSkewerItem skewer)
-        || COMMITTED_EATS.containsKey(event.getEntity())) return;
+        || READY_EATS.containsKey(event.getEntity())) return;
     int usedTicks = skewer.getUseDuration(event.getItem()) - event.getDuration();
     if (usedTicks < MINIMUM_EAT_TICKS) return;
-
-    skewer.finishFoodAndEffect(event.getItem().copyWithCount(1), event.getEntity().level(), event.getEntity());
-    HotFoodHandler.finishEarly(event.getItem(), event.getEntity());
-    ModAdvancements.recordFoodFinished(event.getEntity(), event.getItem());
-    COMMITTED_EATS.put(event.getEntity(), Boolean.TRUE);
+    READY_EATS.put(event.getEntity(), event.getItem());
   }
 
-  private boolean consumeCommitted(ItemStack stack, Level level, LivingEntity entity) {
-    if (COMMITTED_EATS.remove(entity) == null) return false;
-    if (entity instanceof Player player && !player.getAbilities().instabuild) stack.shrink(1);
+  /** Fallback for interruptions which bypass the normal release callback. */
+  public static void onUseStop(LivingEntityUseItemEvent.Stop event) {
+    if (event.getEntity().level().isClientSide) return;
+    if (event.getItem().getItem() instanceof MultiBiteSkewerItem skewer) {
+      skewer.stopCustomSound(event.getEntity());
+      if (!skewer.settleIfEligible(
+          event.getItem(), event.getEntity().level(), event.getEntity(), event.getDuration())) {
+        READY_EATS.remove(event.getEntity());
+        clearActiveProfile(event.getItem());
+      }
+    } else {
+      READY_EATS.remove(event.getEntity());
+    }
+  }
+
+  /** Logging out after the checkpoint still settles the meal exactly once. */
+  public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+    Player player = event.getEntity();
+    ItemStack stack = player.isUsingItem() ? player.getUseItem() : READY_EATS.get(player);
+    if (stack == null) return;
+    if (stack.getItem() instanceof MultiBiteSkewerItem skewer) {
+      skewer.stopCustomSound(player);
+      skewer.settleIfEligible(
+          stack,
+          player.level(),
+          player,
+          player.isUsingItem() ? player.getUseItemRemainingTicks() : 0);
+    } else {
+      READY_EATS.remove(player);
+    }
+  }
+
+  private boolean settleIfEligible(
+      ItemStack stack, Level level, LivingEntity entity, int remainingTicks) {
+    if (SETTLED_EATS.containsKey(entity)) return true;
+    ItemStack ready = READY_EATS.get(entity);
+    ItemStack timingStack = stack.isEmpty() ? ready : stack;
+    if (timingStack == null || timingStack.isEmpty()) return false;
+    int usedTicks = getUseDuration(timingStack) - remainingTicks;
+    if (ready == null && usedTicks < MINIMUM_EAT_TICKS) return false;
+    READY_EATS.remove(entity);
+    SETTLED_EATS.put(entity, Boolean.TRUE);
+    if (stack.isEmpty()) stack = ready;
+    ItemStack consumed = stack.copyWithCount(1);
+    clearActiveProfile(stack);
+    finishFoodAndEffect(stack, level, entity);
+    afterFoodCommitted(consumed, level, entity);
+    HotFoodHandler.finishEarly(consumed, entity);
+    ModAdvancements.recordFoodFinished(entity, consumed);
     playBurp(level, entity);
     return true;
   }
 
   private void stopCustomSound(LivingEntity entity) {
     if (entity instanceof ServerPlayer serverPlayer)
-      GrillingNetwork.setSkewerEatingSound(serverPlayer, animationProfile, false);
+      GrillingNetwork.setSkewerEatingSound(serverPlayer, animationProfile(entity.getUseItem()), false);
+  }
+
+  protected void afterFoodCommitted(ItemStack consumed, Level level, LivingEntity entity) {}
+
+  private static void clearActiveProfile(ItemStack stack) {
+    if (stack.hasTag()) stack.getTag().remove(ACTIVE_PROFILE_TAG);
+  }
+
+  private static void setActiveProfile(ItemStack stack, AnimationProfile profile) {
+    if (profile == AnimationProfile.THREE || profile == AnimationProfile.THREE_ALT)
+      stack.getOrCreateTag().putString(ACTIVE_PROFILE_TAG, profile.name());
   }
 
   @Override

@@ -1,9 +1,10 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
 import cn.breezeth.kaleidoscope_grilling.skewer.EnderPearlEatingAnimation;
-import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
+import cn.breezeth.kaleidoscope_grilling.client.ClientSkewerEatingSound;
 import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerEatingAnimation;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerEatingPiece;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
@@ -14,7 +15,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -26,10 +27,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemInHandRenderer.class)
 public abstract class ItemInHandSkewerEatingMixin {
-  private static final ResourceLocation ENDER_PEARL_PIECE =
-      new ResourceLocation(
-          KaleidoscopeGrilling.MOD_ID, "item/fixed_skewers/ender_pearl_bite_piece");
-
   @Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
   private void grilling$renderSkewerEating(
       AbstractClientPlayer player,
@@ -45,25 +42,33 @@ public abstract class ItemInHandSkewerEatingMixin {
       CallbackInfo ci) {
     if (!player.isUsingItem()
         || !(player.getUseItem().getItem() instanceof MultiBiteSkewerItem animated)) return;
-    if (animated.uses(MultiBiteSkewerItem.AnimationProfile.RAW_ENDER_PEARL)) {
+    MultiBiteSkewerItem.AnimationProfile profile =
+        ClientSkewerEatingSound.profile(
+            player.getId(), animated.animationProfile(player.getUseItem()));
+    if (profile == MultiBiteSkewerItem.AnimationProfile.THREE
+        || profile == MultiBiteSkewerItem.AnimationProfile.ONE) {
       grilling$renderEnderPearlEating(
-          player, partialTick, hand, pose, buffers, packedLight);
+          player, partialTick, hand, pose, buffers, packedLight, profile);
       ci.cancel();
       return;
     }
-    if (!(stack.getItem() instanceof MultiBiteSkewerItem)
-        || player.getUsedItemHand() != hand) return;
+    if (player.getUsedItemHand() != hand) {
+      // These authored animations only render the active hand unless they explicitly add a helper.
+      ci.cancel();
+      return;
+    }
+    if (!(stack.getItem() instanceof MultiBiteSkewerItem)) return;
 
     HumanoidArm arm =
         hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
     SkewerEatingAnimation.ArmPose animation =
-        SkewerEatingAnimation.sample(player, partialTick, animated.animationProfile());
+        SkewerEatingAnimation.sample(player, partialTick, profile);
     PlayerRenderer playerRenderer =
         (PlayerRenderer) Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(player);
     PlayerModel<AbstractClientPlayer> model = playerRenderer.getModel();
     ModelPart armPart = arm == HumanoidArm.RIGHT ? model.rightArm : model.leftArm;
     ModelPart sleevePart = arm == HumanoidArm.RIGHT ? model.rightSleeve : model.leftSleeve;
-    SkewerEatingAnimation.applyToArm(armPart, arm, animation);
+    SkewerEatingAnimation.applyToArm(armPart, arm, animation, profile);
     sleevePart.copyFrom(armPart);
     armPart.visible = true;
     sleevePart.visible = true;
@@ -113,7 +118,8 @@ public abstract class ItemInHandSkewerEatingMixin {
       InteractionHand renderedHand,
       PoseStack pose,
       MultiBufferSource buffers,
-      int packedLight) {
+      int packedLight,
+      MultiBiteSkewerItem.AnimationProfile profile) {
     HumanoidArm renderedArm =
         renderedHand == InteractionHand.MAIN_HAND
             ? player.getMainArm()
@@ -124,7 +130,7 @@ public abstract class ItemInHandSkewerEatingMixin {
             : player.getMainArm().getOpposite();
     boolean active = renderedArm == activeArm;
     EnderPearlEatingAnimation.Pose animation =
-        EnderPearlEatingAnimation.sample(player, partialTick);
+        EnderPearlEatingAnimation.sample(player, partialTick, profile);
 
     PlayerRenderer playerRenderer =
         (PlayerRenderer) Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(player);
@@ -134,10 +140,10 @@ public abstract class ItemInHandSkewerEatingMixin {
         renderedArm == HumanoidArm.RIGHT ? model.rightSleeve : model.leftSleeve;
     if (active) {
       EnderPearlEatingAnimation.applyActiveArm(
-          armPart, renderedArm, animation.activeArm());
+          armPart, renderedArm, animation.activeArm(), profile);
     } else {
       EnderPearlEatingAnimation.applyHelperArm(
-          armPart, renderedArm, animation.helperArm());
+          armPart, renderedArm, animation.helperArm(), profile);
     }
     sleevePart.copyFrom(armPart);
     armPart.visible = true;
@@ -183,18 +189,18 @@ public abstract class ItemInHandSkewerEatingMixin {
       pose.pushPose();
       model.translateToHand(renderedArm, pose);
       EnderPearlEatingAnimation.transformSecondItem(
-          pose, renderedArm, animation.secondItem());
-      Minecraft.getInstance()
-          .getItemRenderer()
-          .render(
-              player.getUseItem(),
-              ItemDisplayContext.NONE,
-              renderedArm == HumanoidArm.LEFT,
-              pose,
-              buffers,
-              packedLight,
-              OverlayTexture.NO_OVERLAY,
-              Minecraft.getInstance().getModelManager().getModel(ENDER_PEARL_PIECE));
+          pose, renderedArm, animation.secondItem(), profile);
+      BakedModel piece = SkewerEatingPiece.fixedModel(player.getUseItem(), profile);
+      ItemStack ingredient = SkewerEatingPiece.ingredient(player.getUseItem(), profile);
+      if (piece != null) {
+        Minecraft.getInstance().getItemRenderer().render(
+            player.getUseItem(), ItemDisplayContext.NONE, renderedArm == HumanoidArm.LEFT,
+            pose, buffers, packedLight, OverlayTexture.NO_OVERLAY, piece);
+      } else if (!ingredient.isEmpty()) {
+        Minecraft.getInstance().getItemRenderer().renderStatic(
+            player, ingredient, ItemDisplayContext.NONE, renderedArm == HumanoidArm.LEFT,
+            pose, buffers, player.level(), packedLight, OverlayTexture.NO_OVERLAY, player.getId());
+      }
       pose.popPose();
     }
     pose.popPose();

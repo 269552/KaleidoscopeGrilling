@@ -1,9 +1,11 @@
 package cn.breezeth.kaleidoscope_grilling.skewer;
 
 import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
+import cn.breezeth.kaleidoscope_grilling.client.SkewerAnimationDebug;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -41,7 +43,7 @@ public final class SkewerEatingHud {
     int duration = skewer.getUseDuration(stack, player);
     float elapsed = duration - player.getUseItemRemainingTicks() + minecraft.getTimer().getGameTimeDeltaPartialTick(true);
     float progress = Math.min(1.0F, Math.max(0.0F, elapsed / duration));
-    boolean committed = elapsed >= MultiBiteSkewerItem.MINIMUM_EAT_TICKS;
+    boolean ready = elapsed >= MultiBiteSkewerItem.MINIMUM_EAT_TICKS;
     int screenWidth = minecraft.getWindow().getGuiScaledWidth();
     int screenHeight = minecraft.getWindow().getGuiScaledHeight();
     int x = screenWidth / 2 + 50 - WIDTH / 2;
@@ -55,7 +57,7 @@ public final class SkewerEatingHud {
     graphics.blit(BASE, x, y, 0, 0, WIDTH, HEIGHT, WIDTH, HEIGHT);
     if (fillWidth > 0)
       graphics.blit(
-          committed ? GREEN : YELLOW,
+          ready ? GREEN : YELLOW,
           x,
           y,
           0,
@@ -64,17 +66,29 @@ public final class SkewerEatingHud {
           HEIGHT,
           WIDTH,
           HEIGHT);
-    ResourceLocation readyIcon = committed ? SkewerGuiIconCache.eatingHudIcon16(stack) : null;
-    graphics.blit(
-        committed && readyIcon != null ? readyIcon : committed ? READY : PENDING,
-        iconX,
-        iconY,
-        0,
-        0,
-        ICON_SIZE,
-        ICON_SIZE,
-        ICON_SIZE,
-        ICON_SIZE);
+    ResourceLocation readyIcon = SkewerGuiIconCache.eatingHudIcon16(stack);
+    if (readyIcon != null) {
+      if (!ready) {
+        // Keep the source icon's highlights and shadows while clearly showing it as pending.
+        RenderSystem.setShaderColor(0.36F, 0.36F, 0.36F, 0.86F);
+        graphics.blit(readyIcon, iconX, iconY, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+      } else {
+        graphics.blit(readyIcon, iconX, iconY, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+      }
+    } else {
+      graphics.blit(ready ? READY : PENDING, iconX, iconY, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+    }
+    if (SkewerAnimationDebug.isEnabled()) {
+      String hand = player.getUsedItemHand() == net.minecraft.world.InteractionHand.MAIN_HAND
+          ? "main hand"
+          : "off hand";
+      String debug = String.format(
+          "%s  %.5fs  %s",
+          SkewerAnimationDebug.animationName(), SkewerAnimationDebug.seconds(), hand);
+      graphics.drawCenteredString(
+          minecraft.font, debug, screenWidth / 2, y - 13, 0xFFFFFF55);
+    }
   }
 
   private static ResourceLocation texture(String file) {

@@ -21,12 +21,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 
-public final class CursedSkewerItem extends SkewerItem {
+public final class CursedSkewerItem extends MultiBiteSkewerItem {
   private static final ResourceKey<DamageType> ORDINARY_SKEWER_DAMAGE = ResourceKey.create(
       Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "ordinary_skewer"));
 
   public CursedSkewerItem(Properties properties) {
-    super(properties, null, null, 0);
+    super(properties, null, null, 0, AnimationProfile.THREE_RANDOM);
   }
 
   @Override
@@ -40,10 +40,9 @@ public final class CursedSkewerItem extends SkewerItem {
   }
 
   @Override
-  public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+  protected void afterFoodCommitted(ItemStack stack, Level level, LivingEntity entity) {
     boolean challenged = entity.hasEffect(ModEffects.INVINCIBLE);
-    ItemStack result = super.finishUsingItem(stack, level, entity);
-    if (!(level instanceof ServerLevel server)) return result;
+    if (!(level instanceof ServerLevel server)) return;
     if (challenged) entity.removeEffect(ModEffects.INVINCIBLE);
     boolean blocked = challenged && entity.getRandom().nextBoolean();
     if (blocked) {
@@ -51,7 +50,7 @@ public final class CursedSkewerItem extends SkewerItem {
       server.playSound(null, entity.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8F, 1.35F);
       server.sendParticles(ParticleTypes.ELECTRIC_SPARK, entity.getX(), entity.getY() + 1.0, entity.getZ(), 28, 0.55, 0.7, 0.55, 0.12);
       ModAdvancements.strongestShield(entity);
-      return result;
+      return;
     }
     server.playSound(null, entity.blockPosition(), SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 1.0F, 0.65F);
     server.playSound(null, entity.blockPosition(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, 0.7F, 0.55F);
@@ -62,7 +61,6 @@ public final class CursedSkewerItem extends SkewerItem {
         .registryOrThrow(Registries.DAMAGE_TYPE)
         .getHolderOrThrow(ORDINARY_SKEWER_DAMAGE));
     entity.hurt(source, Float.MAX_VALUE);
-    return result;
   }
 
   @Override

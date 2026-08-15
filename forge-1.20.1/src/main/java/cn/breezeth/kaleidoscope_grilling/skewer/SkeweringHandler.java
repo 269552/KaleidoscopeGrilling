@@ -197,8 +197,8 @@ public final class SkeweringHandler {
     return read(stack);
   }
 
-  static int ingredientCount(ItemStack stack) {
-    return stack.hasTag() ? stack.getTag().getList(INGREDIENTS_TAG, 8).size() : 0;
+  public static int ingredientCount(ItemStack stack) {
+    return readIngredientStacks(stack).size();
   }
 
   public static int modelState(ItemStack stack) {
@@ -315,7 +315,7 @@ public final class SkeweringHandler {
   static ItemStack finishAsSecret(
       ItemStack stack, net.minecraft.world.entity.player.Player player) {
     List<ItemStack> ingredients = readIngredientStacks(stack);
-    if (ingredients.isEmpty()) return ItemStack.EMPTY;
+    if (ingredients.size() != 3) return ItemStack.EMPTY;
     ItemStack result = new ItemStack(ModItems.SECRET_SKEWER.get());
     write(result, ingredients, readVariants(stack));
     SecretSkewerItem.setCreator(result, player);

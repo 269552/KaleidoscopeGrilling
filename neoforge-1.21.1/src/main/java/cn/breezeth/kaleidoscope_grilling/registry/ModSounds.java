@@ -25,6 +25,10 @@ public final class ModSounds {
       register("seasoning_bottle_place");
   public static final DeferredHolder<SoundEvent, SoundEvent> SEASONING_BOTTLE_STACK =
       register("seasoning_bottle_stack");
+  public static final DeferredHolder<SoundEvent, SoundEvent> ONE_SKEWER_EAT =
+      register("one_skewer_eat");
+  public static final DeferredHolder<SoundEvent, SoundEvent> TWO_SKEWER_EAT =
+      register("two_skewer_eat");
   public static final DeferredHolder<SoundEvent, SoundEvent> THREE_SKEWER_EAT =
       register("three_skewer_eat");
   public static final DeferredHolder<SoundEvent, SoundEvent> FOUR_SKEWER_EAT =

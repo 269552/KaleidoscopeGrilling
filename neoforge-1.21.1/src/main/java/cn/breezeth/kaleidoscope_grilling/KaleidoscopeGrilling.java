@@ -27,6 +27,7 @@ import cn.breezeth.kaleidoscope_grilling.food.HotFoodExpiryHandler;
 import cn.breezeth.kaleidoscope_grilling.food.HotFoodHandler;
 import cn.breezeth.kaleidoscope_grilling.food.IngredientTooltipHandler;
 import cn.breezeth.kaleidoscope_grilling.effect.InvincibleHandler;
+import cn.breezeth.kaleidoscope_grilling.event.WeddingCandyHandler;
 import cn.breezeth.kaleidoscope_grilling.world.KnifeDropHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
 import cn.breezeth.kaleidoscope_grilling.oil.OilFillingHandler;
@@ -85,10 +86,12 @@ public final class KaleidoscopeGrilling {
     NeoForge.EVENT_BUS.addListener(IngredientTooltipHandler::onTooltip);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onFinish);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onStart);
+    NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, MultiBiteSkewerItem::onUseStop);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onStop);
     NeoForge.EVENT_BUS.addListener(
         (net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent.Tick event) ->
             MultiBiteSkewerItem.onUseTick(event));
+    NeoForge.EVENT_BUS.addListener(MultiBiteSkewerItem::onPlayerLoggedOut);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onSmelted);
     NeoForge.EVENT_BUS.addListener(HotFoodExpiryHandler::onPlayerTick);
     NeoForge.EVENT_BUS.addListener(DragonEggPowderHandler::onRightClickBlock);
@@ -105,6 +108,8 @@ public final class KaleidoscopeGrilling {
     NeoForge.EVENT_BUS.addListener(ModAdvancements::onBlockPlaced);
     NeoForge.EVENT_BUS.addListener(ModAdvancements::onFoodFinished);
     NeoForge.EVENT_BUS.addListener(ModAdvancements::onPlayerClone);
+    NeoForge.EVENT_BUS.addListener(WeddingCandyHandler::onPlayerTick);
+    NeoForge.EVENT_BUS.addListener(WeddingCandyHandler::onPlayerClone);
     NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, InvincibleHandler::onDamage);
     NeoForge.EVENT_BUS.addListener(InvincibleHandler::onPlayerTick);
     NeoForge.EVENT_BUS.addListener(CropDropHandler::onBlockBreak);

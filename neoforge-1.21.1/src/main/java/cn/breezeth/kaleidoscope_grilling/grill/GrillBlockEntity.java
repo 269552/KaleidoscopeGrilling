@@ -87,7 +87,9 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     return phase == 0
         && items.stream().anyMatch(ItemStack::isEmpty)
         && (SkewerRecipes.isRawSkewer(stack)
-            || (stack.is(ModItems.SECRET_SKEWER.get()) && !SecretSkewerItem.isCooked(stack)));
+            || (stack.is(ModItems.SECRET_SKEWER.get())
+                && !SecretSkewerItem.isCooked(stack)
+                && SkeweringHandler.ingredientCount(stack) == 3));
   }
 
   public boolean insert(ItemStack held, boolean consumeInput) {

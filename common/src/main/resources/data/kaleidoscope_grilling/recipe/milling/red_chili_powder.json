@@ -1,0 +1,1 @@
+{"type":"create:milling","neoforge:conditions":[{"type":"neoforge:mod_loaded","modid":"create"}],"ingredients":[{"item":"kaleidoscope_cookery:red_chili"}],"processing_time":100,"results":[{"id":"kaleidoscope_grilling:red_chili_powder","count":1}]}

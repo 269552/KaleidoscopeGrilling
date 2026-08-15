@@ -25,6 +25,7 @@ import cn.breezeth.kaleidoscope_grilling.food.HotFoodExpiryHandler;
 import cn.breezeth.kaleidoscope_grilling.food.HotFoodHandler;
 import cn.breezeth.kaleidoscope_grilling.food.IngredientTooltipHandler;
 import cn.breezeth.kaleidoscope_grilling.effect.InvincibleHandler;
+import cn.breezeth.kaleidoscope_grilling.event.WeddingCandyHandler;
 import cn.breezeth.kaleidoscope_grilling.world.KnifeDropHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
 import cn.breezeth.kaleidoscope_grilling.oil.OilFillingHandler;
@@ -82,10 +83,13 @@ public final class KaleidoscopeGrilling {
     MinecraftForge.EVENT_BUS.addListener(IngredientTooltipHandler::onTooltip);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onFinish);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onStart);
+    MinecraftForge.EVENT_BUS.addListener(
+        EventPriority.HIGHEST, MultiBiteSkewerItem::onUseStop);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onStop);
     MinecraftForge.EVENT_BUS.addListener(
         (net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Tick event) ->
             MultiBiteSkewerItem.onUseTick(event));
+    MinecraftForge.EVENT_BUS.addListener(MultiBiteSkewerItem::onPlayerLoggedOut);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onSmelted);
     MinecraftForge.EVENT_BUS.addListener(HotFoodExpiryHandler::onPlayerTick);
     MinecraftForge.EVENT_BUS.addListener(DragonEggPowderHandler::onRightClickBlock);
@@ -102,6 +106,8 @@ public final class KaleidoscopeGrilling {
     MinecraftForge.EVENT_BUS.addListener(ModAdvancements::onBlockPlaced);
     MinecraftForge.EVENT_BUS.addListener(ModAdvancements::onFoodFinished);
     MinecraftForge.EVENT_BUS.addListener(ModAdvancements::onPlayerClone);
+    MinecraftForge.EVENT_BUS.addListener(WeddingCandyHandler::onPlayerTick);
+    MinecraftForge.EVENT_BUS.addListener(WeddingCandyHandler::onPlayerClone);
     MinecraftForge.EVENT_BUS.addListener(EventPriority.HIGHEST, InvincibleHandler::onDamage);
     MinecraftForge.EVENT_BUS.addListener(InvincibleHandler::onPlayerTick);
     MinecraftForge.EVENT_BUS.addListener(CropDropHandler::onBlockBreak);

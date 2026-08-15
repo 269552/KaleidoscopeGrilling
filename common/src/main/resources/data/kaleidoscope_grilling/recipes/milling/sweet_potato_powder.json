@@ -1,0 +1,1 @@
+{"type":"forge:conditional","recipes":[{"conditions":[{"type":"forge:mod_loaded","modid":"create"}],"recipe":{"type":"create:milling","ingredients":[{"tag":"kaleidoscope_grilling:ingredients/sweet_potatoes"}],"processingTime":100,"results":[{"item":"kaleidoscope_grilling:sweet_potato_powder","count":1}]}}]}

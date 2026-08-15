@@ -23,6 +23,8 @@ public final class ModSounds {
       register("seasoning_bottle_place");
   public static final RegistryObject<SoundEvent> SEASONING_BOTTLE_STACK =
       register("seasoning_bottle_stack");
+  public static final RegistryObject<SoundEvent> ONE_SKEWER_EAT = register("one_skewer_eat");
+  public static final RegistryObject<SoundEvent> TWO_SKEWER_EAT = register("two_skewer_eat");
   public static final RegistryObject<SoundEvent> THREE_SKEWER_EAT =
       register("three_skewer_eat");
   public static final RegistryObject<SoundEvent> FOUR_SKEWER_EAT =

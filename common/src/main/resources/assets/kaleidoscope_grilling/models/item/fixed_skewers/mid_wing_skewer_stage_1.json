@@ -1,8 +1,0 @@
-{
-    "parent":  "kaleidoscope_grilling:item/fixed_skewers/mid_wing_skewer",
-    "textures":  {
-                     "4":  "kaleidoscope_grilling:item/fixed_skewers/mid_wing_skewer_stage_1",
-                     "1":  "kaleidoscope_grilling:item/fixed_skewers/beef_skewer_stage_1",
-                     "particle":  "#4"
-                 }
-}

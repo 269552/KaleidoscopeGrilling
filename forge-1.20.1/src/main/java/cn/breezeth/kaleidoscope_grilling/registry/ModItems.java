@@ -19,6 +19,7 @@ import cn.breezeth.kaleidoscope_grilling.skewer.SkewerItem;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlateItem;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipeBookItem;
 import cn.breezeth.kaleidoscope_grilling.food.SweetPotatoPowderItem;
+import cn.breezeth.kaleidoscope_grilling.food.WeddingCandyItem;
 import cn.breezeth.kaleidoscope_grilling.skewer.UnfinishedSkewerItem;
 
 
@@ -113,22 +114,24 @@ public final class ModItems {
       ITEMS.register(
           "mysterious_skewer",
           () ->
-              new SkewerItem(
+              new MultiBiteSkewerItem(
                   new Item.Properties()
                       .food(new FoodProperties.Builder().nutrition(2).saturationMod(0.0F).build()),
                   "tooltip.kaleidoscope_grilling.mysterious_skewer.maxim",
                   new ResourceLocation("minecraft", "nausea"),
-                  100));
+                  100,
+                  MultiBiteSkewerItem.AnimationProfile.THREE_RANDOM));
   public static final RegistryObject<Item> DARK_GRILLING =
       ITEMS.register(
           "dark_grilling",
           () ->
-              new SkewerItem(
+              new MultiBiteSkewerItem(
                   new Item.Properties()
                       .food(new FoodProperties.Builder().nutrition(1).saturationMod(0.0F).build()),
                   "tooltip.kaleidoscope_grilling.dark_grilling.maxim",
                   new ResourceLocation("minecraft", "blindness"),
-                  200));
+                  200,
+                  MultiBiteSkewerItem.AnimationProfile.THREE_RANDOM));
   public static final RegistryObject<Item> EMPTY_SEASONING_BOTTLE =
       ITEMS.register(
           "empty_seasoning_bottle",
@@ -228,6 +231,19 @@ public final class ModItems {
                   grillingEffect("numb"),
                   1200,
                   "tooltip.kaleidoscope_grilling.pepper_honey.maxim"));
+  public static final RegistryObject<Item> WEDDING_CANDY =
+      ITEMS.register(
+          "wedding_candy",
+          () ->
+              new WeddingCandyItem(
+                  new Item.Properties()
+                      .food(
+                          new FoodProperties.Builder()
+                              .nutrition(20)
+                              .saturationMod(0.5F)
+                              .alwaysEat()
+                              .build()),
+                  grillingEffect("invincible")));
   public static final RegistryObject<Item> HOUTTUYNIA_STIR_FRIED_PORK =
       dish("houttuynia_stir_fried_pork", 9, 0.7F);
   public static final RegistryObject<Item> GREEN_PEPPER_SQUID_TENTACLES =
@@ -281,32 +297,35 @@ public final class ModItems {
       ITEMS.register(
           "raw_lamb_skewer",
           () ->
-              new SkewerItem(
+              new MultiBiteSkewerItem(
                   new Item.Properties()
                       .food(new FoodProperties.Builder().nutrition(4).saturationMod(0.8F).build()),
                   null,
                   null,
-                  0));
+                  0,
+                  MultiBiteSkewerItem.AnimationProfile.THREE_RANDOM));
   public static final RegistryObject<Item> GRILLED_LAMB_SKEWER =
       ITEMS.register(
           "grilled_lamb_skewer",
           () ->
-              new SkewerItem(
+              new MultiBiteSkewerItem(
                   new Item.Properties()
                       .food(new FoodProperties.Builder().nutrition(8).saturationMod(0.8F).build()),
                   "tooltip.kaleidoscope_grilling.grilled_lamb_skewer.maxim",
                   cookeryEffect("warmth"),
-                  45 * 20));
+                  45 * 20,
+                  MultiBiteSkewerItem.AnimationProfile.THREE_RANDOM));
   public static final RegistryObject<Item> RAW_GOLDEN_SKEWER =
       ITEMS.register(
           "raw_golden_skewer",
           () ->
-              new SkewerItem(
+              new MultiBiteSkewerItem(
                   new Item.Properties()
                       .food(new FoodProperties.Builder().nutrition(6).saturationMod(1.2F).build()),
                   null,
                   null,
-                  0));
+                  0,
+                  MultiBiteSkewerItem.AnimationProfile.THREE_RANDOM));
   public static final RegistryObject<Item> GRILLED_GOLDEN_SKEWER =
       ITEMS.register(
           "grilled_golden_skewer",
@@ -345,7 +364,7 @@ public final class ModItems {
         0.6F,
         new ResourceLocation("minecraft", "strength"),
         10,
-        MultiBiteSkewerItem.AnimationProfile.BEEF);
+        MultiBiteSkewerItem.AnimationProfile.FOUR);
     skewer("grilled_pork_belly_skewer", 5, 0.6F, cookeryEffect("vigor"), 30);
     skewer(
         "grilled_chicken_skin_skewer",
@@ -360,7 +379,7 @@ public final class ModItems {
         0.4F,
         new ResourceLocation("minecraft", "water_breathing"),
         30,
-        MultiBiteSkewerItem.AnimationProfile.SQUID_TENTACLE);
+        MultiBiteSkewerItem.AnimationProfile.THREE_RANDOM);
     skewer("grilled_fish_skewer", 6, 0.45F, cookeryEffect("tundra_strider"), 30);
     skewer(
         "grilled_sweet_potato_sheet_skewer",
@@ -405,7 +424,7 @@ public final class ModItems {
         2,
         0.05F,
         true,
-        MultiBiteSkewerItem.AnimationProfile.RAW_ENDER_PEARL);
+        MultiBiteSkewerItem.AnimationProfile.THREE);
     rawSkewer("raw_meatball_skewer", 4, 0.4375F, false);
     rawSkewer("raw_slime_skewer", 2, 0.0F, true);
     rawSkewer("raw_meat_and_bone_skewer", 2, 0.25F, false);
@@ -460,7 +479,7 @@ public final class ModItems {
         ITEMS.register(
             id,
             () ->
-                new SkewerItem(
+                new MultiBiteSkewerItem(
                     new Item.Properties()
                         .food(
                             new FoodProperties.Builder()
@@ -469,7 +488,8 @@ public final class ModItems {
                                 .build()),
                     "tooltip.kaleidoscope_grilling." + id + ".maxim",
                     effectId,
-                    effectSeconds * 20)));
+                    effectSeconds * 20,
+                    animationProfile(id))));
   }
 
   private static void multiBiteSkewer(
@@ -504,11 +524,12 @@ public final class ModItems {
         ITEMS.register(
             id,
             () ->
-                new SkewerItem(
+                new MultiBiteSkewerItem(
                     new Item.Properties().food(food.build()),
                     null,
                     nausea ? new ResourceLocation("minecraft", "nausea") : null,
-                    nausea ? 60 : 0)));
+                    nausea ? 60 : 0,
+                    animationProfile(id))));
   }
 
   private static void animatedRawSkewer(
@@ -529,6 +550,23 @@ public final class ModItems {
                     nausea ? new ResourceLocation("minecraft", "nausea") : null,
                     nausea ? 60 : 0,
                     animationProfile)));
+  }
+
+  private static MultiBiteSkewerItem.AnimationProfile animationProfile(String id) {
+    String name = id.replace("raw_", "").replace("grilled_", "");
+    if (name.equals("fish_skewer") || name.equals("caterpillar_skewer"))
+      return MultiBiteSkewerItem.AnimationProfile.ONE;
+    if (name.equals("bun_slice_skewer")
+        || name.equals("fried_egg_skewer")
+        || name.equals("slime_skewer")
+        || name.equals("sweet_potato_sheet_skewer"))
+      return MultiBiteSkewerItem.AnimationProfile.TWO;
+    if (name.equals("beef_skewer")
+        || name.equals("chicken_skin_skewer")
+        || name.equals("pork_belly_skewer"))
+      return MultiBiteSkewerItem.AnimationProfile.FOUR;
+    if (name.equals("ender_pearl_skewer")) return MultiBiteSkewerItem.AnimationProfile.THREE;
+    return MultiBiteSkewerItem.AnimationProfile.THREE_RANDOM;
   }
 
   private ModItems() {}

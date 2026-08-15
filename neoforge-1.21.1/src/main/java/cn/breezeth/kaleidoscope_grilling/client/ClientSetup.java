@@ -201,11 +201,44 @@ public final class ClientSetup {
         ModelResourceLocation.standalone(
             ResourceLocation.fromNamespaceAndPath(
                 KaleidoscopeGrilling.MOD_ID, "item/skewer_plate_base")));
-    event.register(
-        ModelResourceLocation.standalone(
-            ResourceLocation.fromNamespaceAndPath(
-                KaleidoscopeGrilling.MOD_ID,
-                "item/fixed_skewers/ender_pearl_bite_piece")));
+    for (String base : new String[] {"fish_skewer", "caterpillar_skewer"}) {
+      event.register(
+          ModelResourceLocation.standalone(
+              ResourceLocation.fromNamespaceAndPath(
+                  KaleidoscopeGrilling.MOD_ID,
+                  fixedPiecePath(base, "_raw_piece_1"))));
+      event.register(
+          ModelResourceLocation.standalone(
+              ResourceLocation.fromNamespaceAndPath(
+                  KaleidoscopeGrilling.MOD_ID,
+                  fixedPiecePath(base, "_piece_1"))));
+    }
+    for (String base :
+        new String[] {
+          "ender_pearl_skewer",
+          "golden_skewer",
+          "lamb_skewer",
+          "meat_and_bone_skewer",
+          "meatball_skewer",
+          "mid_wing_skewer",
+          "mushroom_skewer",
+          "ordinary_skewer",
+          "potato_slice_skewer",
+          "squid_tentacle_skewer"
+        }) {
+      event.register(
+          ModelResourceLocation.standalone(
+              ResourceLocation.fromNamespaceAndPath(
+                  KaleidoscopeGrilling.MOD_ID,
+                  fixedPiecePath(base, "_piece_3"))));
+      if (!base.equals("ordinary_skewer")) {
+        event.register(
+            ModelResourceLocation.standalone(
+                ResourceLocation.fromNamespaceAndPath(
+                    KaleidoscopeGrilling.MOD_ID,
+                    fixedPiecePath(base, "_raw_piece_3"))));
+      }
+    }
     event.register(
         ModelResourceLocation.standalone(
             ResourceLocation.fromNamespaceAndPath(
@@ -253,6 +286,11 @@ public final class ClientSetup {
         item,
         SKEWER_OUTLINE,
         (stack, level, entity, seed) -> SkewerOutlineRender.isActive() ? 1.0F : 0.0F);
+    if (item instanceof MultiBiteSkewerItem)
+      ItemProperties.register(
+          item,
+          SKEWER_BITE_STAGE,
+          (stack, level, entity, seed) -> MultiBiteSkewerItem.visualBiteStage(stack, entity));
   }
 
   private static void registerFixed(Item item) {
@@ -279,6 +317,11 @@ public final class ClientSetup {
       case "premium_chili" -> 3F;
       default -> 0F;
     };
+  }
+
+  private static String fixedPiecePath(String base, String suffix) {
+    String folder = base.endsWith("_skewer") ? base.substring(0, base.length() - 7) : base;
+    return "item/fixed_skewers/" + folder + "/" + base + suffix;
   }
 
   private static float oilBrushModelValue(

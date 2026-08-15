@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.skewer;
 
+import cn.breezeth.kaleidoscope_grilling.client.SkewerAnimationDebug;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.model.geom.ModelPart;
@@ -93,20 +94,26 @@ public final class SkewerEatingAnimation {
     16.6457F, 53.8578F, 53.8578F, 53.8578F, 53.8578F, 53.8578F, 53.8578F,
     53.8578F, 66.0431F, 61.916F, 53.8578F, 66.0431F, 61.916F, 53.8578F
   };
-  private static final float[] SQUID_ITEM_ROTATION_TIMES = {
-    0.45833F, 0.95833F, 1.20833F, 2.33333F, 2.58333F, 3.66667F,
-    3.91667F, 3.95833F, 4.41667F
-  };
-  private static final float[] SQUID_ITEM_ROTATION_X = {
-    0.0F, 12.5F, 0.0F, 20.0F, 0.0F, 12.5F, 0.0F, 10.21F, 12.5F
-  };
+  private static final float[] SQUID_ITEM_ROTATION_TIMES = {0.0F, 2.33333F};
+  private static final float[] SQUID_ITEM_ROTATION_X = {0.0F, 20.0F};
   private static final float[] SQUID_ITEM_POSITION_TIMES = {0.0F, 2.33333F};
   private static final float[] SQUID_ITEM_POSITION_Y = {0.0F, -0.75F};
+
+  private static final float[] TWO_POSITION_TIMES = {0F,.45833F,.54167F,.58333F,.95833F,1.20833F,1.625F,2.04167F,2.41667F,2.66667F,3.41667F,3.875F,3.95833F,4.08333F,4.5F};
+  private static final float[] TWO_POSITION_X = {3F,8F,8F,6.31F,5F,8F,7.44F,-1.56F,-4.56F,-4.56F,-4.56F,-4.56F,-3.56F,-7.56F,-16.56F};
+  private static final float[] TWO_POSITION_Y = {-7F,-10F,-7F,-6.81F,-7F,-7F,-6.26F,-6.26F,-6.26F,-6.26F,-6.26F,-8.26F,-8.26F,-9.26F,-14.26F};
+  private static final float[] TWO_POSITION_Z = {-5F,-9F,-7F,-6.06F,-5F,-2F,-7.89F,-11.89F,-11.89F,-8.89F,-8.89F,-3.89F,-3.89F,-3.89F,-3.89F};
+  private static final float[] TWO_ROTATION_TIMES = {0F,.45833F,.54167F,.95833F,1.20833F,1.625F,2.04167F,2.41667F,2.66667F,3.875F,3.95833F,4.08333F,4.5F};
+  private static final float[] TWO_ROTATION_X = {83.7983F,114.0944F,121.5944F,127.2944F,101.5944F,82.6076F,143.9989F,127.6042F,127.6042F,127.6042F,127.6042F,127.6042F,127.6042F};
+  private static final float[] TWO_ROTATION_Y = {9.8513F,-3.7751F,-3.7751F,-3.7751F,-3.7751F,-5.1701F,59.5717F,69.8723F,69.8723F,69.8723F,69.8723F,69.8723F,69.8723F};
+  private static final float[] TWO_ROTATION_Z = {16.6457F,53.8578F,53.8578F,53.8578F,53.8578F,44.0561F,10.3724F,-15.8658F,-15.8658F,-15.8658F,-15.8658F,-15.8658F,-15.8658F};
+  private static final float[] TWO_ITEM_ROTATION_Z_TIMES = {1.20833F, 2.25F};
+  private static final float[] TWO_ITEM_ROTATION_Z = {0.0F, -90.0F};
 
   private SkewerEatingAnimation() {}
 
   public static ArmPose sample(Player player, float partialTick) {
-    return sample(player, partialTick, MultiBiteSkewerItem.AnimationProfile.BEEF);
+    return sample(player, partialTick, MultiBiteSkewerItem.AnimationProfile.FOUR);
   }
 
   public static ArmPose sample(
@@ -119,9 +126,10 @@ public final class SkewerEatingAnimation {
                 / 20.0F,
             0.0F,
             LENGTH_SECONDS);
-    return profile == MultiBiteSkewerItem.AnimationProfile.SQUID_TENTACLE
-        ? sampleSquid(seconds)
-        : sample(seconds);
+    seconds = SkewerAnimationDebug.seconds(player, seconds);
+    if (profile == MultiBiteSkewerItem.AnimationProfile.THREE_ALT) return sampleSquid(seconds);
+    if (profile == MultiBiteSkewerItem.AnimationProfile.TWO) return sampleTwo(seconds);
+    return sample(seconds);
   }
 
   public static ArmPose sample(float seconds) {
@@ -134,7 +142,8 @@ public final class SkewerEatingAnimation {
         catmullRom(time, ROTATION_TIMES, ROTATION_Y),
         catmullRom(time, ROTATION_TIMES, ROTATION_Z),
         0.0F,
-        catmullRom(time, ITEM_ROTATION_TIMES, ITEM_ROTATION_X));
+        catmullRom(time, ITEM_ROTATION_TIMES, ITEM_ROTATION_X),
+        0.0F);
   }
 
   private static ArmPose sampleSquid(float seconds) {
@@ -147,13 +156,34 @@ public final class SkewerEatingAnimation {
         catmullRom(time, SQUID_ROTATION_TIMES, SQUID_ROTATION_Y),
         catmullRom(time, SQUID_ROTATION_TIMES, SQUID_ROTATION_Z),
         catmullRom(time, SQUID_ITEM_POSITION_TIMES, SQUID_ITEM_POSITION_Y),
-        catmullRom(time, SQUID_ITEM_ROTATION_TIMES, SQUID_ITEM_ROTATION_X));
+        catmullRom(time, SQUID_ITEM_ROTATION_TIMES, SQUID_ITEM_ROTATION_X),
+        0.0F);
   }
 
-  public static void applyToArm(ModelPart arm, HumanoidArm side, ArmPose pose) {
+  private static ArmPose sampleTwo(float seconds) {
+    float time = Mth.clamp(seconds, 0.0F, LENGTH_SECONDS);
+    return new ArmPose(
+        catmullRom(time, TWO_POSITION_TIMES, TWO_POSITION_X),
+        catmullRom(time, TWO_POSITION_TIMES, TWO_POSITION_Y),
+        catmullRom(time, TWO_POSITION_TIMES, TWO_POSITION_Z),
+        catmullRom(time, TWO_ROTATION_TIMES, TWO_ROTATION_X),
+        catmullRom(time, TWO_ROTATION_TIMES, TWO_ROTATION_Y),
+        catmullRom(time, TWO_ROTATION_TIMES, TWO_ROTATION_Z),
+        0.0F,
+        catmullRom(time, new float[]{.45833F,.95833F,1.20833F}, new float[]{0F,12.5F,0F}),
+        catmullRom(time, TWO_ITEM_ROTATION_Z_TIMES, TWO_ITEM_ROTATION_Z));
+  }
+
+  public static void applyToArm(
+      ModelPart arm,
+      HumanoidArm side,
+      ArmPose pose,
+      MultiBiteSkewerItem.AnimationProfile profile) {
     float mirror = side == HumanoidArm.RIGHT ? 1.0F : -1.0F;
     float xRot = -pose.rotationX() * Mth.DEG_TO_RAD;
-    float yRot = mirror * pose.rotationY() * Mth.DEG_TO_RAD;
+    float yDirection =
+        profile == MultiBiteSkewerItem.AnimationProfile.TWO ? -mirror : mirror;
+    float yRot = yDirection * pose.rotationY() * Mth.DEG_TO_RAD;
     float zRot = mirror * pose.rotationZ() * Mth.DEG_TO_RAD;
 
     // The BB arm pivot is one pixel inward from vanilla's arm pivot.
@@ -168,6 +198,9 @@ public final class SkewerEatingAnimation {
 
     arm.x = -mirror * (4.0F + pose.positionX()) + correctionX;
     arm.y = 2.0F - pose.positionY() + correctionY;
+    if (profile == MultiBiteSkewerItem.AnimationProfile.TWO) {
+      arm.y += 2.0F;
+    }
     arm.z = pose.positionZ() + correctionZ;
     arm.xRot = xRot;
     arm.yRot = yRot;
@@ -179,6 +212,7 @@ public final class SkewerEatingAnimation {
     poseStack.translate(
         -mirror / 16.0F, (9.0F - pose.itemPositionY()) / 16.0F, -6.0F / 16.0F);
     poseStack.mulPose(Axis.XP.rotationDegrees(180.0F + pose.itemRotationX()));
+    poseStack.mulPose(Axis.ZP.rotationDegrees(mirror * pose.itemRotationZ()));
     poseStack.translate(0.0F, 7.0F / 16.0F, 2.0F / 16.0F);
   }
 
@@ -214,5 +248,6 @@ public final class SkewerEatingAnimation {
       float rotationY,
       float rotationZ,
       float itemPositionY,
-      float itemRotationX) {}
+      float itemRotationX,
+      float itemRotationZ) {}
 }

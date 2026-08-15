@@ -1,0 +1,14 @@
+{
+  "parent": "kaleidoscope_grilling:human_fireworks",
+  "display": {
+    "icon": {"item": "kaleidoscope_grilling:wedding_candy"},
+    "title": {"translate": "advancement.kaleidoscope_grilling.wedding_candy.title"},
+    "description": {"translate": "advancement.kaleidoscope_grilling.wedding_candy.description"},
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {"event": {"trigger": "minecraft:impossible"}},
+  "rewards": {"experience": 50}
+}

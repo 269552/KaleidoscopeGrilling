@@ -1,7 +1,0 @@
-{
-    "parent":  "kaleidoscope_grilling:item/fixed_skewers/bun_slice_skewer",
-    "textures":  {
-                     "8":  "kaleidoscope_grilling:item/fixed_skewers/bun_slice_skewer_stage_1",
-                     "particle":  "#8"
-                 }
-}

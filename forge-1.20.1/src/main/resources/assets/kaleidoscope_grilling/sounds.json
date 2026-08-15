@@ -44,6 +44,16 @@
       { "name": "kaleidoscope_grilling:glass_place_3", "weight": 1, "pitch": 1.20 }
     ]
   },
+  "one_skewer_eat": {
+    "sounds": [
+      { "name": "kaleidoscope_grilling:one_skewer_eat", "stream": true }
+    ]
+  },
+  "two_skewer_eat": {
+    "sounds": [
+      { "name": "kaleidoscope_grilling:two_skewer_eat", "stream": true }
+    ]
+  },
   "three_skewer_eat": {
     "sounds": [
       { "name": "kaleidoscope_grilling:three_skewer_eat", "stream": true }

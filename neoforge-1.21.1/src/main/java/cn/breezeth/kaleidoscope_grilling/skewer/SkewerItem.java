@@ -19,6 +19,7 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -67,10 +68,24 @@ public class SkewerItem extends Item {
     return result;
   }
 
-  /** Applies nutrition and the skewer's own effect without the completion sound. */
+  /** Applies nutrition and the skewer's own effect without any eat or completion sound. */
   protected ItemStack finishFoodAndEffect(ItemStack stack, Level level, LivingEntity entity) {
-    ItemStack result = super.finishUsingItem(stack, level, entity);
-    if (level.isClientSide) return result;
+    FoodProperties food = stack.getFoodProperties(entity);
+    if (food != null) {
+      if (entity instanceof Player player) {
+        player.getFoodData().eat(food);
+      }
+      if (!level.isClientSide) {
+        for (FoodProperties.PossibleEffect possible : food.effects()) {
+          if (possible.effect() != null && level.random.nextFloat() < possible.probability())
+            entity.addEffect(new MobEffectInstance(possible.effect()));
+        }
+      }
+      if (!(entity instanceof Player player) || !player.getAbilities().instabuild) {
+        stack.shrink(1);
+      }
+    }
+    if (level.isClientSide) return stack;
     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
     var data = GrillingDataManager.skewer(itemId.toString());
     ResourceLocation resolved =
@@ -81,7 +96,7 @@ public class SkewerItem extends Item {
           .getHolder(ResourceKey.create(Registries.MOB_EFFECT, resolved))
           .ifPresent(effect -> entity.addEffect(new MobEffectInstance(effect, duration)));
     }
-    return result;
+    return stack;
   }
 
   protected void playBurp(Level level, LivingEntity entity) {

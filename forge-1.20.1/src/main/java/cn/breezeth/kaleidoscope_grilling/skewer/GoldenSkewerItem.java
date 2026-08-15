@@ -11,14 +11,13 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-public final class GoldenSkewerItem extends SkewerItem {
+public final class GoldenSkewerItem extends MultiBiteSkewerItem {
   public GoldenSkewerItem(Properties properties) {
-    super(properties, "tooltip.kaleidoscope_grilling.grilled_golden_skewer.maxim", new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "invincible"), 200);
+    super(properties, "tooltip.kaleidoscope_grilling.grilled_golden_skewer.maxim", new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "invincible"), 200, AnimationProfile.THREE_RANDOM);
   }
 
   @Override
-  public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
-    ItemStack result = super.finishUsingItem(stack, level, entity);
+  protected void afterFoodCommitted(ItemStack stack, Level level, LivingEntity entity) {
     if (level instanceof ServerLevel server) {
       server.playSound(null, entity.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 0.8F, 1.15F);
       for (int i = 0; i < 18; i++) {
@@ -26,6 +25,5 @@ public final class GoldenSkewerItem extends SkewerItem {
         server.sendParticles(ParticleTypes.ELECTRIC_SPARK, entity.getX() + Math.cos(angle) * 0.65, entity.getY() + 0.25 + i * 0.06, entity.getZ() + Math.sin(angle) * 0.65, 1, 0, 0.02, 0, 0.02);
       }
     }
-    return result;
   }
 }
