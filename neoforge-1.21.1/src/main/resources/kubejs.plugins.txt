@@ -1,0 +1,1 @@
+cn.breezeth.kaleidoscope_grilling.kubejs.GrillingKubeJSPlugin

@@ -5,6 +5,7 @@ import cn.breezeth.kaleidoscope_grilling.client.ClientSkewerEatingSound;
 import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerEatingAnimation;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerEatingPiece;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
@@ -41,11 +42,12 @@ public abstract class ItemInHandSkewerEatingMixin {
       MultiBufferSource buffers,
       int packedLight,
       CallbackInfo ci) {
-    if (!player.isUsingItem()
-        || !(player.getUseItem().getItem() instanceof MultiBiteSkewerItem animated)) return;
+    if (!player.isUsingItem()) return;
+    MultiBiteSkewerItem.AnimationProfile configured =
+        SkewerRecipes.animationProfile(player.getUseItem());
+    if (configured == null) return;
     MultiBiteSkewerItem.AnimationProfile profile =
-        ClientSkewerEatingSound.profile(
-            player.getId(), animated.animationProfile(player.getUseItem()));
+        ClientSkewerEatingSound.profile(player.getId(), configured);
     if (profile == MultiBiteSkewerItem.AnimationProfile.THREE
         || profile == MultiBiteSkewerItem.AnimationProfile.ONE) {
       grilling$renderEnderPearlEating(
@@ -59,7 +61,7 @@ public abstract class ItemInHandSkewerEatingMixin {
       ci.cancel();
       return;
     }
-    if (!(stack.getItem() instanceof MultiBiteSkewerItem)) return;
+    if (!SkewerRecipes.usesCustomEating(stack)) return;
 
     HumanoidArm arm =
         hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();

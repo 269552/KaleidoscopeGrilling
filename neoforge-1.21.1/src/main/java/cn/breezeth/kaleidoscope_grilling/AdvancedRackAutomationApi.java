@@ -2,7 +2,6 @@ package cn.breezeth.kaleidoscope_grilling;
 
 import cn.breezeth.kaleidoscope_grilling.rack.AdvancedRackBlockEntity;
 
-
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -45,20 +44,39 @@ public final class AdvancedRackAutomationApi {
       return new ReturnResult(false, returned.copy());
     if (!(level.getBlockEntity(receipt.pos()) instanceof AdvancedRackBlockEntity rack))
       return new ReturnResult(false, returned.copy());
-    int slot = receipt.slot();
-    if (slot < 0 || slot >= rack.getContainerSize() || !rack.canPlaceItem(slot, returned))
-      return new ReturnResult(false, returned.copy());
+    int preferred = receipt.slot();
+    if (canReturnTo(rack, preferred, returned)) {
+      return returnTo(level, receipt.pos(), rack, preferred, returned, simulate);
+    }
+    for (int slot = 0; slot < rack.getContainerSize(); slot++) {
+      if (slot == preferred || !canReturnTo(rack, slot, returned)) continue;
+      return returnTo(level, receipt.pos(), rack, slot, returned, simulate);
+    }
+    return new ReturnResult(false, returned.copy());
+  }
+
+  private static boolean canReturnTo(AdvancedRackBlockEntity rack, int slot, ItemStack returned) {
+    if (slot < 0 || slot >= rack.getContainerSize() || !rack.canPlaceItem(slot, returned)) return false;
     ItemStack stored = rack.getItem(slot);
-    if (!stored.isEmpty()
-        && (!ItemStack.isSameItemSameComponents(stored, returned)
-            || stored.getCount() + returned.getCount() > stored.getMaxStackSize()))
-      return new ReturnResult(false, returned.copy());
+    return stored.isEmpty()
+        || (ItemStack.isSameItemSameComponents(stored, returned)
+            && stored.getCount() + returned.getCount() <= stored.getMaxStackSize());
+  }
+
+  private static ReturnResult returnTo(
+      ServerLevel level,
+      BlockPos pos,
+      AdvancedRackBlockEntity rack,
+      int slot,
+      ItemStack returned,
+      boolean simulate) {
     if (!simulate) {
+      ItemStack stored = rack.getItem(slot);
       if (stored.isEmpty()) rack.setItem(slot, returned.copy());
       else {
         stored.grow(returned.getCount());
         rack.setChanged();
-        level.sendBlockUpdated(receipt.pos(), rack.getBlockState(), rack.getBlockState(), 3);
+        level.sendBlockUpdated(pos, rack.getBlockState(), rack.getBlockState(), 3);
       }
       rack.playPlaceSound();
     }

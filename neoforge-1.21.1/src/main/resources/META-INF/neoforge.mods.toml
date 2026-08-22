@@ -48,6 +48,13 @@ ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.kaleidoscope_grilling]]
+modId = "kubejs"
+type = "optional"
+versionRange = "[2101.7.2,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.kaleidoscope_grilling]]
 modId = "touhou_little_maid"
 type = "optional"
 versionRange = "[1.5.3,)"

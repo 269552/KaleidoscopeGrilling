@@ -12,7 +12,6 @@ import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipeBookItem;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
 
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -107,19 +106,13 @@ final class GrillingJeiRecipes {
 
   static List<Grilling> grillingRecipes() {
     List<Grilling> result = new ArrayList<>();
-    List<Threading> threadingRecipes = new ArrayList<>(fixedThreadingRecipes());
-    threadingRecipes.addAll(secretThreadingRecipes());
-    for (Threading threading : threadingRecipes) {
-      ItemStack raw = threading.result().copy();
-      ItemStack cooked;
-      if (threading.secret()) {
-        cooked = raw.copy();
-        SecretSkewerItem.setCooked(cooked, true);
-      } else {
-        if (!SkewerRecipes.isRawSkewer(raw)) continue;
-        cooked = SkewerRecipes.cookedResult(raw);
-      }
-      if (!cooked.isEmpty()) result.add(new Grilling(List.of(raw), List.of(cooked)));
+    for (SkewerRecipes.Cooking cooking : SkewerRecipes.cookingRecipes())
+      result.add(new Grilling(List.of(cooking.raw()), List.of(cooking.cooked())));
+    ItemStack secret = secretThreadingExample();
+    if (!secret.isEmpty()) {
+      ItemStack cooked = secret.copy();
+      SecretSkewerItem.setCooked(cooked, true);
+      result.add(new Grilling(List.of(secret), List.of(cooked)));
     }
     return List.copyOf(result);
   }
@@ -132,9 +125,15 @@ final class GrillingJeiRecipes {
     for (String type : List.of("", "canola", "secret_chili", "premium_chili")) {
       ItemStack stack = new ItemStack(item);
       OilPotCompat.fill(stack, type, 1);
+      OilPotCompat.nameForDisplay(stack);
       result.add(stack);
     }
     return List.copyOf(result);
+  }
+
+  static List<ItemStack> filledOilPots() {
+    List<ItemStack> pots = oilPots();
+    return pots.size() <= 1 ? List.of() : List.copyOf(pots.subList(1, pots.size()));
   }
 
   static ItemStack premiumChiliOilPot(int points) {
@@ -142,6 +141,7 @@ final class GrillingJeiRecipes {
     if (id == null || !BuiltInRegistries.ITEM.containsKey(id)) return ItemStack.EMPTY;
     ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(id));
     OilPotCompat.fill(stack, "premium_chili", points);
+    OilPotCompat.nameForDisplay(stack);
     return stack;
   }
 
@@ -181,6 +181,7 @@ final class GrillingJeiRecipes {
       ItemStack emptyPot = new ItemStack(BuiltInRegistries.ITEM.get(oilPotId));
       ItemStack canolaPot = emptyPot.copy();
       OilPotCompat.fill(canolaPot, "canola", 32);
+      OilPotCompat.nameForDisplay(canolaPot);
       recipes.add(new OilPress(emptyPot, canolaPot));
     }
     return List.copyOf(recipes);
@@ -188,7 +189,11 @@ final class GrillingJeiRecipes {
 
   private static Threading threadingRecipe(
       Map.Entry<String, GrillingDataManager.Skewer> entry) {
-    ResourceLocation resultId = ResourceLocation.tryParse(entry.getKey());
+    String output =
+        entry.getValue().threadingResult().isBlank()
+            ? entry.getKey()
+            : entry.getValue().threadingResult();
+    ResourceLocation resultId = ResourceLocation.tryParse(output);
     if (resultId == null || !BuiltInRegistries.ITEM.containsKey(resultId)) return null;
     List<List<ItemStack>> ingredients = new ArrayList<>();
     for (List<String> selectors : entry.getValue().ingredients()) {

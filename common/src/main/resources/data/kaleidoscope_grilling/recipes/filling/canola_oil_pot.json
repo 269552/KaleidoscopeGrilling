@@ -1,0 +1,1 @@
+{"type":"forge:conditional","recipes":[{"conditions":[{"type":"forge:mod_loaded","modid":"create"}],"recipe":{"type":"create:filling","ingredients":[{"item":"kaleidoscope_cookery:oil_pot"},{"amount":1000,"fluid":"kaleidoscope_grilling:canola_oil","nbt":{}}],"results":[{"item":"kaleidoscope_cookery:oil_pot","nbt":{"grilling_oil_type":"canola","oil_count":8}}]}}]}

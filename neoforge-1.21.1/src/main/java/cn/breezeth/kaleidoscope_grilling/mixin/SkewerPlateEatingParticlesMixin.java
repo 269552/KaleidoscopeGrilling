@@ -4,6 +4,7 @@ import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
 
 import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
 import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
 import net.minecraft.client.Minecraft;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlateItem;
 import net.minecraft.world.entity.LivingEntity;
@@ -21,7 +22,7 @@ abstract class SkewerPlateEatingParticlesMixin {
       ItemStack stack, int amount, CallbackInfo ci) {
     LivingEntity entity = (LivingEntity) (Object) this;
     Minecraft minecraft = Minecraft.getInstance();
-    if (stack.getItem() instanceof MultiBiteSkewerItem
+    if (SkewerRecipes.usesCustomEating(stack)
         && entity == minecraft.player
         && minecraft.options.getCameraType().isFirstPerson()) {
       ci.cancel();

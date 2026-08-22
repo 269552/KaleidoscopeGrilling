@@ -37,9 +37,9 @@ import cn.breezeth.kaleidoscope_grilling.jei.RecipeDisplayHandler;
 import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlatePlacement;
+import cn.breezeth.kaleidoscope_grilling.skewer.ScriptSkewerEatingHandler;
 import cn.breezeth.kaleidoscope_grilling.world.StrippingHandler;
 import cn.breezeth.kaleidoscope_grilling.world.VillagePepperLootHandler;
-
 
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.EventPriority;
@@ -86,8 +86,11 @@ public final class KaleidoscopeGrilling {
     NeoForge.EVENT_BUS.addListener(IngredientTooltipHandler::onTooltip);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onFinish);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onStart);
+    NeoForge.EVENT_BUS.addListener(ScriptSkewerEatingHandler::onStart);
     NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, MultiBiteSkewerItem::onUseStop);
     NeoForge.EVENT_BUS.addListener(HotFoodHandler::onStop);
+    NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, ScriptSkewerEatingHandler::onStop);
+    NeoForge.EVENT_BUS.addListener(ScriptSkewerEatingHandler::onFinish);
     NeoForge.EVENT_BUS.addListener(
         (net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent.Tick event) ->
             MultiBiteSkewerItem.onUseTick(event));
@@ -104,6 +107,7 @@ public final class KaleidoscopeGrilling {
     NeoForge.EVENT_BUS.addListener(RecipeDisplayHandler::attack);
     NeoForge.EVENT_BUS.addListener(RecipeDisplayHandler::interact);
     NeoForge.EVENT_BUS.addListener(GrillingDataManager::register);
+    NeoForge.EVENT_BUS.addListener(GrillingNetwork::onPlayerLoggedIn);
     NeoForge.EVENT_BUS.addListener(ModAdvancements::onPlayerTick);
     NeoForge.EVENT_BUS.addListener(ModAdvancements::onBlockPlaced);
     NeoForge.EVENT_BUS.addListener(ModAdvancements::onFoodFinished);

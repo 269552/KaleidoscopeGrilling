@@ -76,8 +76,12 @@ public final class SkeweringHandler {
     List<Integer> variants = readVariants(offhand);
     variants.add(event.getEntity().getRandom().nextInt(GUI_VARIANT_COUNT) + GUI_VARIANT_OFFSET);
     ResourceLocation resultId = SkewerRecipes.completedResult(insertedStacks);
+    ResourceLocation threadingResult = SkewerRecipes.threadingResult(insertedStacks);
     ItemStack next;
-    if (resultId != null) {
+    if (threadingResult != null && ForgeRegistries.ITEMS.containsKey(threadingResult)) {
+      // Mode 4: hand the completed recipe to the external mod's item unchanged.
+      next = new ItemStack(ForgeRegistries.ITEMS.getValue(threadingResult));
+    } else if (resultId != null && ForgeRegistries.ITEMS.containsKey(resultId)) {
       next = new ItemStack(ForgeRegistries.ITEMS.getValue(resultId));
       write(next, insertedStacks, variants);
     } else if (insertedStacks.size() >= 3) {
@@ -97,7 +101,7 @@ public final class SkeweringHandler {
     event.getEntity().setItemInHand(InteractionHand.OFF_HAND, next);
     if (!remainingSticks.isEmpty())
       event.getEntity().getInventory().placeItemBackInInventory(remainingSticks);
-    if (resultId != null || insertedStacks.size() >= 3)
+    if (threadingResult != null || resultId != null || insertedStacks.size() >= 3)
       ModAdvancements.skewerCompleted(event.getEntity());
     event
         .getLevel()
@@ -201,6 +205,18 @@ public final class SkeweringHandler {
     return readIngredientStacks(stack).size();
   }
 
+  /** Stores configured ingredients on a generated cooked skewer. */
+  public static void writeGeneratedIngredients(ItemStack stack, List<ItemStack> ingredients) {
+    List<ItemStack> values =
+        ingredients.stream().filter(item -> !item.isEmpty()).limit(3).map(item -> item.copyWithCount(1)).toList();
+    List<Integer> variants = new ArrayList<>(values.size());
+    ResourceLocation resultId = ForgeRegistries.ITEMS.getKey(stack.getItem());
+    int seed = resultId == null ? 0 : resultId.hashCode();
+    for (int index = 0; index < values.size(); index++)
+      variants.add(GUI_VARIANT_OFFSET + Math.floorMod(seed + index * 31, GUI_VARIANT_COUNT));
+    write(stack, values, variants);
+  }
+
   public static int modelState(ItemStack stack) {
     List<Integer> variants = readVariants(stack);
     if (variants.isEmpty()) {
@@ -289,8 +305,13 @@ public final class SkeweringHandler {
 
     insertedStacks.add(food.copyWithCount(1));
     ResourceLocation resultId = SkewerRecipes.completedResult(insertedStacks);
+    ResourceLocation threadingResult = SkewerRecipes.threadingResult(insertedStacks);
     ItemStack next;
-    if (resultId != null) {
+    if (threadingResult != null && ForgeRegistries.ITEMS.containsKey(threadingResult)) {
+      // Mode 4: dynamic threading is only an intermediate state. The completed
+      // recipe hands the stack back to the other mod unchanged.
+      next = new ItemStack(ForgeRegistries.ITEMS.getValue(threadingResult));
+    } else if (resultId != null && ForgeRegistries.ITEMS.containsKey(resultId)) {
       // 固定串模型固定、无变体：确定性 variants，保证同食材组合可堆叠
       List<Integer> fixedVariants = new ArrayList<>();
       for (int i = 0; i < insertedStacks.size(); i++)

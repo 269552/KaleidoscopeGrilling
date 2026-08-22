@@ -24,8 +24,10 @@ public final class SkewerColorProvider {
   private static final int FACE_COUNT = 6;
   private static final int SLOT_STRIDE = 128;
   private static final int FALLBACK = 0xB86B45;
+  private static final int MAX_RENDER_DEPTH = 3;
   private static final Map<PaletteKey, int[]> CACHE = new ConcurrentHashMap<>();
   private static final Map<ItemStack, RenderData> RENDER_CACHE = new IdentityHashMap<>();
+  private static final ThreadLocal<Integer> RENDER_DEPTH = ThreadLocal.withInitial(() -> 0);
 
   public static int color(ItemStack skewer, int tintIndex) {
     if (tintIndex < 0) return -1;
@@ -36,6 +38,7 @@ public final class SkewerColorProvider {
     int cell = localIndex % CELL_COUNT;
     if (slot >= 3 || face >= FACE_COUNT) return -1;
     RenderData renderData = renderData(skewer);
+    if (renderData == null) return opaque(stageColor(skewer, FALLBACK, cell));
     if (slot >= renderData.palettes().size()) return -1;
     int[] palette = renderData.palettes().get(slot);
     int color = shadeForFace(palette[cell], face);
@@ -48,29 +51,36 @@ public final class SkewerColorProvider {
   }
 
   private static RenderData renderData(ItemStack skewer) {
-    Object ingredientToken =
-        skewer.hasTag() ? skewer.getTag().get("SkewerIngredientStacks") : null;
-    Object cookedToken = skewer.hasTag() ? skewer.getTag().get("CookedIngredientStacks") : null;
-    RenderData cached = RENDER_CACHE.get(skewer);
-    if (cached != null
-        && cached.ingredientToken() == ingredientToken
-        && cached.cookedToken() == cookedToken) return cached;
+    int depth = RENDER_DEPTH.get();
+    if (depth >= MAX_RENDER_DEPTH) return null;
+    RENDER_DEPTH.set(depth + 1);
+    try {
+      Object ingredientToken =
+          skewer.hasTag() ? skewer.getTag().get("SkewerIngredientStacks") : null;
+      Object cookedToken = skewer.hasTag() ? skewer.getTag().get("CookedIngredientStacks") : null;
+      RenderData cached = RENDER_CACHE.get(skewer);
+      if (cached != null
+          && cached.ingredientToken() == ingredientToken
+          && cached.cookedToken() == cookedToken) return cached;
 
-    List<ItemStack> ingredients = SkeweringHandler.readEffectiveIngredientStacks(skewer);
-    if (ingredients.isEmpty()) ingredients = SkewerRecipes.displayIngredients(skewer);
-    Minecraft minecraft = Minecraft.getInstance();
-    List<int[]> palettes = new ArrayList<>(ingredients.size());
-    for (ItemStack ingredient : ingredients) {
-      ResourceLocation id = ForgeRegistries.ITEMS.getKey(ingredient.getItem());
-      PaletteKey key =
-          new PaletteKey(id, ingredient.hasTag() ? ingredient.getTag().hashCode() : 0);
-      if (CACHE.size() > 512) CACHE.clear();
-      palettes.add(CACHE.computeIfAbsent(key, ignored -> sample(minecraft, ingredient)));
+      List<ItemStack> ingredients = SkeweringHandler.readEffectiveIngredientStacks(skewer);
+      if (ingredients.isEmpty()) ingredients = SkewerRecipes.displayIngredients(skewer);
+      Minecraft minecraft = Minecraft.getInstance();
+      List<int[]> palettes = new ArrayList<>(ingredients.size());
+      for (ItemStack ingredient : ingredients) {
+        ResourceLocation id = ForgeRegistries.ITEMS.getKey(ingredient.getItem());
+        PaletteKey key =
+            new PaletteKey(id, ingredient.hasTag() ? ingredient.getTag().hashCode() : 0);
+        if (CACHE.size() > 512) CACHE.clear();
+        palettes.add(CACHE.computeIfAbsent(key, ignored -> sample(minecraft, ingredient)));
+      }
+      if (RENDER_CACHE.size() >= 256) RENDER_CACHE.clear();
+      RenderData resolved = new RenderData(ingredientToken, cookedToken, List.copyOf(palettes));
+      RENDER_CACHE.put(skewer, resolved);
+      return resolved;
+    } finally {
+      RENDER_DEPTH.set(depth);
     }
-    if (RENDER_CACHE.size() >= 256) RENDER_CACHE.clear();
-    RenderData resolved = new RenderData(ingredientToken, cookedToken, List.copyOf(palettes));
-    RENDER_CACHE.put(skewer, resolved);
-    return resolved;
   }
 
   private static int[] sample(Minecraft minecraft, ItemStack ingredient) {
@@ -81,13 +91,20 @@ public final class SkewerColorProvider {
           ((SpriteContentsAccessor) (Object) sprite.contents()).grilling$getOriginalImage();
       int width = sprite.contents().width();
       int height = sprite.contents().height();
-      int itemTint = minecraft.getItemColors().getColor(ingredient, 0);
+      int itemTint = isSkewerLike(ingredient) ? -1 : minecraft.getItemColors().getColor(ingredient, 0);
       return sampleGrid(image, width, height, itemTint);
     } catch (RuntimeException ignored) {
       int[] fallback = new int[CELL_COUNT];
       java.util.Arrays.fill(fallback, FALLBACK);
       return fallback;
     }
+  }
+
+  private static boolean isSkewerLike(ItemStack stack) {
+    return stack.is(ModItems.UNFINISHED_SKEWER.get())
+        || stack.is(ModItems.SECRET_SKEWER.get())
+        || ModItems.RAW_SKEWERS.stream().anyMatch(item -> stack.is(item.get()))
+        || ModItems.FIXED_SKEWERS.stream().anyMatch(item -> stack.is(item.get()));
   }
 
   private static int[] sampleGrid(NativeImage image, int width, int height, int itemTint) {

@@ -5,7 +5,6 @@ import cn.breezeth.kaleidoscope_grilling.registry.ModEffects;
 
 import cn.breezeth.kaleidoscope_grilling.oil.OilPotCompat;
 
-
 import cn.breezeth.kaleidoscope_grilling.mixin.FoodDataAccessor;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +53,16 @@ public final class HotFoodHandler {
             .add(
                 Component.translatable("tooltip.kaleidoscope_grilling.oil_pot." + type, count)
                     .withStyle(ChatFormatting.GRAY));
+        if (type.equals("canola")
+            || type.equals("secret_chili")
+            || type.equals("premium_chili")) {
+          event
+              .getToolTip()
+              .add(
+                  Component.translatable(
+                          "tooltip.kaleidoscope_grilling.oil_pot." + type + ".heat")
+                      .withStyle(ChatFormatting.DARK_GRAY));
+        }
       }
     }
     if (event.getEntity() != null

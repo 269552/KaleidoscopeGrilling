@@ -38,6 +38,13 @@ ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.kaleidoscope_grilling]]
+modId = "kubejs"
+mandatory = false
+versionRange = "[2001.6.5,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.kaleidoscope_grilling]]
 modId = "create"
 mandatory = false
 versionRange = "[0.5.1,)"

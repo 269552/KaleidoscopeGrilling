@@ -6,6 +6,7 @@ import java.util.List;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
+import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
@@ -33,7 +34,7 @@ final class SecretThreadingJeiCategory
 
   SecretThreadingJeiCategory(IGuiHelper guiHelper) {
     background = guiHelper.createDrawable(BACKGROUND, 0, 0, 147, 110);
-    icon = guiHelper.createDrawableItemStack(GrillingJeiRecipes.secretThreadingExample());
+    icon = SkewerJeiRenderer.drawable(GrillingJeiRecipes.secretThreadingExample());
   }
 
   @Override
@@ -97,7 +98,11 @@ final class SecretThreadingJeiCategory
           .addItemStacks(rotated(choices, i));
     }
     builder.addInputSlot(8, 87).setSlotName("stick").addItemStack(new ItemStack(Items.STICK));
-    builder.addOutputSlot(123, 57).setSlotName("result").addItemStack(recipe.result());
+    builder
+        .addOutputSlot(123, 57)
+        .setSlotName("result")
+        .setCustomRenderer(VanillaTypes.ITEM_STACK, SkewerJeiRenderer.INSTANCE)
+        .addItemStack(recipe.result());
   }
 
   @Override

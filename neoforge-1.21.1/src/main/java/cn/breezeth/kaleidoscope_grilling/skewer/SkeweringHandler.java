@@ -83,8 +83,11 @@ public final class SkeweringHandler {
     List<Integer> variants = readVariants(offhand);
     variants.add(event.getEntity().getRandom().nextInt(GUI_VARIANT_COUNT) + GUI_VARIANT_OFFSET);
     ResourceLocation resultId = SkewerRecipes.completedResult(insertedStacks);
+    ResourceLocation threadingResult = SkewerRecipes.threadingResult(insertedStacks);
     ItemStack next;
-    if (resultId != null) {
+    if (threadingResult != null && BuiltInRegistries.ITEM.containsKey(threadingResult)) {
+      next = new ItemStack(BuiltInRegistries.ITEM.get(threadingResult));
+    } else if (resultId != null && BuiltInRegistries.ITEM.containsKey(resultId)) {
       next = new ItemStack(BuiltInRegistries.ITEM.get(resultId));
       write(next, insertedStacks, variants, event.getLevel().registryAccess());
     } else if (insertedStacks.size() >= 3) {
@@ -104,7 +107,7 @@ public final class SkeweringHandler {
     event.getEntity().setItemInHand(InteractionHand.OFF_HAND, next);
     if (!remainingSticks.isEmpty())
       event.getEntity().getInventory().placeItemBackInInventory(remainingSticks);
-    if (resultId != null || insertedStacks.size() >= 3)
+    if (threadingResult != null || resultId != null || insertedStacks.size() >= 3)
       ModAdvancements.skewerCompleted(event.getEntity());
     event
         .getLevel()
@@ -229,6 +232,28 @@ public final class SkeweringHandler {
     return data == null ? 0 : data.getUnsafe().getList(INGREDIENTS_TAG, 8).size();
   }
 
+  /** Stores configured ingredients on a generated cooked skewer. */
+  public static void writeGeneratedIngredients(ItemStack stack, List<ItemStack> ingredients) {
+    List<ItemStack> values =
+        ingredients.stream()
+            .filter(item -> !item.isEmpty())
+            .limit(3)
+            .map(item -> item.copyWithCount(1))
+            .toList();
+    ListTag ids = new ListTag();
+    List<Integer> variants = new ArrayList<>(values.size());
+    int seed = BuiltInRegistries.ITEM.getKey(stack.getItem()).hashCode();
+    for (int index = 0; index < values.size(); index++) {
+      ids.add(
+          StringTag.valueOf(BuiltInRegistries.ITEM.getKey(values.get(index).getItem()).toString()));
+      variants.add(GUI_VARIANT_OFFSET + Math.floorMod(seed + index * 31, GUI_VARIANT_COUNT));
+    }
+    CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+    tag.put(INGREDIENTS_TAG, ids);
+    tag.putIntArray(VARIANTS_TAG, variants);
+    stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+  }
+
   public static int modelState(ItemStack stack) {
     List<Integer> variants = readVariants(stack);
     if (variants.isEmpty()) {
@@ -318,8 +343,11 @@ public final class SkeweringHandler {
 
     insertedStacks.add(food.copyWithCount(1));
     ResourceLocation resultId = SkewerRecipes.completedResult(insertedStacks);
+    ResourceLocation threadingResult = SkewerRecipes.threadingResult(insertedStacks);
     ItemStack next;
-    if (resultId != null) {
+    if (threadingResult != null && BuiltInRegistries.ITEM.containsKey(threadingResult)) {
+      next = new ItemStack(BuiltInRegistries.ITEM.get(threadingResult));
+    } else if (resultId != null && BuiltInRegistries.ITEM.containsKey(resultId)) {
       // 固定串模型固定、无变体：确定性 variants，保证同食材组合可堆叠
       List<Integer> fixedVariants = new ArrayList<>();
       for (int i = 0; i < insertedStacks.size(); i++)

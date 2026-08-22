@@ -15,8 +15,19 @@ base { archivesName = props.getProperty('archives_base_name') }
 
 repositories {
     maven { url = 'https://maven.minecraftforge.net/' }
+    maven { name = 'GeckoLib'; url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
     mavenCentral()
     maven { url = 'https://maven.blamejared.com' }
+    maven {
+        name = 'LatvianDev'
+        url = 'https://maven.latvian.dev/releases'
+        content { includeGroup 'dev.latvian.mods' }
+    }
+    maven {
+        name = 'Architectury'
+        url = 'https://maven.architectury.dev/'
+        content { includeGroup 'dev.architectury' }
+    }
     exclusiveContent {
         forRepositories(fg.repository)
         forRepository { maven { name = 'Create'; url = 'https://maven.createmod.net' } }
@@ -56,6 +67,7 @@ minecraft {
         }
         client {
             workingDirectory project.file('runs/client')
+            jvmArgs '-Xms1G', '-Xmx4G'
             mods { kaleidoscope_grilling { source sourceSets.main } }
         }
         server {
@@ -68,7 +80,22 @@ minecraft {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${props.getProperty('minecraft_version')}-${props.getProperty('forge_version')}"
+    // The bridge is always packaged so normal release builds expose the KubeJS API.
+    // KubeJS itself remains an optional runtime dependency; this flag only adds it to dev runs.
+    compileOnly(fg.deobf('dev.latvian.mods:kubejs-forge:2001.6.5-build.16')) { transitive = false }
+    compileOnly fg.deobf('dev.latvian.mods:rhino-forge:2001.2.3-build.10')
+    if (providers.gradleProperty('withKubeJS').isPresent()) {
+        runtimeOnly fg.deobf('dev.latvian.mods:kubejs-forge:2001.6.5-build.16')
+        runtimeOnly fg.deobf('dev.latvian.mods:rhino-forge:2001.2.3-build.10')
+        runtimeOnly fg.deobf('dev.architectury:architectury-forge:9.2.14')
+    }
     implementation fg.deobf('maven.modrinth:v17FatAc:NXvhd04p')
+    def orderToCook = 'maven.modrinth:order-to-cook:9vfyDbLx'
+    compileOnly fg.deobf(orderToCook)
+    if (providers.gradleProperty('withOrderToCook').isPresent()) {
+        runtimeOnly fg.deobf(orderToCook)
+        runtimeOnly fg.deobf('software.bernie.geckolib:geckolib-forge-1.20.1:4.8.3')
+    }
     compileOnly fg.deobf('mezz.jei:jei-1.20.1-common-api:15.20.0.105')
     compileOnly fg.deobf('mezz.jei:jei-1.20.1-forge-api:15.20.0.105')
     compileOnly fg.deobf('maven.modrinth:jade:11.13.1+forge')

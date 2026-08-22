@@ -37,9 +37,9 @@ public final class SkewerEatingHud {
     Player player = minecraft.player;
     if (player == null || minecraft.options.hideGui || !player.isUsingItem()) return;
     ItemStack stack = player.getUseItem();
-    if (!(stack.getItem() instanceof MultiBiteSkewerItem skewer)) return;
-
-    int duration = skewer.getUseDuration(stack);
+    MultiBiteSkewerItem.AnimationProfile profile = SkewerRecipes.animationProfile(stack);
+    if (profile == null) return;
+    int duration = profile.duration();
     float elapsed = duration - player.getUseItemRemainingTicks() + minecraft.getPartialTick();
     float progress = Math.min(1.0F, Math.max(0.0F, elapsed / duration));
     boolean ready = elapsed >= MultiBiteSkewerItem.MINIMUM_EAT_TICKS;

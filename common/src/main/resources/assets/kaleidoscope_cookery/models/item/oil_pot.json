@@ -10,27 +10,27 @@
     },
     {
       "model": "kaleidoscope_grilling:item/oil_pot_canola",
-      "predicate": { "kaleidoscope_grilling:oil_type": 1.0 }
+      "predicate": { "kaleidoscope_grilling:oil_type": 0.25 }
     },
     {
       "model": "kaleidoscope_grilling:item/oil_pot_secret_chili",
-      "predicate": { "kaleidoscope_grilling:oil_type": 2.0 }
+      "predicate": { "kaleidoscope_grilling:oil_type": 0.5 }
     },
     {
       "model": "kaleidoscope_grilling:item/oil_pot_premium_chili",
-      "predicate": { "kaleidoscope_grilling:oil_type": 3.0 }
+      "predicate": { "kaleidoscope_grilling:oil_type": 0.75 }
     },
     {
       "model": "kaleidoscope_grilling:item/canola_oil_brush",
-      "predicate": { "kaleidoscope_grilling:oil_brushing": 1.0 }
+      "predicate": { "kaleidoscope_grilling:oil_brushing": 0.25 }
     },
     {
       "model": "kaleidoscope_grilling:item/secret_chili_oil_brush",
-      "predicate": { "kaleidoscope_grilling:oil_brushing": 2.0 }
+      "predicate": { "kaleidoscope_grilling:oil_brushing": 0.5 }
     },
     {
       "model": "kaleidoscope_grilling:item/premium_chili_oil_brush",
-      "predicate": { "kaleidoscope_grilling:oil_brushing": 3.0 }
+      "predicate": { "kaleidoscope_grilling:oil_brushing": 0.75 }
     }
   ]
 }

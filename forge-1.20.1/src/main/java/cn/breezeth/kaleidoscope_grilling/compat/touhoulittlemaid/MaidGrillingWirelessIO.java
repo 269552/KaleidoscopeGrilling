@@ -9,28 +9,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 
 final class MaidGrillingWirelessIO {
-  static List<MaidGrillingData.BoundContainer> supplyEndpoints(EntityMaid maid) {
-    return endpoints(maid, false);
-  }
-
-  static List<MaidGrillingData.BoundContainer> outputEndpoints(EntityMaid maid) {
-    return endpoints(maid, true);
-  }
-
-  static boolean hasSupplyEndpoint(EntityMaid maid) {
-    return hasEndpoint(maid, false);
-  }
-
-  static boolean hasOutputEndpoint(EntityMaid maid) {
-    return hasEndpoint(maid, true);
-  }
-
-  private static List<MaidGrillingData.BoundContainer> endpoints(
-      EntityMaid maid, boolean maidToChest) {
+  static List<MaidGrillingData.BoundContainer> endpoints(EntityMaid maid) {
     List<MaidGrillingData.BoundContainer> result = new ArrayList<>();
     for (int slot = 0; slot < maid.getMaidBauble().getSlots(); slot++) {
       ItemStack stack = maid.getMaidBauble().getStackInSlot(slot);
-      if (!isEndpoint(stack, maidToChest)) continue;
+      if (!isEndpoint(stack)) continue;
       BlockPos pos = ItemWirelessIO.getBindingPos(stack);
       if (pos != null) {
         result.add(
@@ -41,18 +24,17 @@ final class MaidGrillingWirelessIO {
     return result;
   }
 
-  private static boolean hasEndpoint(EntityMaid maid, boolean maidToChest) {
+  static boolean hasEndpoint(EntityMaid maid) {
     for (int slot = 0; slot < maid.getMaidBauble().getSlots(); slot++) {
       ItemStack stack = maid.getMaidBauble().getStackInSlot(slot);
-      if (isEndpoint(stack, maidToChest) && ItemWirelessIO.getBindingPos(stack) != null) return true;
+      if (isEndpoint(stack) && ItemWirelessIO.getBindingPos(stack) != null) return true;
     }
     return false;
   }
 
-  private static boolean isEndpoint(ItemStack stack, boolean maidToChest) {
+  private static boolean isEndpoint(ItemStack stack) {
     return stack.is(InitItems.WIRELESS_IO.get())
-        && GrillingWirelessIOData.isEnabled(stack)
-        && ItemWirelessIO.isMaidToChest(stack) == maidToChest;
+        && GrillingWirelessIOData.isEnabled(stack);
   }
 
   private MaidGrillingWirelessIO() {}

@@ -48,8 +48,8 @@ NeoForge 1.21.1：
 
 烟火在 Forge 1.20.1 与 NeoForge 1.21.1 均内置“烧烤”女仆任务。Touhou Little Maid 是可选依赖，未安装时不会加载相关任务、网络消息、Jade 组件或 Mixin。
 
-- 女仆通过启用“烧烤模式”的进货/出货隙间连接容器；烧烤模式会暂停隙间原本的自动搬运。
-- 油壶、特制调料和打火石优先从 24 格内的高级厨具架借用，并在进入水平 1 格、上下 3 格的操作范围后实际取还。
+- 女仆只使用启用“烧烤模式”的隙间存放熟串，不再区分进货与出货；目标可以是普通箱子、木桶、下单了冰箱或高级厨具架。
+- 生串、油壶、特制调料和打火石优先从女仆背包获取，不足时会主动搜索 24 格内的上述容器；仍有可烤制生串时会保留可继续使用的工具，批次结束后再归还。
 - 女仆调用公开的 `GrillAutomationApi`，与其他自动化共享烧烤架租约，不伪造玩家右键。
 - 服务器可使用 `/kg grill unlockall` 清理残留租约；玩家可注视烧烤架使用 `/kg grill unlock`。
 - Forge 开发依赖版本为 `1.5.3-forge+mc1.20.1`；NeoForge 开发依赖版本为 `1.5.3-neoforge+mc1.21.1`。
@@ -342,11 +342,154 @@ data/<你的命名空间>/grilling/<任意文件名>.json
 
 | 字段 | 必需 | 说明 |
 | --- | --- | --- |
-| `id` | 是 | 已注册的生串物品完整 ID |
+| `id` | 是 | 已注册的生串物品完整 ID；仅使用 `threading_result` 时也可以是未注册但唯一的配方 ID |
 | `cooked_result` | 推荐必填 | 已注册的熟串物品完整 ID |
+| `threading_result` | 可选 | 木棍穿串完成后直接输出的外部物品完整 ID |
 | `ingredients` | 是 | 1 至 3 个原料槽 |
 
 每个原料槽是候选选择器数组，支持物品 ID 和以 `#` 开头的物品标签。声明在固定串数据中的 `id` 会自动被烧烤架识别，即使没有加入 `raw_skewers` 标签。
+
+### 木棍穿串后转换为外部物品（Forge 1.20.1 与 NeoForge 1.21.1）
+
+固定串数据还可以声明 `threading_result`，用于只兼容穿串配方的模式。玩家仍然使用木棍逐份穿串，过程中显示烟火的动态串外观；满足全部食材后，物品直接转换为指定的其他模组物品。转换完成后烟火不会写入串数据，也不会修改该物品的模型、贴图或食用逻辑。
+
+```json
+{
+  "skewers": [
+    {
+      "id": "kaleidoscope_grilling:external_example_threading",
+      "ingredients": [
+        ["example_mod:raw_meat"],
+        ["minecraft:redstone"],
+        ["example_mod:raw_meat"]
+      ],
+      "threading_result": "example_mod:cooked_meat_skewer"
+    }
+  ]
+}
+```
+
+`threading_result` 必须指向服务器中已经注册的物品；如果物品不存在，配方会回退到普通动态串流程。
+
+在 Forge 1.20.1 与 NeoForge 1.21.1 中，安装 KubeJS 后都可以直接在 `server_scripts` 使用同一能力。进入世界时自动加载，修改后执行 `/reload` 即可，无需重启客户端：
+
+```js
+Grilling.threadingRecipe(
+  'example_mod:cooked_meat_skewer',
+  [
+    'example_mod:raw_meat',
+    'minecraft:redstone',
+    'example_mod:raw_meat'
+  ]
+)
+```
+
+普通新增无需填写配方 ID，烟火会根据结果和食材生成稳定 ID。需要固定 ID，以便长期覆盖或管理时，可以额外填写：
+
+```js
+Grilling.threadingRecipe(
+  'example_mod:meat_skewer_threading',
+  'example_mod:cooked_meat_skewer',
+  [
+    'example_mod:raw_meat',
+    'minecraft:redstone',
+    'example_mod:raw_meat'
+  ]
+)
+```
+
+上面的 `threadingRecipe` 是模式 4：它只负责穿串转换。生串过程仍由烟火动态渲染，完成后返回外部物品原样。
+
+### KubeJS 四种串类模式（Forge 1.20.1 与 NeoForge 1.21.1）
+
+物品注册必须放在 `startup_scripts`，串配方放在 `server_scripts`。这样进入世界时会自动加载，修改配方后执行 `/reload` 即可同步到客户端和 JEI；新增或删除物品仍然需要重启游戏。
+
+#### 模式 1：生串和熟串物品都不存在
+
+先用烟火提供的 KubeJS 物品类型注册生、熟串。默认由烟火根据配方食材生成两者的模型，熟串默认使用烟火食用动画：
+
+```js
+// kubejs/startup_scripts/grilling_items.js
+StartupEvents.registry('item', event => {
+  event.create('kubejs:apple_carrot_raw', 'kaleidoscope_grilling:raw_skewer')
+    .displayName('苹果胡萝卜生串')
+
+  event.create('kubejs:apple_carrot_cooked', 'kaleidoscope_grilling:cooked_skewer')
+    .displayName('苹果胡萝卜熟串')
+    .effect('minecraft:speed', 20)
+    .animation('THREE')
+})
+```
+
+```js
+// kubejs/server_scripts/grilling_recipes.js
+Grilling.createdSkewerRecipe(
+  'kubejs:apple_carrot_raw',
+  'kubejs:apple_carrot_cooked',
+  ['minecraft:apple', 'minecraft:carrot', 'minecraft:apple']
+)
+```
+
+`effect` 和 `animation` 都可以省略。省略效果时没有额外 Buff；省略动画时使用三段串的默认动画。动画可填写 `ONE`、`TWO`、`THREE`、`THREE_ALT`、`THREE_RANDOM` 或 `FOUR`。
+
+#### 模式 2：生串和熟串物品都已经注册
+
+使用 `skewerRecipe` 将现有物品接入穿串、烧烤、JEI 和食用流程。已有模型时设为 `provided`；需要烟火按食材动态生成模型时设为 `generated`：
+
+```js
+Grilling.skewerRecipe(
+  'example_mod:raw_meat_skewer',
+  'example_mod:cooked_meat_skewer',
+  ['example_mod:raw_meat', '#forge:vegetables/onion', 'example_mod:raw_meat'],
+  {
+    rawModel: 'provided',
+    cookedModel: 'provided',
+    eating: 'default',
+    effect: 'minecraft:strength',
+    effectSeconds: 30
+  }
+)
+```
+
+`rawModel` 与 `cookedModel` 相互独立，可填：
+
+- `auto`：默认值；烟火自有串类型使用动态模型，其他模组物品保留原模型。
+- `generated`：强制使用烟火按三份食材生成的串模型和 16×16 GUI 图标。
+- `provided`：完全沿用物品已有模型、贴图和 GUI 图标。
+
+`eating` 默认为 `default`，会按照食材数量选择烟火动画；也可指定上述动画名，或填 `provided`/`none` 保留物品原有食用方式。`effect` 未填写时不附加额外效果；物品自身的食物属性和效果仍然保留。
+
+#### 模式 3：只有生串物品
+
+若目标熟串物品已存在，直接声明烧烤映射。可选的食材数组只用于 JEI 展示和动态模型，不会新增木棍穿串配方：
+
+```js
+Grilling.cookingRecipe(
+  'example_mod:raw_skewer',
+  'example_mod:cooked_skewer',
+  ['example_mod:raw_meat', 'minecraft:carrot', 'example_mod:raw_meat'],
+  { rawModel: 'provided', cookedModel: 'provided', eating: 'default' }
+)
+```
+
+如果没有熟串物品，可让它烤熟后变为烟火的通用动态熟串：
+
+```js
+Grilling.generatedCookingRecipe(
+  'example_mod:raw_skewer',
+  ['example_mod:raw_meat', 'minecraft:carrot', 'example_mod:raw_meat']
+)
+```
+
+后一种写法必须提供 1 至 3 份展示食材；烧烤完成后，烟火会把这些食材写入通用熟串并据此生成模型、图标和默认食用动画。
+
+#### 模式 4：只增加木棍穿串合成
+
+继续使用前文的 `Grilling.threadingRecipe(result, ingredients)`。它不会把结果物品注册为烟火串，也不会接管该物品的烧烤、模型、Buff 或食用动画。
+
+烟火的正式 JAR 会包含桥接代码，但 KubeJS 仍是可选运行依赖：未安装 KubeJS 时不会加载桥接，也不影响烟火启动。开发环境需要连同 KubeJS 启动客户端时可使用 `-PwithKubeJS`。
+
+服务器会在玩家进入时同步这些脚本穿串配方；执行 `/reload` 后也会重新下发，并刷新客户端 JEI 中的穿串条目。多人游戏只需要服务器与客户端安装相同版本的烟火，配方脚本放在服务器的 `server_scripts` 即可。
 
 旧数据未提供 `cooked_result` 时，仅在生串路径以 `raw_` 开头的情况下，按相同命名空间推断 `grilled_`。无效熟串映射会降级为迷之烤串。
 

@@ -6,7 +6,6 @@ import cn.breezeth.kaleidoscope_grilling.seasoning.AdvancedSeasoningHandler;
 import cn.breezeth.kaleidoscope_grilling.data.GrillingDataManager;
 import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningData;
 
-
 import java.util.List;
 import net.minecraft.world.effect.*;
 import net.minecraft.world.entity.LivingEntity;
@@ -43,6 +42,14 @@ public final class FoodState {
     return isHot(first, level) == isHot(second, level) && sameForManualMerge(first, second);
   }
 
+  public static long remainingHeat(ItemStack stack, Level level) {
+    return Math.max(0L, hotUntil(stack) - level.getGameTime());
+  }
+
+  public static boolean sameForHeatMerge(ItemStack first, ItemStack second) {
+    return sameForManualMerge(first, second);
+  }
+
   public static int mergeHot(ItemStack target, ItemStack source, Level level) {
     if (!canMergeHot(target, source, level)) return 0;
     int moved = Math.min(target.getMaxStackSize() - target.getCount(), source.getCount());
@@ -64,7 +71,7 @@ public final class FoodState {
   }
 
   private static long hotUntil(ItemStack stack) {
-    return stack.getTag().getLong(HOT_UNTIL);
+    return stack.hasTag() ? stack.getTag().getLong(HOT_UNTIL) : 0L;
   }
 
   private static boolean sameForManualMerge(ItemStack first, ItemStack second) {

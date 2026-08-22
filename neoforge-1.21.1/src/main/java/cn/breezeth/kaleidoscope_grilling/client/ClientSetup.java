@@ -29,7 +29,7 @@ import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerOutlineRender;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlateRenderer;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipeBlockRenderer;
-
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -103,6 +103,9 @@ public final class ClientSetup {
           register(ModItems.DARK_GRILLING.get());
           ModItems.RAW_SKEWERS.forEach(item -> registerFixed(item.get()));
           ModItems.FIXED_SKEWERS.forEach(item -> registerFixed(item.get()));
+          net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
+              .filter(ClientSetup::isGeneratedKubeSkewer)
+              .forEach(ClientSetup::registerGeneratedSkewer);
           Item cookedSlimeSkewer =
               net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
                   ResourceLocation.fromNamespaceAndPath(
@@ -182,6 +185,9 @@ public final class ClientSetup {
         SkewerColorProvider::color, ModItems.UNFINISHED_SKEWER.get(), ModItems.SECRET_SKEWER.get());
     ModItems.RAW_SKEWERS.forEach(item -> event.register(SkewerColorProvider::color, item.get()));
     ModItems.FIXED_SKEWERS.forEach(item -> event.register(SkewerColorProvider::color, item.get()));
+    net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
+        .filter(ClientSetup::isGeneratedKubeSkewer)
+        .forEach(item -> event.register(SkewerColorProvider::color, item));
     event.register(
         SeasoningColorProvider::color,
         ModItems.EMPTY_SEASONING_BOTTLE.get(),
@@ -193,6 +199,26 @@ public final class ClientSetup {
     SkewerGuiDecorator decorator = new SkewerGuiDecorator();
     event.register(ModItems.UNFINISHED_SKEWER.get(), decorator);
     event.register(ModItems.SECRET_SKEWER.get(), decorator);
+    net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
+        .filter(ClientSetup::isGeneratedKubeSkewer)
+        .forEach(item -> event.register(item, decorator));
+  }
+
+  /** Called after a server-script sync, including after /reload. */
+  public static void refreshScriptSkewerRendering() {
+    Minecraft minecraft = Minecraft.getInstance();
+    net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
+        .filter(
+            item ->
+                SkewerRecipes.usesGeneratedModel(
+                    new net.minecraft.world.item.ItemStack(item)))
+        .forEach(
+            item -> {
+              registerGeneratedSkewer(item);
+              minecraft.getItemColors().register(SkewerColorProvider::color, item);
+            });
+    SkewerColorProvider.clearCache();
+    SkewerGuiIconCache.clear();
   }
 
   @SubscribeEvent
@@ -310,11 +336,26 @@ public final class ClientSetup {
           (stack, level, entity, seed) -> MultiBiteSkewerItem.visualBiteStage(stack, entity));
   }
 
+  private static void registerGeneratedSkewer(Item item) {
+    register(item);
+    registerFixed(item);
+  }
+
+  private static boolean isGeneratedKubeSkewer(Item item) {
+    if (!item.getClass().getName().equals(
+        "cn.breezeth.kaleidoscope_grilling.kubejs.KubeSkewerItem")) return false;
+    try {
+      return Boolean.TRUE.equals(item.getClass().getMethod("usesGeneratedModel").invoke(item));
+    } catch (ReflectiveOperationException ignored) {
+      return false;
+    }
+  }
+
   private static float oilTypeModelValue(String type) {
     return switch (type) {
-      case "canola" -> 1F;
-      case "secret_chili" -> 2F;
-      case "premium_chili" -> 3F;
+      case "canola" -> 0.25F;
+      case "secret_chili" -> 0.5F;
+      case "premium_chili" -> 0.75F;
       default -> 0F;
     };
   }
@@ -332,7 +373,7 @@ public final class ClientSetup {
                 Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true))
             < 0.0F
         || player.getItemInHand(animation.grilling$getOilBrushHand()) != stack) return 0F;
-    return animation.grilling$getOilBrushType() + 1.0F;
+    return (animation.grilling$getOilBrushType() + 1.0F) * 0.25F;
   }
 
   private static IClientFluidTypeExtensions fluid(String stillPath, String flowingPath, int tint) {

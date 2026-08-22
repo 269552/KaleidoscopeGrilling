@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.oil;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -52,6 +53,20 @@ public final class OilPotCompat {
     stack
         .getOrCreateTag()
         .putInt(OIL_COUNT, Math.min(FLUID_CAPACITY, getCount(stack) + points));
+  }
+
+  /** Gives generated display stacks a searchable, oil-specific name. */
+  public static void nameForDisplay(ItemStack stack) {
+    String type = getType(stack);
+    if (!type.isEmpty())
+      stack.setHoverName(
+          Component.translatable("item.kaleidoscope_grilling.oil_pot." + type));
+  }
+
+  /** JEI identity: stored amount must not create dozens of duplicate oil-pot entries. */
+  public static String jeiSubtype(ItemStack stack) {
+    String type = getType(stack);
+    return type.isEmpty() ? (getCount(stack) > 0 ? "fat" : "empty") : type;
   }
 
   public static void setType(ItemStack stack, String type) {

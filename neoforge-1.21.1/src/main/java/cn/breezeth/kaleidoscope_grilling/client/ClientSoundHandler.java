@@ -6,7 +6,6 @@ import cn.breezeth.kaleidoscope_grilling.TypedOilPotAccess;
 
 import cn.breezeth.kaleidoscope_grilling.seasoning.ShakeSeasoningSound;
 
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -21,6 +20,7 @@ public final class ClientSoundHandler {
 
   @SubscribeEvent
   public static void clientTick(ClientTickEvent.Post event) {
+    ClientSkewerEatingSound.tickLocal();
     var player = Minecraft.getInstance().player;
     boolean shaking =
         player != null

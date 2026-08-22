@@ -40,6 +40,15 @@ public final class PendingSeasoningItem extends BlockItem {
   @Override
   public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
     player.startUsingItem(hand);
+    if (!level.isClientSide) {
+      level.playSound(
+          player,
+          player.blockPosition(),
+          ModSounds.SHAKE_SEASONING.get(),
+          SoundSource.PLAYERS,
+          0.8F,
+          1.0F);
+    }
     return InteractionResultHolder.consume(player.getItemInHand(hand));
   }
 

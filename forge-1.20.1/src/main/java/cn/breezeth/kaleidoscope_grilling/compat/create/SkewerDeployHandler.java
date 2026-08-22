@@ -3,6 +3,7 @@ package cn.breezeth.kaleidoscope_grilling.compat.create;
 import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
 import cn.breezeth.kaleidoscope_grilling.skewer.SecretSkewerItem;
 import cn.breezeth.kaleidoscope_grilling.SkewerCompatApi;
+import cn.breezeth.kaleidoscope_grilling.SeasoningAutomationApi;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
 import com.simibubi.create.content.kinetics.deployer.DeployerRecipeSearchEvent;
 import java.util.Optional;
@@ -22,7 +23,12 @@ public final class SkewerDeployHandler {
         event.getBlockEntity().getPlayer() == null
             ? ItemStack.EMPTY
             : event.getBlockEntity().getPlayer().getMainHandItem();
-    if (!isSkewerTarget(target) || held.isEmpty()) return;
+    if (held.isEmpty()) return;
+    if (!SeasoningAutomationApi.appendIngredient(target, held).isEmpty()) {
+      event.addRecipe(() -> Optional.of(new SkewerDeployRecipe()), 250);
+      return;
+    }
+    if (!isSkewerTarget(target)) return;
     if (!SkewerRecipes.isConfiguredIngredient(held) && !SkewerCompatApi.canSkewer(held, null))
       return;
     event.addRecipe(() -> Optional.of(new SkewerDeployRecipe()), 200);

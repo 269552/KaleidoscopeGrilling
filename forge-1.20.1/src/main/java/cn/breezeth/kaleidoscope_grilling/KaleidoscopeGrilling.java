@@ -34,9 +34,9 @@ import cn.breezeth.kaleidoscope_grilling.jei.RecipeDisplayHandler;
 import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlatePlacement;
+import cn.breezeth.kaleidoscope_grilling.skewer.ScriptSkewerEatingHandler;
 import cn.breezeth.kaleidoscope_grilling.world.StrippingHandler;
 import cn.breezeth.kaleidoscope_grilling.world.VillagePepperLootHandler;
-
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -83,9 +83,13 @@ public final class KaleidoscopeGrilling {
     MinecraftForge.EVENT_BUS.addListener(IngredientTooltipHandler::onTooltip);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onFinish);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onStart);
+    MinecraftForge.EVENT_BUS.addListener(ScriptSkewerEatingHandler::onStart);
     MinecraftForge.EVENT_BUS.addListener(
         EventPriority.HIGHEST, MultiBiteSkewerItem::onUseStop);
     MinecraftForge.EVENT_BUS.addListener(HotFoodHandler::onStop);
+    MinecraftForge.EVENT_BUS.addListener(
+        EventPriority.HIGH, ScriptSkewerEatingHandler::onStop);
+    MinecraftForge.EVENT_BUS.addListener(ScriptSkewerEatingHandler::onFinish);
     MinecraftForge.EVENT_BUS.addListener(
         (net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Tick event) ->
             MultiBiteSkewerItem.onUseTick(event));
@@ -102,6 +106,8 @@ public final class KaleidoscopeGrilling {
     MinecraftForge.EVENT_BUS.addListener(RecipeDisplayHandler::attack);
     MinecraftForge.EVENT_BUS.addListener(RecipeDisplayHandler::interact);
     MinecraftForge.EVENT_BUS.addListener(GrillingDataManager::register);
+    MinecraftForge.EVENT_BUS.addListener(
+        cn.breezeth.kaleidoscope_grilling.network.GrillingNetwork::onPlayerLoggedIn);
     MinecraftForge.EVENT_BUS.addListener(ModAdvancements::onPlayerTick);
     MinecraftForge.EVENT_BUS.addListener(ModAdvancements::onBlockPlaced);
     MinecraftForge.EVENT_BUS.addListener(ModAdvancements::onFoodFinished);

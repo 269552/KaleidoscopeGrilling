@@ -7,7 +7,6 @@ import cn.breezeth.kaleidoscope_grilling.food.FoodState;
 import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 import cn.breezeth.kaleidoscope_grilling.food.HotFoodGuiBadge;
 
-
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -67,10 +66,11 @@ public final class SkewerGuiIconCache {
       stack = SkeweringHandler.creativePreviewFrame(stack, minecraft.level.getGameTime());
     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
     boolean custom = isCompletedCustom(minecraft, stack);
+    boolean generated = SkewerRecipes.usesGeneratedModel(stack) || isGeneratedKubeSkewer(stack);
     boolean composedCustom =
         !HotFoodConfig.USE_CUSTOM_SKEWER_64X_CACHE.get()
-            && isStartedCustom(minecraft, stack);
-    boolean fixed = SkewerRecipes.isRawSkewer(stack) || SkewerRecipes.isCookedSkewer(stack);
+            && (isStartedCustom(minecraft, stack) || generated);
+    boolean fixed = isBuiltInFixedSkewer(stack);
     boolean failed =
         stack.is(ModItems.MYSTERIOUS_SKEWER.get()) || stack.is(ModItems.DARK_GRILLING.get());
     if (!custom && !composedCustom && !fixed && !failed) return false;
@@ -204,11 +204,16 @@ public final class SkewerGuiIconCache {
     if (minecraft.screen instanceof CreativeModeInventoryScreen && minecraft.level != null)
       stack = SkeweringHandler.creativePreviewFrame(stack, minecraft.level.getGameTime());
     boolean use64 = HotFoodConfig.USE_CUSTOM_SKEWER_64X_CACHE.get();
-    if (use64 ? !isCompletedCustom(minecraft, stack) : !isStartedCustom(minecraft, stack)) {
+    boolean generated = SkewerRecipes.usesGeneratedModel(stack) || isGeneratedKubeSkewer(stack);
+    if (use64
+        ? !isCompletedCustom(minecraft, stack)
+        : !isStartedCustom(minecraft, stack) && !generated) {
       return false;
     }
     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-    boolean cooked = stack.is(ModItems.SECRET_SKEWER.get()) && SecretSkewerItem.isCooked(stack);
+    boolean cooked =
+        SkewerRecipes.isCookedSkewer(stack)
+            || stack.is(ModItems.SECRET_SKEWER.get()) && SecretSkewerItem.isCooked(stack);
     boolean hot = cooked && minecraft.level != null && FoodState.isHot(stack, minecraft.level);
     String state = cooked ? "cooked" : "raw";
     String key = customKey(minecraft, stack, itemId, state);
@@ -222,12 +227,14 @@ public final class SkewerGuiIconCache {
   static ResourceLocation recipeIcon16(ItemStack stack) {
     Minecraft minecraft = Minecraft.getInstance();
     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-    if ((SkewerRecipes.isRawSkewer(stack) || SkewerRecipes.isCookedSkewer(stack))
+    if (isBuiltInFixedSkewer(stack)
         && !HotFoodConfig.USE_FIXED_SKEWER_64X_CACHE.get()) {
       return fixedIcon(itemId, SkewerRecipes.isCookedSkewer(stack), minecraft);
     }
     if (HotFoodConfig.USE_CUSTOM_SKEWER_64X_CACHE.get()
-        || !isStartedCustom(minecraft, stack)
+        || (!isStartedCustom(minecraft, stack)
+            && !SkewerRecipes.usesGeneratedModel(stack)
+            && !isGeneratedKubeSkewer(stack))
         || !isEnabled()) return null;
     String key =
         "16/"
@@ -252,9 +259,12 @@ public final class SkewerGuiIconCache {
     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
     if (stack.is(ModItems.MYSTERIOUS_SKEWER.get()) || stack.is(ModItems.DARK_GRILLING.get()))
       return failedIcon(stack, minecraft);
-    if (SkewerRecipes.isRawSkewer(stack) || SkewerRecipes.isCookedSkewer(stack))
+    if (isBuiltInFixedSkewer(stack))
       return fixedIcon(itemId, SkewerRecipes.isCookedSkewer(stack), minecraft);
-    if (!isStartedCustom(minecraft, stack) || !isEnabled()) return null;
+    if ((!isStartedCustom(minecraft, stack)
+            && !SkewerRecipes.usesGeneratedModel(stack)
+            && !isGeneratedKubeSkewer(stack))
+        || !isEnabled()) return null;
 
     boolean cooked = stack.is(ModItems.SECRET_SKEWER.get()) && SecretSkewerItem.isCooked(stack);
     String key =
@@ -549,6 +559,22 @@ public final class SkewerGuiIconCache {
             && !stack.is(ModItems.SECRET_SKEWER.get()))
         || minecraft.level == null) return false;
     return SkeweringHandler.ingredientCount(stack) > 0;
+  }
+
+  private static boolean isBuiltInFixedSkewer(ItemStack stack) {
+    return ModItems.RAW_SKEWERS.stream().anyMatch(item -> stack.is(item.get()))
+        || ModItems.FIXED_SKEWERS.stream().anyMatch(item -> stack.is(item.get()));
+  }
+
+  private static boolean isGeneratedKubeSkewer(ItemStack stack) {
+    Object item = stack.getItem();
+    if (!item.getClass().getName().equals(
+        "cn.breezeth.kaleidoscope_grilling.kubejs.KubeSkewerItem")) return false;
+    try {
+      return Boolean.TRUE.equals(item.getClass().getMethod("usesGeneratedModel").invoke(item));
+    } catch (ReflectiveOperationException ignored) {
+      return false;
+    }
   }
 
   private static void refreshBudgets(Minecraft minecraft) {

@@ -50,7 +50,11 @@ public final class SkewerOutlineRender {
   }
 
   public static boolean isCustomSkewer(ItemStack stack) {
-    return stack.is(ModItems.UNFINISHED_SKEWER.get()) || stack.is(ModItems.SECRET_SKEWER.get());
+    return stack.is(ModItems.UNFINISHED_SKEWER.get())
+        || stack.is(ModItems.SECRET_SKEWER.get())
+        || SkewerRecipes.usesGeneratedModel(stack)
+        || stack.getItem().getClass().getName().equals(
+            "cn.breezeth.kaleidoscope_grilling.kubejs.KubeSkewerItem");
   }
 
   private SkewerOutlineRender() {}

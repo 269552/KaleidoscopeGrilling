@@ -14,6 +14,9 @@ public record MaidGrillingData(
     Optional<BorrowSource> oilSource,
     Optional<BorrowSource> seasoningSource,
     Optional<BorrowSource> flintSource,
+    Optional<BorrowSource> rawSource0,
+    Optional<BorrowSource> rawSource1,
+    Optional<BorrowSource> rawSource2,
     WaitReason waitReason,
     Action action,
     long actionUntil,
@@ -23,6 +26,9 @@ public record MaidGrillingData(
       new MaidGrillingData(
           Optional.empty(),
           WorkStage.FIND_GRILL,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
@@ -45,6 +51,9 @@ public record MaidGrillingData(
                       BorrowSource.CODEC.optionalFieldOf("OilSource").forGetter(MaidGrillingData::oilSource),
                       BorrowSource.CODEC.optionalFieldOf("SeasoningSource").forGetter(MaidGrillingData::seasoningSource),
                       BorrowSource.CODEC.optionalFieldOf("FlintSource").forGetter(MaidGrillingData::flintSource),
+                      BorrowSource.CODEC.optionalFieldOf("RawSource0").forGetter(MaidGrillingData::rawSource0),
+                      BorrowSource.CODEC.optionalFieldOf("RawSource1").forGetter(MaidGrillingData::rawSource1),
+                      BorrowSource.CODEC.optionalFieldOf("RawSource2").forGetter(MaidGrillingData::rawSource2),
                       Codec.STRING
                           .optionalFieldOf("WaitReason", WaitReason.NONE.serializedName)
                           .xmap(WaitReason::byName, reason -> reason.serializedName)
@@ -67,6 +76,9 @@ public record MaidGrillingData(
         oilSource,
         seasoningSource,
         flintSource,
+        rawSource0,
+        rawSource1,
+        rawSource2,
         WaitReason.NONE,
         action,
         actionUntil,
@@ -79,7 +91,27 @@ public record MaidGrillingData(
       Optional<BorrowSource> seasoning,
       Optional<BorrowSource> flint) {
     return new MaidGrillingData(
-        grill, stage, oil, seasoning, flint, waitReason, action, actionUntil, displayItem, completedBatch);
+        grill, stage, oil, seasoning, flint, rawSource0, rawSource1, rawSource2,
+        waitReason, action, actionUntil, displayItem, completedBatch);
+  }
+
+  public MaidGrillingData withRawSource(int taskSlot, Optional<BorrowSource> source) {
+    int index = taskSlot - 3;
+    return new MaidGrillingData(
+        grill, stage, oilSource, seasoningSource, flintSource,
+        index == 0 ? source : rawSource0,
+        index == 1 ? source : rawSource1,
+        index == 2 ? source : rawSource2,
+        waitReason, action, actionUntil, displayItem, completedBatch);
+  }
+
+  public Optional<BorrowSource> rawSource(int taskSlot) {
+    return switch (taskSlot - 3) {
+      case 0 -> rawSource0;
+      case 1 -> rawSource1;
+      case 2 -> rawSource2;
+      default -> Optional.empty();
+    };
   }
 
   public MaidGrillingData withWaitReason(WaitReason reason) {
@@ -89,6 +121,9 @@ public record MaidGrillingData(
         oilSource,
         seasoningSource,
         flintSource,
+        rawSource0,
+        rawSource1,
+        rawSource2,
         reason,
         action,
         actionUntil,
@@ -103,6 +138,9 @@ public record MaidGrillingData(
         oilSource,
         seasoningSource,
         flintSource,
+        rawSource0,
+        rawSource1,
+        rawSource2,
         waitReason,
         action,
         actionUntil,
@@ -117,6 +155,9 @@ public record MaidGrillingData(
         oilSource,
         seasoningSource,
         flintSource,
+        rawSource0,
+        rawSource1,
+        rawSource2,
         waitReason,
         action,
         actionUntil,
@@ -124,10 +165,30 @@ public record MaidGrillingData(
         true);
   }
 
+  public MaidGrillingData continueBatch() {
+    return new MaidGrillingData(
+        grill,
+        WorkStage.GATHER_INPUT,
+        oilSource,
+        seasoningSource,
+        flintSource,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        WaitReason.NONE,
+        Action.NONE,
+        0L,
+        ItemStack.EMPTY,
+        false);
+  }
+
   public MaidGrillingData resetBatch() {
     return new MaidGrillingData(
         Optional.empty(),
         WorkStage.FIND_GRILL,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),

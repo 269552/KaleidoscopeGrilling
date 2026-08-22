@@ -25,11 +25,15 @@ crash-reports/
 hs_err_pid*.log
 replay_pid*.log
 
+
 # Local artifacts and development helpers
 *.jar
 .breezeth/
+.tmp_maid/
+.tmp_maid.zip
 
 # Operating system files
 .DS_Store
 Thumbs.db
 desktop.ini
+changelog.md

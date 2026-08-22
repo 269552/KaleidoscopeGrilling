@@ -10,11 +10,17 @@ public final class GrillingMixinPlugin implements IMixinConfigPlugin {
   private static final boolean CREATE_AVAILABLE = classExists("com.simibubi.create.Create");
   private static final boolean MAID_AVAILABLE =
       classExists("com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid");
+  private static final boolean JEI_AVAILABLE =
+      classExists("mezz.jei.library.render.ItemStackRenderer");
+  private static final boolean ORDER_TO_COOK_AVAILABLE =
+      classExists("cn.breezeth.ordertocook.screen.RefrigeratorScreenHandler");
 
   @Override
   public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
     if (mixinClassName.endsWith("PressingBehaviourMixin")
         || mixinClassName.endsWith("BeltDeployerCallbacksMixin")
+        || mixinClassName.endsWith("DeployerCompletedSkewerUseMixin")
+        || mixinClassName.endsWith("FillingRecipeOilPotMixin")
         || mixinClassName.endsWith("BasinOperatingBlockEntityAccessor")
         || mixinClassName.endsWith("MechanicalMixerSeasoningMixin")
         || mixinClassName.endsWith("BasinRecipeSeasoningMixin")) return CREATE_AVAILABLE;
@@ -23,6 +29,10 @@ public final class GrillingMixinPlugin implements IMixinConfigPlugin {
         || mixinClassName.endsWith("WirelessIOContainerGuiMixin")
         || mixinClassName.endsWith("MaidRendererGrillingLayerMixin")
         || mixinClassName.endsWith("GeckoMaidRendererGrillingLayerMixin")) return MAID_AVAILABLE;
+    if (mixinClassName.endsWith("JeiItemStackRendererMixin")
+        || mixinClassName.endsWith("JeiItemStackBatchRendererMixin")) return JEI_AVAILABLE;
+    if (mixinClassName.endsWith("RefrigeratorScreenHandlerSkewerSortMixin")
+        || mixinClassName.endsWith("RefrigeratorScreenSkewerSortMixin")) return ORDER_TO_COOK_AVAILABLE;
     return true;
   }
 

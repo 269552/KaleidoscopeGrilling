@@ -12,6 +12,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 /** Resolves the detached food piece shown in the helper hand of dual-arm animations. */
 public final class SkewerEatingPiece {
   public static BakedModel fixedModel(ItemStack stack, MultiBiteSkewerItem.AnimationProfile profile) {
+    // Multi-ingredient animations render the last-eaten piece's dedicated 3D block model.
     if (stack.is(ModItems.SECRET_SKEWER.get())
         || stack.is(ModItems.MYSTERIOUS_SKEWER.get())
         || stack.is(ModItems.DARK_GRILLING.get())) return null;

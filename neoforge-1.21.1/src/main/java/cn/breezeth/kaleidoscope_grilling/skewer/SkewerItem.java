@@ -4,7 +4,6 @@ import cn.breezeth.kaleidoscope_grilling.food.FoodTooltip;
 import cn.breezeth.kaleidoscope_grilling.data.GrillingDataManager;
 import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 
-
 import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -12,14 +11,11 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -61,33 +57,15 @@ public class SkewerItem extends Item {
 
   @Override
   public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
-    ItemStack result = finishFoodAndEffect(stack, level, entity);
-    if (!level.isClientSide) {
-      playBurp(level, entity);
-    }
-    return result;
+    return finishFoodAndEffect(stack, level, entity);
   }
 
-  /** Applies nutrition and the skewer's own effect without any eat or completion sound. */
+  /** Completes the skewer through vanilla's eating path, then applies its data-driven effect. */
   protected ItemStack finishFoodAndEffect(ItemStack stack, Level level, LivingEntity entity) {
-    FoodProperties food = stack.getFoodProperties(entity);
-    if (food != null) {
-      if (entity instanceof Player player) {
-        player.getFoodData().eat(food);
-      }
-      if (!level.isClientSide) {
-        for (FoodProperties.PossibleEffect possible : food.effects()) {
-          if (possible.effect() != null && level.random.nextFloat() < possible.probability())
-            entity.addEffect(new MobEffectInstance(possible.effect()));
-        }
-      }
-      if (!(entity instanceof Player player) || !player.getAbilities().instabuild) {
-        stack.shrink(1);
-      }
-    }
-    if (level.isClientSide) return stack;
+    ItemStack result = entity.eat(level, stack);
+    if (level.isClientSide) return result;
     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-    var data = GrillingDataManager.skewer(itemId.toString());
+    var data = GrillingDataManager.skewerForItem(itemId.toString());
     ResourceLocation resolved =
         data != null && !data.effect().isEmpty() ? ResourceLocation.parse(data.effect()) : effectId;
     int duration = data != null ? data.effectSeconds() * 20 : effectDuration;
@@ -96,21 +74,7 @@ public class SkewerItem extends Item {
           .getHolder(ResourceKey.create(Registries.MOB_EFFECT, resolved))
           .ifPresent(effect -> entity.addEffect(new MobEffectInstance(effect, duration)));
     }
-    return stack;
-  }
-
-  protected void playBurp(Level level, LivingEntity entity) {
-    level.playSound(
-        null,
-        entity.blockPosition(),
-        SoundEvents.PLAYER_BURP,
-        SoundSource.PLAYERS,
-        burpVolume(),
-        level.random.nextFloat() * 0.1F + 0.9F);
-  }
-
-  protected float burpVolume() {
-    return 0.5F;
+    return result;
   }
 
   @Override
@@ -124,7 +88,7 @@ public class SkewerItem extends Item {
               .withStyle(ChatFormatting.DARK_GRAY));
     }
     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-    var data = GrillingDataManager.skewerForDisplay(itemId.toString());
+    var data = GrillingDataManager.skewerForItem(itemId.toString());
     ResourceLocation resolved =
         data != null && !data.effect().isEmpty() ? ResourceLocation.parse(data.effect()) : effectId;
     int duration = data != null ? data.effectSeconds() * 20 : effectDuration;

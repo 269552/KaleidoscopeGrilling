@@ -1,10 +1,7 @@
 package cn.breezeth.kaleidoscope_grilling.skewer;
 
-import cn.breezeth.kaleidoscope_grilling.registry.ModAdvancements;
-
 import cn.breezeth.kaleidoscope_grilling.network.GrillingNetwork;
-import cn.breezeth.kaleidoscope_grilling.food.HotFoodHandler;
-
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -22,12 +19,14 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.EventHooks;
 import org.jetbrains.annotations.Nullable;
 
 /** A skewer whose visible bites are completed before its food value is awarded. */
 public class MultiBiteSkewerItem extends SkewerItem {
   /** Holding a skewer for this long makes an interrupted use eligible for settlement. */
   public static final int MINIMUM_EAT_TICKS = 25;
+  private static final int RELEASE_CHECKPOINT_GRACE_TICKS = 1;
   private static final String ACTIVE_PROFILE_TAG = "SkewerEatingProfile";
   private static final Map<LivingEntity, ItemStack> READY_EATS = new WeakHashMap<>();
   private static final Map<LivingEntity, Boolean> SETTLED_EATS = new WeakHashMap<>();
@@ -45,6 +44,10 @@ public class MultiBiteSkewerItem extends SkewerItem {
     AnimationProfile(int duration, float... biteSeconds) {
       this.duration = duration;
       this.biteSeconds = biteSeconds;
+    }
+
+    public int duration() {
+      return duration;
     }
   }
 
@@ -79,7 +82,8 @@ public class MultiBiteSkewerItem extends SkewerItem {
   }
 
   public static float visualBiteStage(ItemStack stack, @Nullable LivingEntity entity) {
-    if (entity == null
+    if (!HotFoodConfig.ENABLE_SKEWER_EATING_ANIMATIONS.get()
+        || entity == null
         || !entity.isUsingItem()
         || !ItemStack.isSameItemSameComponents(stack, entity.getUseItem())
         || !(stack.getItem() instanceof MultiBiteSkewerItem animated)) return 0.0F;
@@ -95,7 +99,9 @@ public class MultiBiteSkewerItem extends SkewerItem {
 
   @Override
   public int getUseDuration(ItemStack stack, LivingEntity entity) {
-    return animationProfile(stack).duration;
+    return HotFoodConfig.ENABLE_SKEWER_EATING_ANIMATIONS.get()
+        ? animationProfile(stack).duration
+        : MINIMUM_EAT_TICKS;
   }
 
   @Override
@@ -110,6 +116,10 @@ public class MultiBiteSkewerItem extends SkewerItem {
     if (!level.isClientSide) {
       READY_EATS.remove(player);
       SETTLED_EATS.remove(player);
+    }
+    if (!HotFoodConfig.ENABLE_SKEWER_EATING_ANIMATIONS.get()) {
+      clearActiveProfile(stack);
+      return super.use(level, player, hand);
     }
     AnimationProfile selected =
         animationProfile == AnimationProfile.THREE_RANDOM
@@ -142,8 +152,16 @@ public class MultiBiteSkewerItem extends SkewerItem {
 
   @Override
   public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
+    if (!HotFoodConfig.ENABLE_SKEWER_EATING_ANIMATIONS.get()) {
+      READY_EATS.remove(entity);
+      SETTLED_EATS.remove(entity);
+      clearActiveProfile(stack);
+      super.releaseUsing(stack, level, entity, timeLeft);
+      return;
+    }
     stopCustomSound(entity);
-    if (!level.isClientSide && settleIfEligible(stack, level, entity, timeLeft)) {
+    if (!level.isClientSide
+        && settleIfEligible(stack, level, entity, timeLeft, entity.getUsedItemHand())) {
       return;
     }
     READY_EATS.remove(entity);
@@ -166,21 +184,28 @@ public class MultiBiteSkewerItem extends SkewerItem {
 
   /** Marks the use as eligible; nutrition and effects are deferred until it actually settles. */
   public static void onUseTick(LivingEntityUseItemEvent.Tick event) {
-    if (event.getEntity().level().isClientSide
+    if (!HotFoodConfig.ENABLE_SKEWER_EATING_ANIMATIONS.get()
+        || event.getEntity().level().isClientSide
         || !(event.getItem().getItem() instanceof MultiBiteSkewerItem skewer)
         || READY_EATS.containsKey(event.getEntity())) return;
+    SETTLED_EATS.remove(event.getEntity());
     int usedTicks = skewer.getUseDuration(event.getItem(), event.getEntity()) - event.getDuration();
     if (usedTicks < MINIMUM_EAT_TICKS) return;
     READY_EATS.put(event.getEntity(), event.getItem());
   }
 
-  /** Fallback for interruptions which bypass the normal release callback. */
+  /** Settles before lower-priority stop listeners discard their pre-use snapshots. */
   public static void onUseStop(LivingEntityUseItemEvent.Stop event) {
-    if (event.getEntity().level().isClientSide) return;
+    if (!HotFoodConfig.ENABLE_SKEWER_EATING_ANIMATIONS.get()
+        || event.getEntity().level().isClientSide) return;
     if (event.getItem().getItem() instanceof MultiBiteSkewerItem skewer) {
       skewer.stopCustomSound(event.getEntity());
       if (!skewer.settleIfEligible(
-          event.getItem(), event.getEntity().level(), event.getEntity(), event.getDuration())) {
+          event.getItem(),
+          event.getEntity().level(),
+          event.getEntity(),
+          event.getDuration(),
+          event.getHand())) {
         READY_EATS.remove(event.getEntity());
         clearActiveProfile(event.getItem());
       }
@@ -191,6 +216,7 @@ public class MultiBiteSkewerItem extends SkewerItem {
 
   /** Logging out after the checkpoint still settles the meal exactly once. */
   public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+    if (!HotFoodConfig.ENABLE_SKEWER_EATING_ANIMATIONS.get()) return;
     Player player = event.getEntity();
     ItemStack stack = player.isUsingItem() ? player.getUseItem() : READY_EATS.get(player);
     if (stack == null) return;
@@ -200,30 +226,37 @@ public class MultiBiteSkewerItem extends SkewerItem {
           stack,
           player.level(),
           player,
-          player.isUsingItem() ? player.getUseItemRemainingTicks() : 0);
+          player.isUsingItem() ? player.getUseItemRemainingTicks() : 0,
+          player.getUsedItemHand());
     } else {
       READY_EATS.remove(player);
     }
   }
 
   private boolean settleIfEligible(
-      ItemStack stack, Level level, LivingEntity entity, int remainingTicks) {
+      ItemStack stack,
+      Level level,
+      LivingEntity entity,
+      int remainingTicks,
+      InteractionHand hand) {
     if (SETTLED_EATS.containsKey(entity)) return true;
     ItemStack ready = READY_EATS.get(entity);
     ItemStack timingStack = stack.isEmpty() ? ready : stack;
     if (timingStack == null || timingStack.isEmpty()) return false;
     int usedTicks = getUseDuration(timingStack, entity) - remainingTicks;
-    if (ready == null && usedTicks < MINIMUM_EAT_TICKS) return false;
+    // The HUD uses a partial client tick. Accept the immediately adjacent server tick so
+    // releasing exactly as the checkpoint turns green cannot miss settlement in transit.
+    if (ready == null
+        && usedTicks + RELEASE_CHECKPOINT_GRACE_TICKS < MINIMUM_EAT_TICKS) return false;
     READY_EATS.remove(entity);
     SETTLED_EATS.put(entity, Boolean.TRUE);
     if (stack.isEmpty()) stack = ready;
     ItemStack consumed = stack.copyWithCount(1);
     clearActiveProfile(stack);
-    finishFoodAndEffect(stack, level, entity);
+    ItemStack result = finishFoodAndEffect(stack, level, entity);
     afterFoodCommitted(consumed, level, entity);
-    HotFoodHandler.finishEarly(consumed, entity);
-    ModAdvancements.recordFoodFinished(entity, consumed);
-    playBurp(level, entity);
+    result = EventHooks.onItemUseFinish(entity, consumed, 0, result);
+    entity.setItemInHand(hand, result);
     return true;
   }
 
@@ -251,8 +284,4 @@ public class MultiBiteSkewerItem extends SkewerItem {
     });
   }
 
-  @Override
-  protected float burpVolume() {
-    return 0.8F;
-  }
 }

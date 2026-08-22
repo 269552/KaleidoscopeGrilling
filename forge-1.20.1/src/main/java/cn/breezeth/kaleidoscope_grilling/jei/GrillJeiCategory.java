@@ -6,6 +6,7 @@ import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
 
 import java.util.List;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
@@ -86,7 +87,10 @@ final class GrillJeiCategory implements IRecipeCategory<GrillingJeiRecipes.Grill
           input
               ? builder.addInputSlot(positions[i][0], positions[i][1])
               : builder.addOutputSlot(positions[i][0], positions[i][1]);
-      slot.setSlotName((input ? "raw_" : "cooked_") + (i + 1)).addItemStack(stacks.get(i));
+      slot
+          .setSlotName((input ? "raw_" : "cooked_") + (i + 1))
+          .setCustomRenderer(VanillaTypes.ITEM_STACK, SkewerJeiRenderer.INSTANCE)
+          .addItemStack(stacks.get(i));
     }
   }
 }

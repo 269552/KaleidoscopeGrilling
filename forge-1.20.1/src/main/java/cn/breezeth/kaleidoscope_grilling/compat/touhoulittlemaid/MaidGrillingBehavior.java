@@ -45,7 +45,7 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
   private static final int RAW_END = 6;
   private static final int OUTPUT_START = 6;
   private static final int OUTPUT_END = 9;
-  private static final int ADVANCED_RACK_SEARCH_RANGE = 24;
+  private static final int SUPPLY_SEARCH_RANGE = 24;
 
   private int actionCooldown;
   private int searchCooldown;
@@ -112,7 +112,6 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
       }
       boolean needsLease =
           data.stage() != MaidGrillingData.WorkStage.RETURN_TOOLS
-              && data.stage() != MaidGrillingData.WorkStage.STORE_OUTPUT
               && data.stage() != MaidGrillingData.WorkStage.WAIT_CHAIR;
       if (needsLease
           && !GrillAutomationApi.heartbeat(level, grillPos, maid.getUUID())
@@ -233,30 +232,86 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
       return;
     }
 
-    WirelessCandidate wireless =
-        findWirelessSource(level, maid, GrillAutomationApi::acceptsRawSkewer);
-    if (wireless != null) {
-      if (!arriveContainer(maid, wireless.container().pos())) {
-        setWaitReason(maid, MaidGrillingData.WaitReason.SUPPLY_UNREACHABLE);
-        return;
-      }
-      openContainer(level, maid, wireless.container().pos());
-      ItemStack pulled = wireless.handler().extractItem(wireless.slot(), 1, false);
-      if (!pulled.isEmpty()) {
-        maid.getTaskInv().setStackInSlot(destination, pulled);
-        showAndSwing(maid, pulled, MaidGrillingData.Action.PICKUP, 10);
-        actionCooldown = scaledDelay(10);
-        return;
-      }
-    }
-
     IItemHandlerModifiable own = maid.getAvailableInv(false);
     int ownSlot = findSlot(own, GrillAutomationApi::acceptsRawSkewer);
     if (ownSlot >= 0) {
       ItemStack pulled = own.extractItem(ownSlot, 1, false);
       maid.getTaskInv().setStackInSlot(destination, pulled);
+      setData(maid, data(maid).withRawSource(destination, Optional.empty()));
       showAndSwing(maid, pulled, MaidGrillingData.Action.PICKUP, 10);
       actionCooldown = scaledDelay(10);
+      return;
+    }
+
+    RackCandidate rack = findRack(level, maid, GrillAutomationApi::acceptsRawSkewer);
+    if (rack != null) {
+      if (!rack.reachable()) {
+        maid.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
+        setWaitReason(maid, MaidGrillingData.WaitReason.SUPPLY_UNREACHABLE);
+        return;
+      }
+      if (!arriveAdvancedRack(maid, rack)) {
+        setWaitReason(maid, MaidGrillingData.WaitReason.APPROACHING_TOOL_SOURCE);
+        return;
+      }
+      AdvancedRackAutomationApi.BorrowResult result =
+          AdvancedRackAutomationApi.borrow(
+              level, rack.pos(), GrillAutomationApi::acceptsRawSkewer, false);
+      if (result.success()) {
+        maid.getTaskInv().setStackInSlot(destination, result.stack());
+        setData(
+            maid,
+            data(maid)
+                .withRawSource(
+                    destination,
+                    Optional.of(
+                        new MaidGrillingData.BorrowSource(
+                            new MaidGrillingData.BoundContainer(
+                                level.dimension().location(), rack.pos()),
+                            result.receipt().slot(),
+                            destination,
+                            true,
+                            false,
+                            false))));
+        showAndSwing(maid, result.stack(), MaidGrillingData.Action.PICKUP, 10);
+        actionCooldown = scaledDelay(10);
+      }
+      return;
+    }
+
+    ContainerCandidate container =
+        findLocalContainer(level, maid, GrillAutomationApi::acceptsRawSkewer);
+    if (container != null) {
+      if (!container.reachable()) {
+        maid.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
+        setWaitReason(maid, MaidGrillingData.WaitReason.SUPPLY_UNREACHABLE);
+        return;
+      }
+      if (!arriveContainer(maid, container.approach(), container.pos())) {
+        setWaitReason(maid, MaidGrillingData.WaitReason.SUPPLY_UNREACHABLE);
+        return;
+      }
+      openContainer(level, maid, container.pos());
+      ItemStack pulled = container.handler().extractItem(container.slot(), 1, false);
+      if (!pulled.isEmpty()) {
+        maid.getTaskInv().setStackInSlot(destination, pulled);
+        setData(
+            maid,
+            data(maid)
+                .withRawSource(
+                    destination,
+                    Optional.of(
+                        new MaidGrillingData.BorrowSource(
+                            new MaidGrillingData.BoundContainer(
+                                level.dimension().location(), container.pos()),
+                            container.slot(),
+                            destination,
+                            false,
+                            false,
+                            false))));
+        showAndSwing(maid, pulled, MaidGrillingData.Action.PICKUP, 10);
+        actionCooldown = scaledDelay(10);
+      }
       return;
     }
 
@@ -347,17 +402,16 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
       int taskSlot,
       Predicate<ItemStack> predicate) {
     if (source(data, taskSlot).isPresent()) {
-      setData(
-          maid,
-          data.withWork(data.grill(), MaidGrillingData.WorkStage.RETURN_TOOLS));
+      returnOne(level, maid, data, taskSlot, source(data, taskSlot));
       return true;
     }
     int ownSlot = findSlot(maid.getMaidInv(), predicate);
+    if (ownSlot >= 0) return trackOwnedTool(level, maid, taskSlot, ownSlot);
+
     RackCandidate rack = findRack(level, maid, predicate);
     if (rack != null) {
       int maidSlot = emptySlot(maid.getMaidInv());
       if (maidSlot < 0) {
-        if (ownSlot >= 0) return trackOwnedTool(level, maid, taskSlot, ownSlot);
         reportInventoryFull(maid);
         return true;
       }
@@ -389,20 +443,24 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
       return true;
     }
 
-    WirelessCandidate wireless = findWirelessSource(level, maid, predicate);
-    if (wireless != null) {
+    ContainerCandidate container = findLocalContainer(level, maid, predicate);
+    if (container != null) {
       int maidSlot = emptySlot(maid.getMaidInv());
       if (maidSlot < 0) {
-        if (ownSlot >= 0) return trackOwnedTool(level, maid, taskSlot, ownSlot);
         reportInventoryFull(maid);
         return true;
       }
-      if (!arriveContainer(maid, wireless.container().pos())) {
+      if (!container.reachable()) {
+        maid.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
+        setWaitReason(maid, MaidGrillingData.WaitReason.TOOL_SOURCE_UNREACHABLE);
+        return true;
+      }
+      if (!arriveContainer(maid, container.approach(), container.pos())) {
         setWaitReason(maid, MaidGrillingData.WaitReason.APPROACHING_TOOL_SOURCE);
         return true;
       }
-      openContainer(level, maid, wireless.container().pos());
-      ItemStack borrowed = wireless.handler().extractItem(wireless.slot(), 1, false);
+      openContainer(level, maid, container.pos());
+      ItemStack borrowed = container.handler().extractItem(container.slot(), 1, false);
       if (borrowed.isEmpty()) return true;
       maid.getMaidInv().setStackInSlot(maidSlot, borrowed);
       setSource(
@@ -411,13 +469,13 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
           taskSlot,
           Optional.of(
               new MaidGrillingData.BorrowSource(
-                  wireless.container(), wireless.slot(), maidSlot, false, true, false)));
+                  new MaidGrillingData.BoundContainer(
+                      level.dimension().location(), container.pos()),
+                  container.slot(), maidSlot, false, false, false)));
       showAndSwing(maid, borrowed, MaidGrillingData.Action.PICKUP, 10);
       actionCooldown = scaledDelay(10);
       return true;
     }
-
-    if (ownSlot >= 0) return trackOwnedTool(level, maid, taskSlot, ownSlot);
 
     return false;
   }
@@ -543,7 +601,10 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
         ItemStack raw = maid.getTaskInv().getStackInSlot(slot);
         if (GrillAutomationApi.insertSkewer(level, pos, raw, false).success()) {
           level.playSound(null, pos, ModSounds.ACTION_SUCCESS.get(), SoundSource.BLOCKS, 0.55F, 1.0F);
-          if (raw.isEmpty()) maid.getTaskInv().setStackInSlot(slot, ItemStack.EMPTY);
+          if (raw.isEmpty()) {
+            maid.getTaskInv().setStackInSlot(slot, ItemStack.EMPTY);
+            setData(maid, data(maid).withRawSource(slot, Optional.empty()));
+          }
         }
       }
       case BRUSH -> {
@@ -589,7 +650,7 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
           setData(
               maid,
               data(maid)
-                  .withWork(data.grill(), MaidGrillingData.WorkStage.RETURN_TOOLS));
+                  .withWork(data.grill(), MaidGrillingData.WorkStage.STORE_OUTPUT));
       }
       case EXTINGUISH -> {
         GrillAutomationApi.extinguish(level, pos, false);
@@ -631,28 +692,57 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
     if (returnOne(level, maid, data, SEASONING_SLOT, data.seasoningSource())) return;
     data = data(maid);
     if (returnOne(level, maid, data, FLINT_SLOT, data.flintSource())) return;
-    setData(maid, data(maid).withWork(data.grill(), MaidGrillingData.WorkStage.STORE_OUTPUT));
+    if (data(maid).completedBatch())
+      MaidGrillingSpeech.say(maid, "bubble.kaleidoscope_grilling.maid_grilling.done", false);
+    reset(level, maid, data(maid));
   }
 
   private boolean returnRawInput(ServerLevel level, EntityMaid maid, MaidGrillingData data) {
     int slot = firstTaskSlot(maid, RAW_START, RAW_END);
     if (slot < 0) return false;
     ItemStack raw = maid.getTaskInv().getStackInSlot(slot);
-    WirelessDestination destination = findWirelessDestination(level, maid, false, raw);
-    if (destination != null) {
-      if (!arriveContainer(maid, destination.container().pos())) {
-        setWaitReason(maid, MaidGrillingData.WaitReason.OUTPUT_UNREACHABLE);
+    Optional<MaidGrillingData.BorrowSource> source = data.rawSource(slot);
+    if (source.isPresent()) {
+      MaidGrillingData.BorrowSource receipt = source.get();
+      BlockPos pos = localPos(level, receipt.container());
+      if (pos != null) {
+        RackCandidate approach = rackCandidate(level, maid, pos);
+        if (!approach.reachable()) {
+          maid.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
+          setWaitReason(maid, MaidGrillingData.WaitReason.TOOL_SOURCE_UNREACHABLE);
+          return true;
+        }
+        if (!(receipt.advancedRack()
+            ? arriveAdvancedRack(maid, approach)
+            : arriveContainer(maid, approach.approach(), pos))) {
+          setWaitReason(maid, MaidGrillingData.WaitReason.APPROACHING_TOOL_SOURCE);
+          return true;
+        }
+        ItemStack remainder;
+        if (receipt.advancedRack()) {
+          AdvancedRackAutomationApi.ReturnResult result =
+              AdvancedRackAutomationApi.returnBorrowed(
+                  level,
+                  new AdvancedRackAutomationApi.BorrowReceipt(
+                      receipt.container().dimension(), pos, receipt.slot()),
+                  raw,
+                  false);
+          remainder = result.remainder();
+        } else {
+          openContainer(level, maid, pos);
+          remainder = insertAtSource(itemHandler(level, pos), receipt.slot(), raw);
+        }
+        if (!remainder.isEmpty())
+          remainder = ItemHandlerHelper.insertItemStacked(maid.getAvailableInv(false), remainder, false);
+        maid.getTaskInv().setStackInSlot(slot, remainder);
+        setData(maid, data(maid).withRawSource(slot, Optional.empty()));
+        actionCooldown = scaledDelay(10);
         return true;
       }
-      openContainer(level, maid, destination.container().pos());
-      ItemStack remainder =
-          ItemHandlerHelper.insertItemStacked(destination.handler(), raw.copy(), false);
-      maid.getTaskInv().setStackInSlot(slot, remainder);
-      actionCooldown = scaledDelay(10);
-      return true;
     }
     ItemStack remainder = ItemHandlerHelper.insertItemStacked(maid.getAvailableInv(false), raw.copy(), false);
     maid.getTaskInv().setStackInSlot(slot, remainder);
+    setData(maid, data(maid).withRawSource(slot, Optional.empty()));
     return true;
   }
 
@@ -679,7 +769,10 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
       return false;
     }
     BlockPos pos = localPos(level, receipt.container());
-    if (pos == null) return true;
+    if (pos == null) {
+      setSource(maid, data, taskSlot, Optional.empty());
+      return true;
+    }
     RackCandidate returnRack =
         receipt.advancedRack() ? rackCandidate(level, maid, pos) : null;
     if (returnRack != null && !returnRack.reachable()) {
@@ -693,7 +786,7 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
       setWaitReason(maid, MaidGrillingData.WaitReason.APPROACHING_TOOL_SOURCE);
       return true;
     }
-    if (receipt.wireless()) openContainer(level, maid, pos);
+    if (!receipt.advancedRack()) openContainer(level, maid, pos);
     ItemStack remainder;
     if (receipt.advancedRack()) {
       AdvancedRackAutomationApi.ReturnResult result =
@@ -708,23 +801,20 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
       remainder = insertAtSource(itemHandler(level, pos), receipt.slot(), returned);
     }
     maid.getMaidInv().setStackInSlot(maidSlot, remainder);
-    if (remainder.isEmpty()) {
-      setSource(maid, data(maid), taskSlot, Optional.empty());
-      actionCooldown = scaledDelay(10);
-    }
+    setSource(maid, data(maid), taskSlot, Optional.empty());
+    actionCooldown = scaledDelay(10);
     return true;
   }
 
   private void storeOutput(ServerLevel level, EntityMaid maid, MaidGrillingData data) {
     int slot = firstTaskSlot(maid, OUTPUT_START, OUTPUT_END);
     if (slot < 0) {
-      if (data.completedBatch())
-        MaidGrillingSpeech.say(maid, "bubble.kaleidoscope_grilling.maid_grilling.done", false);
-      reset(level, maid, data);
+      if (hasAvailableRawInput(level, maid, data)) setData(maid, data.continueBatch());
+      else setData(maid, data.withWork(data.grill(), MaidGrillingData.WorkStage.RETURN_TOOLS));
       return;
     }
     ItemStack output = maid.getTaskInv().getStackInSlot(slot);
-    WirelessDestination destination = findWirelessDestination(level, maid, true, output);
+    WirelessDestination destination = findWirelessDestination(level, maid, output);
     if (destination != null) {
       if (!arriveContainer(maid, destination.container().pos())) return;
       openContainer(level, maid, destination.container().pos());
@@ -759,13 +849,18 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
   }
 
   private static boolean arriveContainer(EntityMaid maid, BlockPos pos) {
+    return arriveContainer(maid, pos, pos);
+  }
+
+  private static boolean arriveContainer(EntityMaid maid, BlockPos approach, BlockPos lookAt) {
     if (maid.getVehicle() instanceof EntityChair) maid.stopRiding();
-    if (maid.distanceToSqr(pos.getCenter()) <= 2.25D) {
+    if (maid.distanceToSqr(approach.getCenter()) <= 2.25D) {
       maid.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
-      maid.getLookControl().setLookAt(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+      maid.getLookControl().setLookAt(
+          lookAt.getX() + 0.5, lookAt.getY() + 0.5, lookAt.getZ() + 0.5);
       return true;
     }
-    BehaviorUtils.setWalkAndLookTargetMemories(maid, pos, 0.55F, 1);
+    BehaviorUtils.setWalkAndLookTargetMemories(maid, approach, 0.55F, 0);
     return false;
   }
 
@@ -833,7 +928,58 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
   private static boolean hasAvailableRawInput(
       ServerLevel level, EntityMaid maid, MaidGrillingData data) {
     if (findSlot(maid.getAvailableInv(false), GrillAutomationApi::acceptsRawSkewer) >= 0) return true;
-    return findWirelessSource(level, maid, GrillAutomationApi::acceptsRawSkewer) != null;
+    if (findRack(level, maid, GrillAutomationApi::acceptsRawSkewer) != null) return true;
+    return findLocalContainer(level, maid, GrillAutomationApi::acceptsRawSkewer) != null;
+  }
+
+  private static ContainerCandidate findLocalContainer(
+      ServerLevel level, EntityMaid maid, Predicate<ItemStack> predicate) {
+    List<ContainerMatch> matching = new ArrayList<>();
+    BlockPos center = maid.blockPosition();
+    int minChunkX = (center.getX() - SUPPLY_SEARCH_RANGE) >> 4;
+    int maxChunkX = (center.getX() + SUPPLY_SEARCH_RANGE) >> 4;
+    int minChunkZ = (center.getZ() - SUPPLY_SEARCH_RANGE) >> 4;
+    int maxChunkZ = (center.getZ() + SUPPLY_SEARCH_RANGE) >> 4;
+    double maxDistance = SUPPLY_SEARCH_RANGE * SUPPLY_SEARCH_RANGE;
+    for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+      for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+        var chunk = level.getChunkSource().getChunkNow(chunkX, chunkZ);
+        if (chunk == null) continue;
+        for (var entry : chunk.getBlockEntities().entrySet()) {
+          BlockPos pos = entry.getKey();
+          if (!isSupportedLocalContainer(entry.getValue())
+              || !maid.isWithinRestriction(pos)
+              || pos.distSqr(center) > maxDistance) continue;
+          IItemHandler handler = itemHandler(level, pos);
+          int slot = findSlot(handler, predicate);
+          if (slot >= 0) matching.add(new ContainerMatch(pos.immutable(), handler, slot));
+        }
+      }
+    }
+    matching.sort(
+        Comparator.comparingDouble((ContainerMatch match) -> match.pos().distSqr(center))
+            .thenComparingInt(match -> match.pos().getY())
+            .thenComparingInt(match -> match.pos().getX())
+            .thenComparingInt(match -> match.pos().getZ()));
+    ContainerCandidate nearestUnreachable = null;
+    for (ContainerMatch match : matching) {
+      RackCandidate approach = rackCandidate(level, maid, match.pos());
+      ContainerCandidate candidate =
+          new ContainerCandidate(
+              match.pos(), approach.approach(), approach.reachable(), match.handler(), match.slot());
+      if (candidate.reachable()) return candidate;
+      if (nearestUnreachable == null) nearestUnreachable = candidate;
+    }
+    return nearestUnreachable;
+  }
+
+  private static boolean isSupportedLocalContainer(Object blockEntity) {
+    if (blockEntity instanceof ChestBlockEntity || blockEntity instanceof BarrelBlockEntity) return true;
+    return blockEntity != null
+        && blockEntity
+            .getClass()
+            .getName()
+            .equals("cn.breezeth.ordertocook.block.entity.RefrigeratorBlockEntity");
   }
 
   private static RackCandidate findRack(
@@ -842,11 +988,11 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
       Predicate<ItemStack> predicate) {
     List<BlockPos> matching = new ArrayList<>();
     BlockPos center = maid.blockPosition();
-    int minChunkX = (center.getX() - ADVANCED_RACK_SEARCH_RANGE) >> 4;
-    int maxChunkX = (center.getX() + ADVANCED_RACK_SEARCH_RANGE) >> 4;
-    int minChunkZ = (center.getZ() - ADVANCED_RACK_SEARCH_RANGE) >> 4;
-    int maxChunkZ = (center.getZ() + ADVANCED_RACK_SEARCH_RANGE) >> 4;
-    double maxDistance = ADVANCED_RACK_SEARCH_RANGE * ADVANCED_RACK_SEARCH_RANGE;
+    int minChunkX = (center.getX() - SUPPLY_SEARCH_RANGE) >> 4;
+    int maxChunkX = (center.getX() + SUPPLY_SEARCH_RANGE) >> 4;
+    int minChunkZ = (center.getZ() - SUPPLY_SEARCH_RANGE) >> 4;
+    int maxChunkZ = (center.getZ() + SUPPLY_SEARCH_RANGE) >> 4;
+    double maxDistance = SUPPLY_SEARCH_RANGE * SUPPLY_SEARCH_RANGE;
     for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
       for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
         var chunk = level.getChunkSource().getChunkNow(chunkX, chunkZ);
@@ -925,25 +1071,9 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
     return y != 0 ? y : Integer.compare(a.getZ(), b.getZ());
   }
 
-  private static WirelessCandidate findWirelessSource(
-      ServerLevel level, EntityMaid maid, Predicate<ItemStack> predicate) {
-    for (MaidGrillingData.BoundContainer container :
-        MaidGrillingWirelessIO.supplyEndpoints(maid)) {
-      if (!validWirelessEndpoint(level, maid, container)) continue;
-      IItemHandler handler = itemHandler(level, container.pos());
-      int slot = findSlot(handler, predicate);
-      if (slot >= 0) return new WirelessCandidate(container, handler, slot);
-    }
-    return null;
-  }
-
   private static WirelessDestination findWirelessDestination(
-      ServerLevel level, EntityMaid maid, boolean output, ItemStack stack) {
-    var endpoints =
-        output
-            ? MaidGrillingWirelessIO.outputEndpoints(maid)
-            : MaidGrillingWirelessIO.supplyEndpoints(maid);
-    for (MaidGrillingData.BoundContainer container : endpoints) {
+      ServerLevel level, EntityMaid maid, ItemStack stack) {
+    for (MaidGrillingData.BoundContainer container : MaidGrillingWirelessIO.endpoints(maid)) {
       if (!validWirelessEndpoint(level, maid, container)) continue;
       IItemHandler handler = itemHandler(level, container.pos());
       ItemStack remainder = ItemHandlerHelper.insertItemStacked(handler, stack.copy(), true);
@@ -961,9 +1091,11 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
   }
 
   private static IItemHandler itemHandler(ServerLevel level, BlockPos pos) {
-    return pos == null || !level.hasChunkAt(pos)
+    if (pos == null || !level.hasChunkAt(pos)) return null;
+    var blockEntity = level.getBlockEntity(pos);
+    return blockEntity == null
         ? null
-        : level.getBlockEntity(pos).getCapability(ForgeCapabilities.ITEM_HANDLER).orElse(null);
+        : blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).orElse(null);
   }
 
   private static int findSlot(IItemHandler handler, Predicate<ItemStack> predicate) {
@@ -1253,13 +1385,15 @@ final class MaidGrillingBehavior extends Behavior<EntityMaid> {
     setData(maid, data.resetBatch());
   }
 
-  private record WirelessCandidate(
-      MaidGrillingData.BoundContainer container, IItemHandler handler, int slot) {}
-
   private record WirelessDestination(
       MaidGrillingData.BoundContainer container, IItemHandler handler) {}
 
   private record RackCandidate(BlockPos pos, BlockPos approach, boolean reachable) {}
+
+  private record ContainerMatch(BlockPos pos, IItemHandler handler, int slot) {}
+
+  private record ContainerCandidate(
+      BlockPos pos, BlockPos approach, boolean reachable, IItemHandler handler, int slot) {}
 
   private static ItemStack copyOne(ItemStack stack) {
     ItemStack copy = stack.copy();

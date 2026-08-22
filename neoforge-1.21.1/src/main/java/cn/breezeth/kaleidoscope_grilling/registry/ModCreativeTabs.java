@@ -8,7 +8,6 @@ import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningData;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipeBookItem;
 
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -136,6 +135,7 @@ public final class ModCreativeTabs {
             ResourceLocation.fromNamespaceAndPath("kaleidoscope_cookery", "oil_pot"));
     ItemStack stack = new ItemStack(item);
     OilPotCompat.fill(stack, type, 64);
+    OilPotCompat.nameForDisplay(stack);
     return stack;
   }
 

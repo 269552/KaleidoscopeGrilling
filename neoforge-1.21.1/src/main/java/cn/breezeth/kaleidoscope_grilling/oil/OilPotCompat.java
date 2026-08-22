@@ -4,6 +4,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -69,6 +70,21 @@ public final class OilPotCompat {
     tag.putString("grilling_oil_type", type);
     stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     stack.set(countType(), Math.min(FLUID_CAPACITY, getCount(stack) + points));
+  }
+
+  /** Gives generated display stacks a searchable, oil-specific name. */
+  public static void nameForDisplay(ItemStack stack) {
+    String type = getType(stack);
+    if (!type.isEmpty())
+      stack.set(
+          DataComponents.CUSTOM_NAME,
+          Component.translatable("item.kaleidoscope_grilling.oil_pot." + type));
+  }
+
+  /** JEI identity: stored amount must not create dozens of duplicate oil-pot entries. */
+  public static String jeiSubtype(ItemStack stack) {
+    String type = getType(stack);
+    return type.isEmpty() ? (getCount(stack) > 0 ? "fat" : "empty") : type;
   }
 
   public static void setType(ItemStack stack, String type) {

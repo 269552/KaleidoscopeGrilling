@@ -28,7 +28,7 @@ import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerOutlineRender;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlateRenderer;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipeBlockRenderer;
-
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -103,6 +103,9 @@ public final class ClientSetup {
           register(ModItems.DARK_GRILLING.get());
           ModItems.RAW_SKEWERS.forEach(item -> registerFixed(item.get()));
           ModItems.FIXED_SKEWERS.forEach(item -> registerFixed(item.get()));
+          ForgeRegistries.ITEMS.getValues().stream()
+              .filter(ClientSetup::isGeneratedKubeSkewer)
+              .forEach(ClientSetup::registerGeneratedSkewer);
           Item cookedSlimeSkewer =
               ForgeRegistries.ITEMS.getValue(
                   new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "grilled_slime_skewer"));
@@ -178,6 +181,9 @@ public final class ClientSetup {
         SkewerColorProvider::color, ModItems.UNFINISHED_SKEWER.get(), ModItems.SECRET_SKEWER.get());
     ModItems.RAW_SKEWERS.forEach(item -> event.register(SkewerColorProvider::color, item.get()));
     ModItems.FIXED_SKEWERS.forEach(item -> event.register(SkewerColorProvider::color, item.get()));
+    ForgeRegistries.ITEMS.getValues().stream()
+        .filter(ClientSetup::isGeneratedKubeSkewer)
+        .forEach(item -> event.register(SkewerColorProvider::color, item));
     event.register(
         SeasoningColorProvider::color,
         ModItems.EMPTY_SEASONING_BOTTLE.get(),
@@ -189,6 +195,26 @@ public final class ClientSetup {
     SkewerGuiDecorator decorator = new SkewerGuiDecorator();
     event.register(ModItems.UNFINISHED_SKEWER.get(), decorator);
     event.register(ModItems.SECRET_SKEWER.get(), decorator);
+    ForgeRegistries.ITEMS.getValues().stream()
+        .filter(ClientSetup::isGeneratedKubeSkewer)
+        .forEach(item -> event.register(item, decorator));
+  }
+
+  /** Called after a server-script sync, including after /reload. */
+  public static void refreshScriptSkewerRendering() {
+    Minecraft minecraft = Minecraft.getInstance();
+    ForgeRegistries.ITEMS.getValues().stream()
+        .filter(
+            item ->
+                SkewerRecipes.usesGeneratedModel(
+                    new net.minecraft.world.item.ItemStack(item)))
+        .forEach(
+            item -> {
+              registerGeneratedSkewer(item);
+              minecraft.getItemColors().register(SkewerColorProvider::color, item);
+            });
+    SkewerColorProvider.clearCache();
+    SkewerGuiIconCache.clear();
   }
 
   @SubscribeEvent
@@ -198,10 +224,16 @@ public final class ClientSetup {
       event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, fixedPiecePath(base, "_raw_piece_1")));
       event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, fixedPiecePath(base, "_piece_1")));
     }
-    for (String base : new String[] {"ender_pearl_skewer", "golden_skewer", "lamb_skewer", "meat_and_bone_skewer", "meatball_skewer", "mid_wing_skewer", "mushroom_skewer", "ordinary_skewer", "potato_slice_skewer", "squid_tentacle_skewer"}) {
+    String[] threePieceSkewers = {
+        "ender_pearl_skewer", "golden_skewer", "lamb_skewer", "meat_and_bone_skewer",
+        "meatball_skewer", "mid_wing_skewer", "mushroom_skewer", "ordinary_skewer",
+        "potato_slice_skewer", "squid_tentacle_skewer"
+    };
+    for (String base : threePieceSkewers) {
       event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, fixedPiecePath(base, "_piece_3")));
-      if (!base.equals("ordinary_skewer"))
+      if (!base.equals("ordinary_skewer")) {
         event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, fixedPiecePath(base, "_raw_piece_3")));
+      }
     }
     event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "block/pot_oil_default"));
     event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, "block/pot_oil_canola"));
@@ -253,11 +285,26 @@ public final class ClientSetup {
           (stack, level, entity, seed) -> MultiBiteSkewerItem.visualBiteStage(stack, entity));
   }
 
+  private static void registerGeneratedSkewer(Item item) {
+    register(item);
+    registerFixed(item);
+  }
+
+  private static boolean isGeneratedKubeSkewer(Item item) {
+    if (!item.getClass().getName().equals(
+        "cn.breezeth.kaleidoscope_grilling.kubejs.KubeSkewerItem")) return false;
+    try {
+      return Boolean.TRUE.equals(item.getClass().getMethod("usesGeneratedModel").invoke(item));
+    } catch (ReflectiveOperationException ignored) {
+      return false;
+    }
+  }
+
   private static float oilTypeModelValue(String type) {
     return switch (type) {
-      case "canola" -> 1F;
-      case "secret_chili" -> 2F;
-      case "premium_chili" -> 3F;
+      case "canola" -> 0.25F;
+      case "secret_chili" -> 0.5F;
+      case "premium_chili" -> 0.75F;
       default -> 0F;
     };
   }
@@ -273,7 +320,7 @@ public final class ClientSetup {
         || !(player instanceof AnvilPressAnimationAccess animation)
         || animation.grilling$getOilBrushProgress(Minecraft.getInstance().getPartialTick()) < 0.0F
         || player.getItemInHand(animation.grilling$getOilBrushHand()) != stack) return 0F;
-    return animation.grilling$getOilBrushType() + 1.0F;
+    return (animation.grilling$getOilBrushType() + 1.0F) * 0.25F;
   }
 
   private ClientSetup() {}

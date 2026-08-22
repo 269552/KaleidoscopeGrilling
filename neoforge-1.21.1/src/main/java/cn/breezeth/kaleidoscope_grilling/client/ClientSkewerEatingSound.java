@@ -1,10 +1,9 @@
 package cn.breezeth.kaleidoscope_grilling.client;
 
-import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
 import cn.breezeth.kaleidoscope_grilling.registry.ModSounds;
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 
 import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
-
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,21 +14,23 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 @OnlyIn(Dist.CLIENT)
-@EventBusSubscriber(modid = KaleidoscopeGrilling.MOD_ID, value = Dist.CLIENT)
 public final class ClientSkewerEatingSound {
   private static final Map<Integer, EntityBoundSoundInstance> ACTIVE = new HashMap<>();
   private static final Map<Integer, MultiBiteSkewerItem.AnimationProfile> ACTIVE_PROFILES =
       new HashMap<>();
+  private static boolean localWasEating;
 
   public static void handle(
       int entityId, boolean playing, MultiBiteSkewerItem.AnimationProfile profile) {
     Minecraft minecraft = Minecraft.getInstance();
-    EntityBoundSoundInstance previous = ACTIVE.remove(entityId);
+    EntityBoundSoundInstance previous = ACTIVE.get(entityId);
+    if (playing
+        && previous != null
+        && ACTIVE_PROFILES.get(entityId) == profile
+        && minecraft.getSoundManager().isActive(previous)) return;
+    ACTIVE.remove(entityId);
     if (previous != null) minecraft.getSoundManager().stop(previous);
     if (!playing) {
       ACTIVE_PROFILES.remove(entityId);
@@ -54,25 +55,40 @@ public final class ClientSkewerEatingSound {
     minecraft.getSoundManager().play(sound);
   }
 
+  /** Client-state fallback so the eater's sound never depends solely on payload delivery. */
+  public static void tickLocal() {
+    Minecraft minecraft = Minecraft.getInstance();
+    var player = minecraft.player;
+    if (player == null) {
+      ACTIVE.values().forEach(minecraft.getSoundManager()::stop);
+      ACTIVE.clear();
+      ACTIVE_PROFILES.clear();
+      localWasEating = false;
+      return;
+    }
+    boolean eating =
+        HotFoodConfig.ENABLE_SKEWER_EATING_ANIMATIONS.get()
+            && player.isUsingItem()
+            && player.getUseItem().getItem() instanceof MultiBiteSkewerItem;
+    if (eating) {
+      MultiBiteSkewerItem skewer = (MultiBiteSkewerItem) player.getUseItem().getItem();
+      int entityId = player.getId();
+      MultiBiteSkewerItem.AnimationProfile profile =
+          ACTIVE_PROFILES.getOrDefault(entityId, skewer.animationProfile(player.getUseItem()));
+      handle(entityId, true, profile);
+    } else if (localWasEating) {
+      MultiBiteSkewerItem.AnimationProfile profile =
+          ACTIVE_PROFILES.getOrDefault(
+              player.getId(), MultiBiteSkewerItem.AnimationProfile.THREE);
+      handle(player.getId(), false, profile);
+    }
+    localWasEating = eating;
+  }
+
   public static MultiBiteSkewerItem.AnimationProfile profile(
       int entityId, MultiBiteSkewerItem.AnimationProfile fallback) {
     return SkewerAnimationDebug.profile(
         entityId, ACTIVE_PROFILES.getOrDefault(entityId, fallback));
-  }
-
-  @SubscribeEvent
-  public static void clientTick(ClientTickEvent.Post event) {
-    Minecraft minecraft = Minecraft.getInstance();
-    if (minecraft.player == null) return;
-    if (!ACTIVE_PROFILES.containsKey(minecraft.player.getId())) return;
-    boolean stillEating =
-        minecraft.player.isUsingItem()
-            && minecraft.player.getUseItem().getItem() instanceof MultiBiteSkewerItem;
-    if (!stillEating)
-      handle(
-          minecraft.player.getId(),
-          false,
-          MultiBiteSkewerItem.AnimationProfile.THREE);
   }
 
   private ClientSkewerEatingSound() {}

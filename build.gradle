@@ -1,4 +1,4 @@
 allprojects {
     group = 'cn.breezeth'
-    version = '1.1.0c'
+    version = '1.1.1a'
 }

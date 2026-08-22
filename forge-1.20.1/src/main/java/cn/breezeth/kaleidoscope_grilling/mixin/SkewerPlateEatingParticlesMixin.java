@@ -1,10 +1,9 @@
 package cn.breezeth.kaleidoscope_grilling.mixin;
 
-import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
-
 import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
 import cn.breezeth.kaleidoscope_grilling.skewer.MultiBiteSkewerItem;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerPlateItem;
+import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -23,12 +22,6 @@ abstract class SkewerPlateEatingParticlesMixin {
   }
 
   @ModifyVariable(method = "spawnItemParticles", at = @At("HEAD"), argsOnly = true, ordinal = 0)
-  private int kaleidoscopeGrilling$zeroFirstPersonSkewerParticleCount(int amount) {
-    LivingEntity entity = (LivingEntity) (Object) this;
-    return kaleidoscopeGrilling$hideLocalFirstPersonParticles(entity.getUseItem()) ? 0 : amount;
-  }
-
-  @ModifyVariable(method = "spawnItemParticles", at = @At("HEAD"), argsOnly = true, ordinal = 0)
   private ItemStack kaleidoscopeGrilling$useSkewerParticles(ItemStack stack) {
     if (!stack.is(ModItems.SKEWER_PLATE.get())) return stack;
     return SkewerPlateItem.particleStack(stack, (LivingEntity) (Object) this);
@@ -37,8 +30,9 @@ abstract class SkewerPlateEatingParticlesMixin {
   private boolean kaleidoscopeGrilling$hideLocalFirstPersonParticles(ItemStack stack) {
     LivingEntity entity = (LivingEntity) (Object) this;
     Minecraft minecraft = Minecraft.getInstance();
-    return stack.getItem() instanceof MultiBiteSkewerItem
-        && entity == minecraft.player
+    return (SkewerRecipes.usesCustomEating(stack)
+            || SkewerRecipes.usesCustomEating(entity.getUseItem()))
+        && (entity == minecraft.player || entity == minecraft.getCameraEntity())
         && minecraft.options.getCameraType().isFirstPerson();
   }
 }

@@ -35,11 +35,6 @@ public final class CursedSkewerItem extends MultiBiteSkewerItem {
   }
 
   @Override
-  protected float burpVolume() {
-    return 0.0F;
-  }
-
-  @Override
   protected void afterFoodCommitted(ItemStack stack, Level level, LivingEntity entity) {
     boolean challenged = entity.hasEffect(ModEffects.INVINCIBLE);
     if (!(level instanceof ServerLevel server)) return;

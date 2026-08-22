@@ -24,7 +24,8 @@ abstract class WirelessIOContainerGuiMixin extends AbstractContainerScreen<Wirel
     super(menu, inventory, title);
   }
 
-  @Inject(method = "init", at = @At("TAIL"))
+  // The maid jar is mapped in userdev but keeps the SRG name in production.
+  @Inject(method = {"init", "m_7856_"}, at = @At("TAIL"), require = 1)
   private void kaleidoscopeGrilling$addGrillingModeButton(CallbackInfo ci) {
     WirelessIOContainerGui screen = (WirelessIOContainerGui) (Object) this;
     WirelessIOContainer menu = screen.getMenu();

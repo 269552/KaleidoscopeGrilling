@@ -44,8 +44,7 @@ public final class MaidGrillingJadeCompat {
       tooltip.add(
           Component.translatable(
               "jade.kaleidoscope_grilling.maid_grilling.wireless_io",
-              MaidGrillingWirelessIO.hasSupplyEndpoint(maid) ? "\u2713" : "\u274c",
-              MaidGrillingWirelessIO.hasOutputEndpoint(maid) ? "\u2713" : "\u274c"));
+              MaidGrillingWirelessIO.hasEndpoint(maid) ? "\u2713" : "\u274c"));
     }
 
     @Override

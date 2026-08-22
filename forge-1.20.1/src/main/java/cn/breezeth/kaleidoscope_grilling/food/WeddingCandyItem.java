@@ -14,7 +14,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public final class WeddingCandyItem extends Item {
-  private static final int EFFECT_DURATION = 60 * 20;
+  private static final int EFFECT_DURATION = 15 * 20;
   private final ResourceLocation effect;
 
   public WeddingCandyItem(Properties properties, ResourceLocation effect) {
@@ -35,7 +35,7 @@ public final class WeddingCandyItem extends Item {
   @Override
   public void appendHoverText(
       ItemStack stack, Level level, List<Component> lines, TooltipFlag flag) {
-    for (int line = 1; line <= 3; line++) {
+    for (int line = 1; line <= 2; line++) {
       lines.add(
           Component.translatable("tooltip.kaleidoscope_grilling.wedding_candy." + line)
               .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));

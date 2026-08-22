@@ -5,7 +5,7 @@ import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
 import cn.breezeth.kaleidoscope_grilling.SkewerCompatApi;
 
 import cn.breezeth.kaleidoscope_grilling.data.GrillingDataManager;
-
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -14,14 +14,20 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 public final class SkewerRecipes {
   private record Recipe(
-      ResourceLocation rawResult, ResourceLocation cookedResult, List<List<String>> ingredients) {}
+      ResourceLocation rawResult,
+      ResourceLocation cookedResult,
+      String threadingResult,
+      List<List<String>> ingredients,
+      GrillingDataManager.Skewer data) {}
+
+  public record Cooking(ItemStack raw, ItemStack cooked) {}
 
   private static List<Recipe> recipes() {
     return GrillingDataManager.skewersForDisplay().entrySet().stream()
-        .filter(entry -> !entry.getValue().ingredients().isEmpty())
         .map(SkewerRecipes::recipe)
         .filter(java.util.Objects::nonNull)
         .toList();
@@ -33,8 +39,15 @@ public final class SkewerRecipes {
     String configured = entry.getValue().cookedResult();
     ResourceLocation cooked =
         configured.isEmpty() ? inferCooked(raw) : ResourceLocation.tryParse(configured);
-    if (cooked == null && !raw.getPath().startsWith("raw_")) cooked = raw;
-    return cooked == null ? null : new Recipe(raw, cooked, entry.getValue().ingredients());
+    if (cooked == null
+        && entry.getValue().threadingResult().isEmpty()
+        && entry.getValue().ingredients().isEmpty()) return null;
+    return new Recipe(
+        raw,
+        cooked,
+        entry.getValue().threadingResult(),
+        entry.getValue().ingredients(),
+        entry.getValue());
   }
 
   private static ResourceLocation inferCooked(ResourceLocation raw) {
@@ -46,6 +59,7 @@ public final class SkewerRecipes {
   public static boolean canAppend(List<ItemStack> inserted, ItemStack next) {
     int slot = inserted.size();
     return recipes().stream()
+        .filter(recipe -> !recipe.ingredients().isEmpty())
         .anyMatch(
             recipe ->
                 slot < recipe.ingredients().size()
@@ -55,12 +69,14 @@ public final class SkewerRecipes {
 
   public static boolean isConfiguredIngredient(ItemStack stack) {
     return recipes().stream()
+        .filter(recipe -> !recipe.ingredients().isEmpty())
         .flatMap(recipe -> recipe.ingredients().stream())
         .anyMatch(selectors -> matchesAny(stack, selectors));
   }
 
   public static ResourceLocation completedResult(List<ItemStack> inserted) {
     return recipes().stream()
+        .filter(recipe -> !recipe.ingredients().isEmpty())
         .filter(
             recipe -> recipe.ingredients().size() == inserted.size() && prefix(recipe, inserted))
         .map(Recipe::rawResult)
@@ -68,8 +84,22 @@ public final class SkewerRecipes {
         .orElse(null);
   }
 
+  public static ResourceLocation threadingResult(List<ItemStack> inserted) {
+    return recipes().stream()
+        .filter(recipe -> !recipe.ingredients().isEmpty())
+        .filter(
+            recipe ->
+                recipe.ingredients().size() == inserted.size() && prefix(recipe, inserted))
+        .map(Recipe::threadingResult)
+        .map(ResourceLocation::tryParse)
+        .filter(java.util.Objects::nonNull)
+        .findFirst()
+        .orElse(null);
+  }
+
   public static int expectedSize(List<ItemStack> inserted) {
     return recipes().stream()
+        .filter(recipe -> !recipe.ingredients().isEmpty())
         .filter(recipe -> prefix(recipe, inserted))
         .mapToInt(recipe -> recipe.ingredients().size())
         .max()
@@ -80,13 +110,18 @@ public final class SkewerRecipes {
     if (stack.is(SkewerCompatApi.RAW_SKEWERS)) return true;
     ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
     return recipes().stream()
-        .anyMatch(recipe -> recipe.rawResult().equals(id) && !recipe.rawResult().equals(recipe.cookedResult()));
+        .anyMatch(
+            recipe ->
+                recipe.cookedResult() != null
+                    && recipe.rawResult().equals(id)
+                    && !recipe.rawResult().equals(recipe.cookedResult()));
   }
 
   public static boolean isCookedSkewer(ItemStack stack) {
     if (ModItems.FIXED_SKEWERS.stream().anyMatch(item -> stack.is(item.get()))) return true;
     ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
-    return recipes().stream().anyMatch(recipe -> recipe.cookedResult().equals(id));
+    return recipes().stream()
+        .anyMatch(recipe -> recipe.cookedResult() != null && recipe.cookedResult().equals(id));
   }
 
   public static List<ItemStack> displayIngredients(ItemStack stack) {
@@ -95,7 +130,8 @@ public final class SkewerRecipes {
         recipes().stream()
             .filter(
                 candidate ->
-                    candidate.rawResult().equals(id) || candidate.cookedResult().equals(id))
+                    candidate.rawResult().equals(id)
+                        || candidate.cookedResult() != null && candidate.cookedResult().equals(id))
             .findFirst()
             .orElse(null);
     if (recipe != null) {
@@ -118,11 +154,85 @@ public final class SkewerRecipes {
         recipes().stream()
             .filter(recipe -> recipe.rawResult().equals(rawId))
             .map(Recipe::cookedResult)
+            .filter(java.util.Objects::nonNull)
             .findFirst()
             .orElse(null);
     if (cookedId == null) cookedId = inferCooked(rawId);
     if (cookedId == null || !BuiltInRegistries.ITEM.containsKey(cookedId)) return ItemStack.EMPTY;
-    return new ItemStack(BuiltInRegistries.ITEM.get(cookedId));
+    ItemStack result = new ItemStack(BuiltInRegistries.ITEM.get(cookedId));
+    if (result.is(ModItems.SECRET_SKEWER.get())) {
+      List<ItemStack> ingredients = displayIngredients(rawStack);
+      if (!ingredients.isEmpty()) SkeweringHandler.writeGeneratedIngredients(result, ingredients);
+      SecretSkewerItem.setCooked(result, true);
+    }
+    return result;
+  }
+
+  public static List<Cooking> cookingRecipes() {
+    return recipes().stream()
+        .filter(recipe -> recipe.cookedResult() != null)
+        .filter(recipe -> BuiltInRegistries.ITEM.containsKey(recipe.rawResult()))
+        .map(
+            recipe -> {
+              ItemStack raw = new ItemStack(BuiltInRegistries.ITEM.get(recipe.rawResult()));
+              ItemStack cooked = cookedResult(raw);
+              return cooked.isEmpty() ? null : new Cooking(raw, cooked);
+            })
+        .filter(java.util.Objects::nonNull)
+        .toList();
+  }
+
+  public static boolean usesGeneratedModel(ItemStack stack) {
+    ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+    Recipe recipe =
+        recipes().stream()
+            .filter(
+                candidate ->
+                    candidate.rawResult().equals(id)
+                        || candidate.cookedResult() != null && candidate.cookedResult().equals(id))
+            .findFirst()
+            .orElse(null);
+    if (recipe == null) return false;
+    String source =
+        recipe.rawResult().equals(id) ? recipe.data().rawModel() : recipe.data().cookedModel();
+    return "generated".equals(source);
+  }
+
+  @Nullable
+  public static MultiBiteSkewerItem.AnimationProfile animationProfile(ItemStack stack) {
+    if (!HotFoodConfig.ENABLE_SKEWER_EATING_ANIMATIONS.get()) return null;
+    return configuredAnimationProfile(stack);
+  }
+
+  /** Resolves the authored profile without applying the global animation toggle. */
+  @Nullable
+  public static MultiBiteSkewerItem.AnimationProfile configuredAnimationProfile(ItemStack stack) {
+    if (stack.getItem() instanceof MultiBiteSkewerItem animated)
+      return animated.animationProfile(stack);
+    ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+    GrillingDataManager.Skewer data = GrillingDataManager.skewerForItem(id.toString());
+    if (data == null) return null;
+    String configured = data.eatingAnimation();
+    if (configured.equals("provided") || configured.equals("none")) return null;
+    if (!configured.equals("default")) {
+      try {
+        return MultiBiteSkewerItem.AnimationProfile.valueOf(
+            configured.toUpperCase(java.util.Locale.ROOT));
+      } catch (IllegalArgumentException ignored) {
+        return null;
+      }
+    }
+    int count = Math.max(1, Math.min(4, data.ingredients().size()));
+    return switch (count) {
+      case 1 -> MultiBiteSkewerItem.AnimationProfile.ONE;
+      case 2 -> MultiBiteSkewerItem.AnimationProfile.TWO;
+      case 4 -> MultiBiteSkewerItem.AnimationProfile.FOUR;
+      default -> MultiBiteSkewerItem.AnimationProfile.THREE;
+    };
+  }
+
+  public static boolean usesCustomEating(ItemStack stack) {
+    return animationProfile(stack) != null;
   }
 
   private static List<ItemStack> defaultDisplayIngredients(ResourceLocation id) {

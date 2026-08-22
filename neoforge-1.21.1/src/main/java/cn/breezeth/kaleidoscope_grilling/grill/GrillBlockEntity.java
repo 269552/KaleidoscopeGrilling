@@ -11,7 +11,6 @@ import cn.breezeth.kaleidoscope_grilling.skewer.SecretSkewerItem;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -220,7 +219,12 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
       output = SkewerRecipes.cookedResult(input);
       if (output.isEmpty()) return FailedSkewerData.create(input, ModItems.MYSTERIOUS_SKEWER.get());
       CustomData data = input.get(DataComponents.CUSTOM_DATA);
-      if (data != null) output.set(DataComponents.CUSTOM_DATA, data);
+      if (data != null) {
+        CompoundTag merged = data.copyTag();
+        CustomData generated = output.get(DataComponents.CUSTOM_DATA);
+        if (generated != null) merged.merge(generated.copyTag());
+        output.set(DataComponents.CUSTOM_DATA, CustomData.of(merged));
+      }
       SeasoningData.set(output, seasoningIngredients);
       if (level != null) FoodState.setHot(output, level.getGameTime() + heatDurationTicks);
     }
