@@ -79,6 +79,8 @@ Kaleidoscope Grilling is an expansion for Kaleidoscope Cookery focused on charco
 
 Forge 1.20.1 与 NeoForge 1.21.1 均支持通过 KubeJS 扩展串类。穿串配方应放入 `kubejs/server_scripts`，进入世界时自动加载；修改后执行 `/reload` 即可同步到客户端和 JEI。
 
+已有固定串也可以使用 `Grilling.modifyFixedSkewer(rawId, options)` 调整穿串材料、额外 Buff、持续时间、食用动画和模型来源；未填写的字段会保留原设置。
+
 以下示例把三个苹果穿成外部模组物品：
 
 ```javascript
@@ -89,14 +91,15 @@ Grilling.threadingRecipe("example_mod:apple_skewer", [
 ])
 ```
 
-完整接口支持以下四种情况：
+完整接口支持以下五种模式：
 
 1. 生串和熟串物品都不存在，由 KubeJS 注册物品并使用烟火生成的模型。
 2. 生串和熟串物品已经存在，将外部物品完整接入烟火的穿串、烤制和食用流程。
 3. 只有生串物品，由烟火生成对应的熟串结果。
 4. 只添加木棍穿串转换，完成后变为外部物品，不接管其模型、效果和食用行为。
+5. 修改烟火已有固定串的穿串材料、额外 Buff、持续时间、食用动画和模型来源。
 
-物品注册需要放入 `kubejs/startup_scripts` 并重启游戏。四种模式的参数、模型来源和完整示例参见 [兼容开发指南](COMPATIBILITY.md#kubejs-四种串类模式forge-1201-与-neoforge-1211)。
+物品注册需要放入 `kubejs/startup_scripts` 并重启游戏。五种模式的参数、模型来源和完整示例参见 [兼容开发指南](COMPATIBILITY.md#kubejs-五种串类模式forge-1201-与-neoforge-1211)。
 
 ## 第三方兼容接口
 

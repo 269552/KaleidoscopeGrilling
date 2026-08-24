@@ -1,6 +1,8 @@
 package cn.breezeth.kaleidoscope_grilling.kubejs;
 
 import cn.breezeth.kaleidoscope_grilling.data.GrillingDataManager;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,19 @@ public final class GrillingKubeJSBindings {
       new ResourceLocation("kaleidoscope_grilling", "secret_skewer");
 
   private GrillingKubeJSBindings() {}
+
+  /** Overrides selected properties of one of Grilling's existing fixed skewers. */
+  public static void modifyFixedSkewer(String raw, Map<String, Object> options) {
+    FixedSkewerOptions parsed = FixedSkewerOptions.parse(options);
+    GrillingDataManager.modifyFixedSkewer(
+        parseId(raw, "raw skewer"),
+        parsed.ingredients(),
+        parsed.effect(),
+        parsed.effectSeconds(),
+        parsed.rawModel(),
+        parsed.cookedModel(),
+        parsed.eatingAnimation());
+  }
 
   /** Registers a recipe with a deterministic generated ID. */
   public static void threadingRecipe(String result, String[] ingredients) {
@@ -153,6 +168,110 @@ public final class GrillingKubeJSBindings {
   private static List<List<String>> parseOptionalSlots(String[] ingredients) {
     if (ingredients == null || ingredients.length == 0) return List.of();
     return parseSlots(ingredients);
+  }
+
+  private static List<List<String>> parseFlexibleSlots(Object value) {
+    List<Object> rawSlots = elements(value, "ingredients must be an array");
+    if (rawSlots.isEmpty() || rawSlots.size() > 3)
+      throw new IllegalArgumentException("Threading recipes require 1 to 3 ingredient slots");
+    List<List<String>> slots = new ArrayList<>();
+    for (Object rawSlot : rawSlots) {
+      List<Object> alternatives =
+          rawSlot instanceof CharSequence
+              ? List.of(rawSlot)
+              : elements(rawSlot, "Each ingredient slot must be a string or an array");
+      if (alternatives.isEmpty())
+        throw new IllegalArgumentException("Threading ingredient slot cannot be empty");
+      List<String> selectors = new ArrayList<>();
+      for (Object alternative : alternatives) {
+        if (!(alternative instanceof CharSequence))
+          throw new IllegalArgumentException("Threading ingredient must be a string");
+        String selector = String.valueOf(alternative);
+        validateSelector(selector);
+        selectors.add(selector);
+      }
+      slots.add(List.copyOf(selectors));
+    }
+    return List.copyOf(slots);
+  }
+
+  private static List<Object> elements(Object value, String error) {
+    if (value instanceof Iterable<?> iterable) {
+      List<Object> result = new ArrayList<>();
+      iterable.forEach(result::add);
+      return result;
+    }
+    if (value != null && value.getClass().isArray()) {
+      List<Object> result = new ArrayList<>();
+      for (int index = 0; index < Array.getLength(value); index++)
+        result.add(Array.get(value, index));
+      return result;
+    }
+    throw new IllegalArgumentException(error);
+  }
+
+  private static void validateSelector(String selector) {
+    if (selector == null || selector.isBlank())
+      throw new IllegalArgumentException("Threading ingredient cannot be blank");
+    String id = selector.startsWith("#") ? selector.substring(1) : selector;
+    if (ResourceLocation.tryParse(id) == null)
+      throw new IllegalArgumentException("Invalid threading ingredient: " + selector);
+  }
+
+  private record FixedSkewerOptions(
+      List<List<String>> ingredients,
+      String effect,
+      Integer effectSeconds,
+      String rawModel,
+      String cookedModel,
+      String eatingAnimation) {
+    private static FixedSkewerOptions parse(Map<String, Object> values) {
+      Map<String, Object> options = values == null ? Map.of() : values;
+      String effect = optionalString(options, "effect");
+      if (effect != null && !effect.isBlank() && ResourceLocation.tryParse(effect) == null)
+        throw new IllegalArgumentException("Invalid effect ID: " + effect);
+      return new FixedSkewerOptions(
+          options.containsKey("ingredients")
+              ? parseFlexibleSlots(options.get("ingredients"))
+              : null,
+          effect,
+          optionalInteger(options, "effectSeconds", "effect_seconds"),
+          optionalModel(options, "rawModel", "raw_model"),
+          optionalModel(options, "cookedModel", "cooked_model"),
+          optionalString(options, "eating", "eatingAnimation"));
+    }
+
+    private static String optionalString(Map<String, Object> options, String... keys) {
+      for (String key : keys)
+        if (options.containsKey(key)) {
+          Object value = options.get(key);
+          return value == null ? "" : String.valueOf(value);
+        }
+      return null;
+    }
+
+    private static Integer optionalInteger(
+        Map<String, Object> options, String key, String alternate) {
+      String selected = options.containsKey(key) ? key : options.containsKey(alternate) ? alternate : null;
+      if (selected == null) return null;
+      Object value = options.get(selected);
+      if (value instanceof Number number) return Math.max(0, number.intValue());
+      try {
+        return Math.max(0, Integer.parseInt(String.valueOf(value)));
+      } catch (NumberFormatException exception) {
+        throw new IllegalArgumentException(selected + " must be an integer", exception);
+      }
+    }
+
+    private static String optionalModel(
+        Map<String, Object> options, String key, String alternate) {
+      String value = optionalString(options, key, alternate);
+      if (value == null) return null;
+      value = value.toLowerCase(java.util.Locale.ROOT);
+      if (!value.equals("auto") && !value.equals("generated") && !value.equals("provided"))
+        throw new IllegalArgumentException(key + " must be 'auto', 'generated', or 'provided'");
+      return value;
+    }
   }
 
   private record RecipeOptions(

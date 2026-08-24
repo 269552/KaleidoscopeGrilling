@@ -243,6 +243,7 @@ public final class ClientSetup {
         new String[] {
           "ender_pearl_skewer",
           "golden_skewer",
+          "gluten_skewer",
           "lamb_skewer",
           "meat_and_bone_skewer",
           "meatball_skewer",

@@ -1,5 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.skewer;
 
+import cn.breezeth.kaleidoscope_grilling.data.GrillingDataManager;
 import cn.breezeth.kaleidoscope_grilling.network.GrillingNetwork;
 import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 
@@ -17,6 +18,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 
 /** A skewer whose visible bites are completed before its food value is awarded. */
@@ -65,6 +67,19 @@ public class MultiBiteSkewerItem extends SkewerItem {
   }
 
   public AnimationProfile animationProfile(ItemStack stack) {
+    ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
+    var skewerData =
+        itemId == null ? null : GrillingDataManager.skewerForItem(itemId.toString());
+    String configured = skewerData == null ? "default" : skewerData.eatingAnimation();
+    if (!configured.equals("default")
+        && !configured.equals("provided")
+        && !configured.equals("none")) {
+      try {
+        return AnimationProfile.valueOf(configured.toUpperCase(java.util.Locale.ROOT));
+      } catch (IllegalArgumentException ignored) {
+        // Keep the item's authored profile when script data is invalid.
+      }
+    }
     if (animationProfile != AnimationProfile.THREE_RANDOM || !stack.hasTag())
       return animationProfile == AnimationProfile.THREE_RANDOM ? AnimationProfile.THREE : animationProfile;
     String value = stack.getTag().getString(ACTIVE_PROFILE_TAG);

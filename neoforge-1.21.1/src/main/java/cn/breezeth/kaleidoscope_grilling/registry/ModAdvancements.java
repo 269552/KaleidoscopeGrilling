@@ -43,6 +43,7 @@ public final class ModAdvancements {
           "grilled_meat_and_bone_skewer",
           "grilled_fried_egg_skewer",
           "grilled_lamb_skewer",
+          "grilled_gluten_skewer",
           "grilled_golden_skewer",
           "ordinary_skewer",
           "cold_houttuynia",

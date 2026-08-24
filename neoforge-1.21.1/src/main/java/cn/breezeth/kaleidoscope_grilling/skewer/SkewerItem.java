@@ -67,7 +67,9 @@ public class SkewerItem extends Item {
     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
     var data = GrillingDataManager.skewerForItem(itemId.toString());
     ResourceLocation resolved =
-        data != null && !data.effect().isEmpty() ? ResourceLocation.parse(data.effect()) : effectId;
+        data == null
+            ? effectId
+            : data.effect().isEmpty() ? null : ResourceLocation.parse(data.effect());
     int duration = data != null ? data.effectSeconds() * 20 : effectDuration;
     if (resolved != null) {
       BuiltInRegistries.MOB_EFFECT
@@ -90,7 +92,9 @@ public class SkewerItem extends Item {
     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
     var data = GrillingDataManager.skewerForItem(itemId.toString());
     ResourceLocation resolved =
-        data != null && !data.effect().isEmpty() ? ResourceLocation.parse(data.effect()) : effectId;
+        data == null
+            ? effectId
+            : data.effect().isEmpty() ? null : ResourceLocation.parse(data.effect());
     int duration = data != null ? data.effectSeconds() * 20 : effectDuration;
     FoodTooltip.appendEffect(tooltip, context, resolved, duration);
   }

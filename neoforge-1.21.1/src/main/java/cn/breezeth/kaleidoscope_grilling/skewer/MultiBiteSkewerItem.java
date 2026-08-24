@@ -1,11 +1,13 @@
 package cn.breezeth.kaleidoscope_grilling.skewer;
 
+import cn.breezeth.kaleidoscope_grilling.data.GrillingDataManager;
 import cn.breezeth.kaleidoscope_grilling.network.GrillingNetwork;
 import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 
 import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -68,6 +70,18 @@ public class MultiBiteSkewerItem extends SkewerItem {
   }
 
   public AnimationProfile animationProfile(ItemStack stack) {
+    ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+    var skewerData = GrillingDataManager.skewerForItem(itemId.toString());
+    String configured = skewerData == null ? "default" : skewerData.eatingAnimation();
+    if (!configured.equals("default")
+        && !configured.equals("provided")
+        && !configured.equals("none")) {
+      try {
+        return AnimationProfile.valueOf(configured.toUpperCase(java.util.Locale.ROOT));
+      } catch (IllegalArgumentException ignored) {
+        // Keep the item's authored profile when script data is invalid.
+      }
+    }
     if (animationProfile != AnimationProfile.THREE_RANDOM || !stack.has(DataComponents.CUSTOM_DATA))
       return animationProfile == AnimationProfile.THREE_RANDOM ? AnimationProfile.THREE : animationProfile;
     CustomData data = stack.get(DataComponents.CUSTOM_DATA);

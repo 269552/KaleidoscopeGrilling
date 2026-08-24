@@ -16,6 +16,7 @@
     {"id":"kaleidoscope_grilling:raw_slime_skewer","cooked_result":"kaleidoscope_grilling:grilled_slime_skewer","ingredients":[["minecraft:slime_ball"],["#kaleidoscope_grilling:ingredients/houttuynia"],["minecraft:slime_ball"]]},
     {"id":"kaleidoscope_grilling:raw_meat_and_bone_skewer","cooked_result":"kaleidoscope_grilling:grilled_meat_and_bone_skewer","ingredients":[["kaleidoscope_cookery:raw_cut_small_meats"],["minecraft:bone"],["kaleidoscope_cookery:raw_cut_small_meats"]]},
     {"id":"kaleidoscope_grilling:raw_fried_egg_skewer","cooked_result":"kaleidoscope_grilling:grilled_fried_egg_skewer","ingredients":[["kaleidoscope_cookery:fried_egg"],["kaleidoscope_cookery:fried_egg"]]},
+    {"id":"kaleidoscope_grilling:raw_gluten_skewer","cooked_result":"kaleidoscope_grilling:grilled_gluten_skewer","ingredients":[["kaleidoscope_cookery:raw_dough"],["kaleidoscope_cookery:raw_dough"]]},
     {"id":"kaleidoscope_grilling:raw_lamb_skewer","cooked_result":"kaleidoscope_grilling:grilled_lamb_skewer","ingredients":[["kaleidoscope_cookery:raw_lamb_chops"],["kaleidoscope_cookery:oil"],["kaleidoscope_cookery:raw_lamb_chops"]]},
     {"id":"kaleidoscope_grilling:raw_golden_skewer","cooked_result":"kaleidoscope_grilling:grilled_golden_skewer","ingredients":[["minecraft:golden_apple"],["minecraft:totem_of_undying"],["minecraft:golden_carrot"]]},
     {"id":"kaleidoscope_grilling:ordinary_skewer","ingredients":[["minecraft:poisonous_potato"],["minecraft:spider_eye"],["minecraft:pufferfish"]]},
@@ -35,6 +36,7 @@
     {"id":"kaleidoscope_grilling:grilled_slime_skewer","ingredients":[],"effect":"kaleidoscope_cookery:hinder","effect_seconds":45},
     {"id":"kaleidoscope_grilling:grilled_meat_and_bone_skewer","ingredients":[],"effect":"kaleidoscope_cookery:vigor","effect_seconds":20},
     {"id":"kaleidoscope_grilling:grilled_fried_egg_skewer","ingredients":[],"effect":"kaleidoscope_cookery:sulfur","effect_seconds":60},
+    {"id":"kaleidoscope_grilling:grilled_gluten_skewer","ingredients":[],"effect":"minecraft:haste","effect_seconds":30},
     {"id":"kaleidoscope_grilling:grilled_lamb_skewer","ingredients":[],"effect":"kaleidoscope_cookery:warmth","effect_seconds":45},
     {"id":"kaleidoscope_grilling:grilled_golden_skewer","ingredients":[],"effect":"kaleidoscope_grilling:invincible","effect_seconds":10}
   ],

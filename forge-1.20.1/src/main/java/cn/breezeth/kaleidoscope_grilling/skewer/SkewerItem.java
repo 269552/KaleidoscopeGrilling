@@ -66,7 +66,9 @@ public class SkewerItem extends Item {
     ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
     var data = itemId == null ? null : GrillingDataManager.skewerForItem(itemId.toString());
     ResourceLocation resolved =
-        data != null && !data.effect().isEmpty() ? new ResourceLocation(data.effect()) : effectId;
+        data == null
+            ? effectId
+            : data.effect().isEmpty() ? null : new ResourceLocation(data.effect());
     int duration = data != null ? data.effectSeconds() * 20 : effectDuration;
     MobEffect effect = resolved == null ? null : ForgeRegistries.MOB_EFFECTS.getValue(resolved);
     if (effect != null) entity.addEffect(new MobEffectInstance(effect, duration));
@@ -86,7 +88,9 @@ public class SkewerItem extends Item {
     ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
     var data = itemId == null ? null : GrillingDataManager.skewerForItem(itemId.toString());
     ResourceLocation resolved =
-        data != null && !data.effect().isEmpty() ? new ResourceLocation(data.effect()) : effectId;
+        data == null
+            ? effectId
+            : data.effect().isEmpty() ? null : new ResourceLocation(data.effect());
     int duration = data != null ? data.effectSeconds() * 20 : effectDuration;
     FoodTooltip.appendEffect(tooltip, resolved, duration);
   }

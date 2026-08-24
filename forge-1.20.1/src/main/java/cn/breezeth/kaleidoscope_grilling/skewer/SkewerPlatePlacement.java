@@ -1,9 +1,11 @@
 package cn.breezeth.kaleidoscope_grilling.skewer;
 
+import cn.breezeth.kaleidoscope_grilling.food.HotFoodConfig;
 import cn.breezeth.kaleidoscope_grilling.registry.ModBlocks;
 import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
 import cn.breezeth.kaleidoscope_grilling.registry.ModSounds;
 
+import com.github.ysbbbbbb.kaleidoscopecookery.block.decoration.TableBlock;
 import com.github.ysbbbbbb.kaleidoscopecookery.item.RecipeItem;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -101,8 +103,12 @@ public final class SkewerPlatePlacement {
       List<ItemStack> skewers) {
     if (player == null || face != Direction.UP) return InteractionResult.PASS;
     BlockState support = level.getBlockState(clickedPos);
-    if (!Block.isShapeFullBlock(support.getCollisionShape(level, clickedPos)))
+    if (support.getBlock() instanceof TableBlock) {
+      if (!HotFoodConfig.INTERCEPT_COOKERY_TABLE_FOR_PLATE.get())
+        return InteractionResult.PASS;
+    } else if (!Block.isShapeFullBlock(support.getCollisionShape(level, clickedPos))) {
       return InteractionResult.PASS;
+    }
     BlockPos placePos = clickedPos.above();
     if (!level.getBlockState(placePos).canBeReplaced()) return InteractionResult.PASS;
     if (!level.isClientSide) {

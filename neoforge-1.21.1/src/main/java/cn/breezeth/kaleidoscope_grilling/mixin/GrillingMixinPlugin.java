@@ -14,6 +14,7 @@ public final class GrillingMixinPlugin implements IMixinConfigPlugin {
       classExists("mezz.jei.library.render.ItemStackRenderer");
   private static final boolean ORDER_TO_COOK_AVAILABLE =
       classExists("cn.breezeth.ordertocook.screen.RefrigeratorScreenHandler");
+  private static final boolean PUNCHY_AVAILABLE = classExists("punchy.config.PunchyConfig");
 
   @Override
   public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
@@ -33,6 +34,7 @@ public final class GrillingMixinPlugin implements IMixinConfigPlugin {
         || mixinClassName.endsWith("JeiItemStackBatchRendererMixin")) return JEI_AVAILABLE;
     if (mixinClassName.endsWith("RefrigeratorScreenHandlerSkewerSortMixin")
         || mixinClassName.endsWith("RefrigeratorScreenSkewerSortMixin")) return ORDER_TO_COOK_AVAILABLE;
+    if (mixinClassName.endsWith("PunchySkewerEatingCompatMixin")) return PUNCHY_AVAILABLE;
     return true;
   }
 

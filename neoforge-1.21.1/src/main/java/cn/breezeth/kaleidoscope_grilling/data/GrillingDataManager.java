@@ -160,6 +160,81 @@ public final class GrillingDataManager extends SimpleJsonResourceReloadListener 
             eatingAnimation(eatingAnimation)));
   }
 
+  /**
+   * Overrides a fixed skewer while inheriting every option omitted by the script.
+   * The raw entry controls threading and rendering; the cooked entry controls food effects.
+   */
+  public static void modifyFixedSkewer(
+      ResourceLocation raw,
+      List<List<String>> ingredients,
+      String effect,
+      Integer effectSeconds,
+      String rawModel,
+      String cookedModel,
+      String eatingAnimation) {
+    if (raw == null) throw new IllegalArgumentException("Raw skewer ID cannot be null");
+    Skewer originalRaw = configuredSkewer(raw.toString());
+    if (originalRaw == null || originalRaw.cookedResult().isBlank())
+      throw new IllegalArgumentException(
+          "No fixed raw skewer with a cooked result exists for " + raw);
+
+    String cookedId = originalRaw.cookedResult();
+    if (ResourceLocation.tryParse(cookedId) == null)
+      throw new IllegalArgumentException(
+          "Fixed skewer " + raw + " has an invalid cooked result: " + cookedId);
+    Skewer originalCooked = configuredSkewer(cookedId);
+    if (originalCooked == null)
+      originalCooked =
+          new Skewer(List.of(), "", "", "", 0, "auto", "auto", "default");
+
+    List<List<String>> inheritedSlots =
+        ingredients == null
+            ? originalRaw.ingredients()
+            : ingredients.stream().map(List::copyOf).toList();
+    String inheritedRawModel =
+        rawModel == null ? originalRaw.rawModel() : modelSource(rawModel);
+    String inheritedCookedModel =
+        cookedModel == null ? originalRaw.cookedModel() : modelSource(cookedModel);
+    String inheritedEating =
+        eatingAnimation == null
+            ? originalRaw.eatingAnimation()
+            : eatingAnimation(eatingAnimation);
+
+    PENDING_SCRIPT_SKEWERS.put(
+        raw.toString(),
+        new Skewer(
+            inheritedSlots,
+            cookedId,
+            originalRaw.threadingResult(),
+            originalRaw.effect(),
+            originalRaw.effectSeconds(),
+            inheritedRawModel,
+            inheritedCookedModel,
+            inheritedEating));
+    PENDING_SCRIPT_SKEWERS.put(
+        cookedId,
+        new Skewer(
+            originalCooked.ingredients(),
+            originalCooked.cookedResult(),
+            originalCooked.threadingResult(),
+            effect == null ? originalCooked.effect() : effect,
+            effectSeconds == null
+                ? originalCooked.effectSeconds()
+                : Math.max(0, effectSeconds),
+            rawModel == null ? originalCooked.rawModel() : modelSource(rawModel),
+            cookedModel == null ? originalCooked.cookedModel() : modelSource(cookedModel),
+            eatingAnimation == null
+                ? originalCooked.eatingAnimation()
+                : eatingAnimation(eatingAnimation)));
+  }
+
+  private static Skewer configuredSkewer(String id) {
+    Skewer pending = PENDING_SCRIPT_SKEWERS.get(id);
+    if (pending != null) return pending;
+    Skewer loaded = SKEWERS.get(id);
+    return loaded != null ? loaded : BUILT_IN_SKEWERS.get(id);
+  }
+
   public static void commitScriptThreadingRecipes() {
     SCRIPT_SKEWERS = Map.copyOf(PENDING_SCRIPT_SKEWERS);
     PENDING_SCRIPT_SKEWERS.clear();

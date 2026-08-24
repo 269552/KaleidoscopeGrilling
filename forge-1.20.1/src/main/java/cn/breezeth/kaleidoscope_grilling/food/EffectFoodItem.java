@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -25,11 +26,17 @@ public final class EffectFoodItem extends Item {
   }
 
   @Override
+  public FoodProperties getFoodProperties(ItemStack stack, LivingEntity entity) {
+    return CuisineQualitySupport.foodProperties(stack, super.getFoodProperties(stack, entity));
+  }
+
+  @Override
   public ItemStack finishUsingItem(ItemStack s, Level l, LivingEntity entity) {
+    int effectDuration = CuisineQualitySupport.effectDuration(s, duration);
     ItemStack result = super.finishUsingItem(s, l, entity);
     if (!l.isClientSide) {
       MobEffect e = ForgeRegistries.MOB_EFFECTS.getValue(effect);
-      if (e != null) entity.addEffect(new MobEffectInstance(e, duration));
+      if (e != null) entity.addEffect(new MobEffectInstance(e, effectDuration));
     }
     return result;
   }
@@ -37,6 +44,7 @@ public final class EffectFoodItem extends Item {
   @Override
   public void appendHoverText(ItemStack s, Level l, List<Component> lines, TooltipFlag f) {
     FoodTooltip.appendMaxim(lines, tooltip);
-    FoodTooltip.appendEffect(lines, effect, duration);
+    CuisineQualitySupport.appendTooltip(s, lines);
+    FoodTooltip.appendEffect(lines, effect, CuisineQualitySupport.effectDuration(s, duration));
   }
 }

@@ -481,6 +481,12 @@ public final class ModItems {
     skewer("grilled_slime_skewer", 4, 0.0F, cookeryEffect("hinder"), 45);
     skewer("grilled_meat_and_bone_skewer", 4, 0.5F, cookeryEffect("vigor"), 20);
     skewer("grilled_fried_egg_skewer", 4, 0.375F, cookeryEffect("sulfur"), 60);
+    skewer(
+        "grilled_gluten_skewer",
+        6,
+        0.1F,
+        ResourceLocation.withDefaultNamespace("haste"),
+        30);
 
     rawSkewer("raw_beef_skewer", 2, 0.3F, false);
     rawSkewer("raw_pork_belly_skewer", 2, 0.3F, false);
@@ -503,6 +509,7 @@ public final class ModItems {
     rawSkewer("raw_slime_skewer", 2, 0.0F, true);
     rawSkewer("raw_meat_and_bone_skewer", 2, 0.25F, false);
     rawSkewer("raw_fried_egg_skewer", 2, 0.1875F, false);
+    rawSkewer("raw_gluten_skewer", 3, 0.05F, false);
     RAW_SKEWERS.add(RAW_LAMB_SKEWER);
     RAW_SKEWERS.add(RAW_GOLDEN_SKEWER);
     FIXED_SKEWERS.add(GRILLED_LAMB_SKEWER);

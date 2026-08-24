@@ -13,6 +13,7 @@ public final class HotFoodConfig {
   public static final ForgeConfigSpec.BooleanValue USE_CUSTOM_SKEWER_64X_CACHE;
   public static final ForgeConfigSpec.BooleanValue ALLOW_SKEWERS_AT_FULL_HUNGER;
   public static final ForgeConfigSpec.BooleanValue ENABLE_SKEWER_EATING_ANIMATIONS;
+  public static final ForgeConfigSpec.BooleanValue INTERCEPT_COOKERY_TABLE_FOR_PLATE;
   public static final ForgeConfigSpec.BooleanValue ENABLE_MAID_GRILLING_TASK;
   public static final ForgeConfigSpec.IntValue MAID_BUBBLE_COOLDOWN_TICKS;
   public static final ForgeConfigSpec.DoubleValue MAID_GRILL_ACTION_SPEED_MULTIPLIER;
@@ -49,7 +50,7 @@ public final class HotFoodConfig {
                     + " 125% and does not change nutrition.")
             .defineInRange("hotSaturationPercent", 125, 100, 200);
     builder.pop();
-    builder.push("skewers").comment("烤串食用 / Skewer eating");
+    builder.push("skewers").comment("烤串 / Skewers");
     ALLOW_SKEWERS_AT_FULL_HUNGER =
         builder
             .comment(
@@ -65,6 +66,15 @@ public final class HotFoodConfig {
                     + " progress bar and sounds. When disabled, use vanilla eating while retaining"
                     + " the 1.25-second eating duration.")
             .define("enableEatingAnimations", true);
+    INTERCEPT_COOKERY_TABLE_FOR_PLATE =
+        builder
+            .comment(
+                "【桌面餐盘优先】开启后，潜行手持烤串右击森罗厨房桌子时优先放置餐盘，并阻止桌子展示该烤串；"
+                    + "关闭后保留桌子的原有展示交互。 / When enabled, sneak-using a skewer on a"
+                    + " Kaleidoscope Cookery table places a plate first and prevents the table"
+                    + " from displaying that skewer. Disable this option to preserve the table's"
+                    + " original display interaction.")
+            .define("interceptCookeryTableWhenPlacingPlate", true);
     builder.pop();
     builder.push("rendering").comment("界面渲染 / GUI rendering");
     ENABLE_SKEWER_GUI_CACHE =

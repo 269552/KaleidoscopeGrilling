@@ -8,10 +8,12 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
 public final class DualEffectFoodItem extends Item {
   private final ResourceLocation firstEffect;
@@ -36,7 +38,15 @@ public final class DualEffectFoodItem extends Item {
   }
 
   @Override
+  public @Nullable FoodProperties getFoodProperties(
+      ItemStack stack, @Nullable LivingEntity entity) {
+    return CuisineQualitySupport.foodProperties(stack, super.getFoodProperties(stack, entity));
+  }
+
+  @Override
   public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+    int firstDuration = CuisineQualitySupport.effectDuration(stack, this.firstDuration);
+    int secondDuration = CuisineQualitySupport.effectDuration(stack, this.secondDuration);
     ItemStack result = super.finishUsingItem(stack, level, entity);
     if (!level.isClientSide) {
       applyEffect(entity, firstEffect, firstDuration);
@@ -55,7 +65,13 @@ public final class DualEffectFoodItem extends Item {
   public void appendHoverText(
       ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
     FoodTooltip.appendMaxim(lines, tooltip);
+    CuisineQualitySupport.appendTooltip(stack, lines);
     FoodTooltip.appendEffects(
-        lines, context, firstEffect, firstDuration, secondEffect, secondDuration);
+        lines,
+        context,
+        firstEffect,
+        CuisineQualitySupport.effectDuration(stack, firstDuration),
+        secondEffect,
+        CuisineQualitySupport.effectDuration(stack, secondDuration));
   }
 }

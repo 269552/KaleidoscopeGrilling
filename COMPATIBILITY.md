@@ -400,7 +400,7 @@ Grilling.threadingRecipe(
 
 上面的 `threadingRecipe` 是模式 4：它只负责穿串转换。生串过程仍由烟火动态渲染，完成后返回外部物品原样。
 
-### KubeJS 四种串类模式（Forge 1.20.1 与 NeoForge 1.21.1）
+### KubeJS 五种串类模式（Forge 1.20.1 与 NeoForge 1.21.1）
 
 物品注册必须放在 `startup_scripts`，串配方放在 `server_scripts`。这样进入世界时会自动加载，修改配方后执行 `/reload` 即可同步到客户端和 JEI；新增或删除物品仍然需要重启游戏。
 
@@ -486,6 +486,28 @@ Grilling.generatedCookingRecipe(
 #### 模式 4：只增加木棍穿串合成
 
 继续使用前文的 `Grilling.threadingRecipe(result, ingredients)`。它不会把结果物品注册为烟火串，也不会接管该物品的烧烤、模型、Buff 或食用动画。
+
+#### 模式 5：修改烟火已有的固定串
+
+脚本可以直接调整烟火自带固定串的穿串配方、额外 Buff、持续时间、模型来源和食用动画。第一个参数填写生串物品 ID；没有填写的字段会沿用原设置：
+
+```js
+// kubejs/server_scripts/grilling_fixed_skewers.js
+Grilling.modifyFixedSkewer('kaleidoscope_grilling:raw_beef_skewer', {
+  ingredients: [
+    ['minecraft:beef', 'minecraft:cooked_beef'],
+    '#forge:crops/onion',
+    'minecraft:beef'
+  ],
+  effect: 'minecraft:speed',
+  effectSeconds: 60,
+  eating: 'THREE'
+})
+```
+
+`ingredients` 的每一项代表木棍上的一个位置。字符串表示只接受一种物品或标签，数组表示该位置可接受其中任意一种。配方需要 1～3 个位置。
+
+可选的 `rawModel` 和 `cookedModel` 支持 `auto`、`generated`、`provided`。当前 `effect` 只表示一个 I 级额外效果；不填写时保留固定串原有效果，填写空字符串可以移除效果。脚本在 `/reload` 后同步到客户端并刷新 JEI。
 
 烟火的正式 JAR 会包含桥接代码，但 KubeJS 仍是可选运行依赖：未安装 KubeJS 时不会加载桥接，也不影响烟火启动。开发环境需要连同 KubeJS 启动客户端时可使用 `-PwithKubeJS`。
 

@@ -225,7 +225,7 @@ public final class ClientSetup {
       event.register(new ResourceLocation(KaleidoscopeGrilling.MOD_ID, fixedPiecePath(base, "_piece_1")));
     }
     String[] threePieceSkewers = {
-        "ender_pearl_skewer", "golden_skewer", "lamb_skewer", "meat_and_bone_skewer",
+        "ender_pearl_skewer", "golden_skewer", "gluten_skewer", "lamb_skewer", "meat_and_bone_skewer",
         "meatball_skewer", "mid_wing_skewer", "mushroom_skewer", "ordinary_skewer",
         "potato_slice_skewer", "squid_tentacle_skewer"
     };

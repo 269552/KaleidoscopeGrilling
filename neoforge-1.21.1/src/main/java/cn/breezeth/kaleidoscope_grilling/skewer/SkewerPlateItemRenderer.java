@@ -1,8 +1,6 @@
 package cn.breezeth.kaleidoscope_grilling.skewer;
 
 import cn.breezeth.kaleidoscope_grilling.KaleidoscopeGrilling;
-import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
@@ -17,13 +15,6 @@ import net.minecraft.world.item.ItemStack;
 public final class SkewerPlateItemRenderer extends BlockEntityWithoutLevelRenderer {
   private static final ResourceLocation PLATE_MODEL =
       ResourceLocation.fromNamespaceAndPath(KaleidoscopeGrilling.MOD_ID, "item/skewer_plate_base");
-  private static final float[][] SLOTS = {
-    {8F, 3F, 6.25F, 0F},
-    {12F, 3F, 6.25F, 0F},
-    {4F, 3F, 6.25F, 0F},
-    {6F, 5.5F, 6.25F, -22.5F},
-    {10F, 5.5F, 6.25F, -22.5F}
-  };
   private static SkewerPlateItemRenderer instance;
 
   private SkewerPlateItemRenderer() {
@@ -56,14 +47,15 @@ public final class SkewerPlateItemRenderer extends BlockEntityWithoutLevelRender
     pose.popPose();
 
     var skewers = SkewerPlateItem.read(plate);
-    for (int i = 0; i < skewers.size() && i < SLOTS.length; i++) {
+    float[][] slots = SkewerPlateRenderer.slotsFor(skewers.size());
+    for (int i = 0; i < skewers.size() && i < slots.length; i++) {
       ItemStack skewer = skewers.get(i);
-      float[] slot = SLOTS[i];
+      float[] slot = slots[i];
       pose.pushPose();
       pose.translate(slot[0] / 16F, slot[1] / 16F, slot[2] / 16F);
       pose.mulPose(Axis.YP.rotationDegrees(slot[3]));
       pose.mulPose(Axis.XP.rotationDegrees(90F));
-      if (skewer.is(ModItems.SECRET_SKEWER.get())) pose.scale(2F / 3F, 2F / 3F, 2F / 3F);
+      pose.scale(4F / 5F, 4F / 5F, 4F / 5F);
       minecraft
           .getItemRenderer()
           .renderStatic(
