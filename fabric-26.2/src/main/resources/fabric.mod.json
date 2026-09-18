@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "id": "kaleidoscope_grilling",
-  "version": "1.1.1-fabric+mc26.2-preview1",
+  "version": "1.1.1-fabric+mc26.2-preview2",
   "name": "Kaleidoscope Grilling",
-  "description": "Fabric 26.2 playable preview. Core ingredients and Big Vat are enabled while the remaining Grilling systems are being ported.",
+  "description": "Fabric 26.2 expanded preview. The original item catalogue is visible while full Grilling mechanics are being ported.",
   "authors": ["breezeth"],
   "license": "BSD-3-Clause + CC BY-NC-SA 4.0",
   "environment": "*",
@@ -15,6 +15,6 @@
     "fabric-api": ">=0.151.0",
     "minecraft": "~26.2",
     "java": ">=25",
-    "kaleidoscope_cookery": ">=1.4.1.5"
+    "kaleidoscope_cookery": "1.4.1.5-fabric+mc26.2"
   }
 }

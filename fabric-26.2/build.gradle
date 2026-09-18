@@ -2,7 +2,7 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.17.2'
 }
 
-version = '1.1.1-fabric+mc26.2-preview1'
+version = '1.1.1-fabric+mc26.2-preview2'
 group = 'cn.breezeth'
 
 base {
@@ -25,6 +25,8 @@ dependencies {
     implementation 'curse.maven:kaleidoscope-cookery-refabricated-1394201:8684828'
 }
 
+def generatedPreviewResources = layout.buildDirectory.dir('generated-preview-resources')
+
 sourceSets {
     main {
         java {
@@ -33,14 +35,38 @@ sourceSets {
         resources {
             srcDir '../common/src/main/resources'
             srcDir 'src/main/resources'
-            // Preview 1 deliberately omits legacy 1.21.1 datapack recipes until
-            // their 26.2 serializers and ingredient references are ported.
+            srcDir generatedPreviewResources
+            // Legacy 1.21.1 datapack recipes stay disabled until their
+            // serializers and ingredient formats are ported to 26.2.
             exclude 'data/**'
         }
     }
 }
 
+tasks.register('generatePreviewItemDefinitions') {
+    inputs.dir rootProject.file('common/src/main/resources/assets/kaleidoscope_grilling/models/item')
+    outputs.dir generatedPreviewResources
+
+    doLast {
+        def modelDir = rootProject.file('common/src/main/resources/assets/kaleidoscope_grilling/models/item')
+        def outRoot = generatedPreviewResources.get().asFile
+        fileTree(modelDir).matching { include '*.json' }.files.each { modelFile ->
+            def id = modelFile.name.substring(0, modelFile.name.length() - 5)
+            def outFile = new File(outRoot, "assets/kaleidoscope_grilling/items/${id}.json")
+            outFile.parentFile.mkdirs()
+            outFile.text = """{
+  \"model\": {
+    \"type\": \"minecraft:model\",
+    \"model\": \"kaleidoscope_grilling:item/${id}\"
+  }
+}
+"""
+        }
+    }
+}
+
 processResources {
+    dependsOn tasks.named('generatePreviewItemDefinitions')
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
@@ -51,11 +77,12 @@ tasks.withType(JavaCompile).configureEach {
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(25)
+    withSourcesJar()
 }
 
 tasks.withType(Jar).configureEach {
-    archiveFileName = "kaleidoscope_grilling-${project.version}.jar"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveFileName = "kaleidoscope_grilling-${project.version}.jar"
     from(rootProject.file('LICENSE-CODE'))
     from(rootProject.file('LICENSE-ASSETS'))
     from(rootProject.file('NOTICE'))
