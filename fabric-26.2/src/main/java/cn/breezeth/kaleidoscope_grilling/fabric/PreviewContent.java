@@ -112,7 +112,7 @@ public final class PreviewContent {
         block("advanced_rack", BlockBehaviour.Properties.of().strength(2.0F).sound(SoundType.WOOD).noOcclusion());
         block("pepper_log", BlockBehaviour.Properties.of().strength(2.0F).sound(SoundType.WOOD));
         block("pepper_leaves", BlockBehaviour.Properties.of().strength(0.2F).sound(SoundType.GRASS).noOcclusion());
-        block("pepper_sapling", BlockBehaviour.Properties.of().strength(0.0F).sound(SoundType.GRASS).noOcclusion().noCollission());
+        block("pepper_sapling", BlockBehaviour.Properties.of().strength(0.0F).sound(SoundType.GRASS).noOcclusion());
         block("skewer_plate", BlockBehaviour.Properties.of().strength(0.2F).sound(SoundType.WOOD).noOcclusion());
         block("seasoning_bottle", BlockBehaviour.Properties.of().strength(0.0F).sound(SoundType.GLASS).noOcclusion());
     }
