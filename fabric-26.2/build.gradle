@@ -51,11 +51,11 @@ tasks.withType(JavaCompile).configureEach {
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(25)
-    withSourcesJar()
 }
 
 tasks.withType(Jar).configureEach {
     archiveFileName = "kaleidoscope_grilling-${project.version}.jar"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(rootProject.file('LICENSE-CODE'))
     from(rootProject.file('LICENSE-ASSETS'))
     from(rootProject.file('NOTICE'))
