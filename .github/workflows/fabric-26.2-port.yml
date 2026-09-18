@@ -21,6 +21,9 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
 
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
       - name: Build Fabric 26.2 module
         run: ./gradlew :fabric-26.2:build --stacktrace --warning-mode all
 
