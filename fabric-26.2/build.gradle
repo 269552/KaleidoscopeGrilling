@@ -2,7 +2,7 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.17.2'
 }
 
-version = '1.1.1-fabric+mc26.2-preview2'
+version = '1.1.1-fabric+mc26.2-preview3'
 group = 'cn.breezeth'
 
 base {
@@ -33,12 +33,9 @@ sourceSets {
             srcDir 'src/main/java'
         }
         resources {
-            srcDir '../common/src/main/resources'
+            // Fabric-specific overrides and safe 26.2 recipes come first.
             srcDir 'src/main/resources'
             srcDir generatedPreviewResources
-            // Legacy 1.21.1 datapack recipes stay disabled until their
-            // serializers and ingredient formats are ported to 26.2.
-            exclude 'data/**'
         }
     }
 }
@@ -68,6 +65,12 @@ tasks.register('generatePreviewItemDefinitions') {
 processResources {
     dependsOn tasks.named('generatePreviewItemDefinitions')
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // Reuse all upstream art/lang/sounds, but do not load the old 1.21.1
+    // datapack wholesale: custom serializers are not all ported yet.
+    from(rootProject.file('../common/src/main/resources')) {
+        exclude 'data/**'
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
