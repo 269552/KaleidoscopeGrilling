@@ -14,21 +14,23 @@ repositories {
     maven { url = 'https://maven.fabricmc.net/' }
     maven { url = 'https://api.modrinth.com/maven' }
     maven { url = 'https://www.cursemaven.com' }
+    maven { url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/' }
 }
 
 dependencies {
     minecraft 'com.mojang:minecraft:26.2'
-    implementation 'net.fabricmc:fabric-loader:0.19.3'
-    implementation 'net.fabricmc.fabric-api:fabric-api:0.160.0+26.2'
+    modImplementation 'net.fabricmc:fabric-loader:0.19.5'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.160.0+26.2'
+    modImplementation 'fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1'
 
-    // Exact Cookery version supplied by the user.
-    implementation 'curse.maven:kaleidoscope-cookery-refabricated-1394201:8684828'
+    // Kaleidoscope Cookery Refabricated 1.4.1.5 for Minecraft 26.2.
+    modImplementation 'curse.maven:kaleidoscope-cookery-refabricated-1394201:8684828'
 }
 
 sourceSets {
     main {
         java {
-            srcDir '../neoforge-1.21.1/src/main/java'
+            srcDir "$buildDir/generated-port-src"
             srcDir 'src/main/java'
         }
         resources {
@@ -36,6 +38,19 @@ sourceSets {
             srcDir 'src/main/resources'
         }
     }
+}
+
+tasks.register('generatePortSources', Exec) {
+    inputs.dir rootProject.file('neoforge-1.21.1/src/main/java')
+    inputs.file file('port_transform.py')
+    outputs.dir "$buildDir/generated-port-src"
+    commandLine 'python3', file('port_transform.py').absolutePath,
+            rootProject.file('neoforge-1.21.1/src/main/java').absolutePath,
+            file("$buildDir/generated-port-src").absolutePath
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('generatePortSources')
 }
 
 processResources {
