@@ -2,7 +2,7 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.17.2'
 }
 
-version = '1.1.1-fabric+mc26.2'
+version = '1.1.1-fabric+mc26.2-preview1'
 group = 'cn.breezeth'
 
 base {
@@ -19,41 +19,25 @@ repositories {
 
 dependencies {
     minecraft 'com.mojang:minecraft:26.2'
-
-    // Minecraft 26.2 uses Loom's non-remapping mode, so dependencies are regular
-    // Gradle implementation/compileOnly configurations instead of modImplementation.
     implementation 'net.fabricmc:fabric-loader:0.19.5'
     implementation 'net.fabricmc.fabric-api:fabric-api:0.160.0+26.2'
     implementation 'fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1'
-
-    // Kaleidoscope Cookery Refabricated 1.4.1.5 for Minecraft 26.2.
     implementation 'curse.maven:kaleidoscope-cookery-refabricated-1394201:8684828'
 }
 
 sourceSets {
     main {
         java {
-            srcDir "$buildDir/generated-port-src"
             srcDir 'src/main/java'
         }
         resources {
             srcDir '../common/src/main/resources'
             srcDir 'src/main/resources'
+            // Preview 1 deliberately omits legacy 1.21.1 datapack recipes until
+            // their 26.2 serializers and ingredient references are ported.
+            exclude 'data/**'
         }
     }
-}
-
-tasks.register('generatePortSources', Exec) {
-    inputs.dir rootProject.file('neoforge-1.21.1/src/main/java')
-    inputs.file file('port_transform.py')
-    outputs.dir "$buildDir/generated-port-src"
-    commandLine 'python3', file('port_transform.py').absolutePath,
-            rootProject.file('neoforge-1.21.1/src/main/java').absolutePath,
-            file("$buildDir/generated-port-src").absolutePath
-}
-
-tasks.named('compileJava') {
-    dependsOn tasks.named('generatePortSources')
 }
 
 processResources {
