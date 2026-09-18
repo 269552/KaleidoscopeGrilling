@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "kaleidoscope_grilling",
+  "version": "1.1.1-fabric+mc26.2",
+  "name": "Kaleidoscope Grilling",
+  "description": "Fabric 26.2 port in progress.",
+  "authors": ["breezeth"],
+  "license": "BSD-3-Clause + CC BY-NC-SA 4.0",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["cn.breezeth.kaleidoscope_grilling.fabric.KaleidoscopeGrillingFabric"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "fabric-api": ">=0.151.0",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "kaleidoscope_cookery": ">=1.4.1.5"
+  }
+}
