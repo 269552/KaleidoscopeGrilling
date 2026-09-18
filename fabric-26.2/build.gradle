@@ -19,12 +19,15 @@ repositories {
 
 dependencies {
     minecraft 'com.mojang:minecraft:26.2'
-    modImplementation 'net.fabricmc:fabric-loader:0.19.5'
-    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.160.0+26.2'
-    modImplementation 'fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1'
+
+    // Minecraft 26.2 uses Loom's non-remapping mode, so dependencies are regular
+    // Gradle implementation/compileOnly configurations instead of modImplementation.
+    implementation 'net.fabricmc:fabric-loader:0.19.5'
+    implementation 'net.fabricmc.fabric-api:fabric-api:0.160.0+26.2'
+    implementation 'fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1'
 
     // Kaleidoscope Cookery Refabricated 1.4.1.5 for Minecraft 26.2.
-    modImplementation 'curse.maven:kaleidoscope-cookery-refabricated-1394201:8684828'
+    implementation 'curse.maven:kaleidoscope-cookery-refabricated-1394201:8684828'
 }
 
 sourceSets {
