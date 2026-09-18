@@ -68,7 +68,7 @@ processResources {
 
     // Reuse all upstream art/lang/sounds, but do not load the old 1.21.1
     // datapack wholesale: custom serializers are not all ported yet.
-    from(rootProject.file('../common/src/main/resources')) {
+    from(rootProject.file('common/src/main/resources')) {
         exclude 'data/**'
     }
 }
