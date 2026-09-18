@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "id": "kaleidoscope_grilling",
-  "version": "1.1.1-fabric+mc26.2-preview2",
+  "version": "1.1.1-fabric+mc26.2-preview3",
   "name": "Kaleidoscope Grilling",
-  "description": "Fabric 26.2 expanded preview. The original item catalogue is visible while full Grilling mechanics are being ported.",
+  "description": "Fabric 26.2 functional preview. Foods, a first batch of buffs, placeable blocks and safe vanilla recipes are restored while the full grilling/oil systems are still being ported.",
   "authors": ["breezeth"],
   "license": "BSD-3-Clause + CC BY-NC-SA 4.0",
   "environment": "*",
