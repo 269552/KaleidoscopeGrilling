@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "id": "kaleidoscope_grilling",
-  "version": "1.1.1-fabric+mc26.2-preview3",
+  "version": "1.1.1-fabric+mc26.2-preview4",
   "name": "Kaleidoscope Grilling",
-  "description": "Fabric 26.2 functional preview. Foods, a first batch of buffs, placeable blocks and safe vanilla recipes are restored while the full grilling/oil systems are still being ported.",
+  "description": "Fabric 26.2 Preview 4: original block states/collision shapes, broader recipe compatibility and first-pass block interactions are restored while full block-entity mechanics continue to be ported.",
   "authors": ["breezeth"],
   "license": "BSD-3-Clause + CC BY-NC-SA 4.0",
   "environment": "*",
@@ -15,6 +15,7 @@
     "fabric-api": ">=0.151.0",
     "minecraft": "~26.2",
     "java": ">=25",
+    "forgeconfigapiport": "*",
     "kaleidoscope_cookery": "1.4.1.5-fabric+mc26.2"
   }
 }
