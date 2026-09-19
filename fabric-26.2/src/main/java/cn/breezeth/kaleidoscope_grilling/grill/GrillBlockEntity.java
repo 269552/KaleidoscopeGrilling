@@ -1,16 +1,15 @@
 package cn.breezeth.kaleidoscope_grilling.grill;
 
 import cn.breezeth.kaleidoscope_grilling.GrillAutomationApi;
+import cn.breezeth.kaleidoscope_grilling.food.FoodState;
 import cn.breezeth.kaleidoscope_grilling.registry.ModBlockEntities;
 import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
-
-import cn.breezeth.kaleidoscope_grilling.skewer.FailedSkewerData;
-import cn.breezeth.kaleidoscope_grilling.food.FoodState;
 import cn.breezeth.kaleidoscope_grilling.seasoning.SeasoningData;
+import cn.breezeth.kaleidoscope_grilling.skewer.FailedSkewerData;
 import cn.breezeth.kaleidoscope_grilling.skewer.SecretSkewerItem;
-import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
 import cn.breezeth.kaleidoscope_grilling.skewer.SkewerRecipes;
-
+import cn.breezeth.kaleidoscope_grilling.skewer.SkeweringHandler;
+import com.mojang.serialization.Codec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -19,12 +18,10 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.ItemStackWithSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -33,11 +30,27 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public final class GrillBlockEntity extends BlockEntity implements Container {
   public static final int SLOT_COUNT = 3;
   private static final int FINISHED_TICKS = 800;
   private static final int BURNT_TICKS = 400;
+
+  private static final String ITEMS = "Items";
+  private static final String PHASE = "Phase";
+  private static final String PHASE_TICKS = "PhaseTicks";
+  private static final String FLIPS = "Flips";
+  private static final String FLIP_COOLDOWN = "FlipCooldown";
+  private static final String HEAT_DURATION = "HeatDuration";
+  private static final String AUTOMATION_OWNER = "AutomationOwner";
+  private static final String AUTOMATION_HEARTBEAT = "AutomationHeartbeat";
+  private static final String AUTOMATION_BLOCKED_OWNER = "AutomationBlockedOwner";
+  private static final String AUTOMATION_BLOCKED_UNTIL = "AutomationBlockedUntil";
+  private static final String SEASONED = "Seasoned";
+  private static final String FAILED = "Failed";
+  private static final String SEASONING_INGREDIENTS = "SeasoningIngredients";
 
   private NonNullList<ItemStack> items = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY);
   private int phase;
@@ -60,14 +73,13 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
 
   public static void tick(Level level, BlockPos pos, BlockState state, GrillBlockEntity grill) {
     if (grill.automationOwner != null
-        && grill.automationExpired(
-            level.getGameTime(), GrillAutomationApi.DEFAULT_LEASE_TIMEOUT_TICKS)) {
+        && grill.automationExpired(level.getGameTime(), GrillAutomationApi.DEFAULT_LEASE_TIMEOUT_TICKS)) {
       grill.clearAutomation();
       GrillAutomationApi.untrackExpiredLease(level, pos);
     }
     if (grill.flipCooldown > 0) grill.flipCooldown--;
-    if (!state.getValue(GrillBlock.LIT)) return;
-    if (grill.isEmpty()) return;
+    if (!state.getValue(GrillBlock.LIT) || grill.isEmpty()) return;
+
     grill.phaseTicks++;
     if (grill.phaseTicks % 20 == 0) grill.sync();
     if (grill.phase <= 2 && grill.phaseTicks >= FINISHED_TICKS) {
@@ -93,13 +105,14 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
 
   public boolean insert(ItemStack held, boolean consumeInput) {
     if (!canAccept(held)) return false;
-    for (int i = 0; i < items.size(); i++)
+    for (int i = 0; i < items.size(); i++) {
       if (items.get(i).isEmpty()) {
         items.set(i, held.copyWithCount(1));
         if (consumeInput) held.shrink(1);
         sync();
         return true;
       }
+    }
     return false;
   }
 
@@ -128,7 +141,7 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     if (flips >= 4) {
       phase = 2;
       failed = false;
-      if (level != null && !level.isClientSide) {
+      if (level != null && !level.isClientSide()) {
         for (ItemStack item : items) SkeweringHandler.ensureCookedIngredientStacks(item, level);
       }
     }
@@ -186,7 +199,7 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
   }
 
   public void dropForBreak() {
-    if (level == null || level.isClientSide) return;
+    if (level == null || level.isClientSide()) return;
     for (ItemStack input : items) {
       if (input.isEmpty()) continue;
       ItemStack output;
@@ -231,37 +244,14 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
     return output;
   }
 
-  public boolean isFailed() {
-    return failed;
-  }
-
-  public int getPhase() {
-    return phase;
-  }
-
-  public int getFlips() {
-    return flips;
-  }
-
-  public int getPhaseTicks() {
-    return phaseTicks;
-  }
-
-  public int getFlipCooldown() {
-    return flipCooldown;
-  }
-
-  public boolean isSeasoned() {
-    return seasoned;
-  }
-
-  public int getHeatDurationTicks() {
-    return heatDurationTicks;
-  }
-
-  public int occupiedSlots() {
-    return (int) items.stream().filter(s -> !s.isEmpty()).count();
-  }
+  public boolean isFailed() { return failed; }
+  public int getPhase() { return phase; }
+  public int getFlips() { return flips; }
+  public int getPhaseTicks() { return phaseTicks; }
+  public int getFlipCooldown() { return flipCooldown; }
+  public boolean isSeasoned() { return seasoned; }
+  public int getHeatDurationTicks() { return heatDurationTicks; }
+  public int occupiedSlots() { return (int) items.stream().filter(s -> !s.isEmpty()).count(); }
 
   public boolean tryAcquireAutomation(UUID owner, long gameTime, int timeoutTicks) {
     if (owner == null) return false;
@@ -270,9 +260,7 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
       automationBlockedUntil = 0;
     }
     if (owner.equals(automationBlockedOwner)) return false;
-    if (automationOwner == null
-        || automationOwner.equals(owner)
-        || automationExpired(gameTime, timeoutTicks)) {
+    if (automationOwner == null || automationOwner.equals(owner) || automationExpired(gameTime, timeoutTicks)) {
       automationOwner = owner;
       automationHeartbeat = gameTime;
       sync();
@@ -332,65 +320,68 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
 
   private void sync() {
     setChanged();
-    if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+    if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
   }
 
   @Override
-  protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-    super.saveAdditional(tag, registries);
-    ContainerHelper.saveAllItems(tag, items, registries);
-    tag.putInt("Phase", phase);
-    tag.putInt("PhaseTicks", phaseTicks);
-    tag.putInt("Flips", flips);
-    tag.putInt("FlipCooldown", flipCooldown);
-    tag.putInt("HeatDuration", heatDurationTicks);
-    if (automationOwner != null) tag.putUUID("AutomationOwner", automationOwner);
-    tag.putLong("AutomationHeartbeat", automationHeartbeat);
-    if (automationBlockedOwner != null) tag.putUUID("AutomationBlockedOwner", automationBlockedOwner);
-    tag.putLong("AutomationBlockedUntil", automationBlockedUntil);
-    tag.putBoolean("Seasoned", seasoned);
-    tag.putBoolean("Failed", failed);
-    ListTag list = new ListTag();
-    seasoningIngredients.forEach(v -> list.add(StringTag.valueOf(v)));
-    tag.put("SeasoningIngredients", list);
+  protected void saveAdditional(ValueOutput out) {
+    super.saveAdditional(out);
+    ValueOutput.TypedOutputList<ItemStackWithSlot> itemList = out.list(ITEMS, ItemStackWithSlot.CODEC);
+    for (int i = 0; i < items.size(); i++) {
+      ItemStack stack = items.get(i);
+      if (!stack.isEmpty()) itemList.add(new ItemStackWithSlot(i, stack));
+    }
+    out.putInt(PHASE, phase);
+    out.putInt(PHASE_TICKS, phaseTicks);
+    out.putInt(FLIPS, flips);
+    out.putInt(FLIP_COOLDOWN, flipCooldown);
+    out.putInt(HEAT_DURATION, heatDurationTicks);
+    if (automationOwner != null) out.putString(AUTOMATION_OWNER, automationOwner.toString());
+    out.putLong(AUTOMATION_HEARTBEAT, automationHeartbeat);
+    if (automationBlockedOwner != null) out.putString(AUTOMATION_BLOCKED_OWNER, automationBlockedOwner.toString());
+    out.putLong(AUTOMATION_BLOCKED_UNTIL, automationBlockedUntil);
+    out.putBoolean(SEASONED, seasoned);
+    out.putBoolean(FAILED, failed);
+    ValueOutput.TypedOutputList<String> seasonings = out.list(SEASONING_INGREDIENTS, Codec.STRING);
+    seasoningIngredients.forEach(seasonings::add);
   }
 
   @Override
-  protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-    super.loadAdditional(tag, registries);
+  protected void loadAdditional(ValueInput in) {
+    super.loadAdditional(in);
     items = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY);
-    ContainerHelper.loadAllItems(tag, items, registries);
-    phase = tag.getInt("Phase");
-    phaseTicks = tag.getInt("PhaseTicks");
-    flips = tag.getInt("Flips");
-    flipCooldown = tag.getInt("FlipCooldown");
-    heatDurationTicks = tag.getInt("HeatDuration");
-    automationOwner = tag.hasUUID("AutomationOwner") ? tag.getUUID("AutomationOwner") : null;
-    automationHeartbeat = tag.getLong("AutomationHeartbeat");
-    automationBlockedOwner =
-        tag.hasUUID("AutomationBlockedOwner") ? tag.getUUID("AutomationBlockedOwner") : null;
-    automationBlockedUntil = tag.getLong("AutomationBlockedUntil");
-    seasoned = tag.getBoolean("Seasoned");
-    failed = tag.getBoolean("Failed");
+    for (ItemStackWithSlot entry : in.listOrEmpty(ITEMS, ItemStackWithSlot.CODEC)) {
+      if (entry.isValidInContainer(items.size())) items.set(entry.slot(), entry.stack());
+    }
+    phase = in.getIntOr(PHASE, 0);
+    phaseTicks = in.getIntOr(PHASE_TICKS, 0);
+    flips = in.getIntOr(FLIPS, 0);
+    flipCooldown = in.getIntOr(FLIP_COOLDOWN, 0);
+    heatDurationTicks = in.getIntOr(HEAT_DURATION, 0);
+    automationOwner = parseUuid(in.getString(AUTOMATION_OWNER).orElse(""));
+    automationHeartbeat = in.getLongOr(AUTOMATION_HEARTBEAT, 0L);
+    automationBlockedOwner = parseUuid(in.getString(AUTOMATION_BLOCKED_OWNER).orElse(""));
+    automationBlockedUntil = in.getLongOr(AUTOMATION_BLOCKED_UNTIL, 0L);
+    seasoned = in.getBooleanOr(SEASONED, false);
+    failed = in.getBooleanOr(FAILED, false);
     seasoningIngredients.clear();
-    ListTag list = tag.getList("SeasoningIngredients", 8);
-    for (int i = 0; i < list.size(); i++) seasoningIngredients.add(list.getString(i));
+    for (String value : in.listOrEmpty(SEASONING_INGREDIENTS, Codec.STRING)) seasoningIngredients.add(value);
+  }
+
+  private static UUID parseUuid(String value) {
+    if (value == null || value.isEmpty()) return null;
+    try { return UUID.fromString(value); }
+    catch (IllegalArgumentException ignored) { return null; }
   }
 
   @Override
-  public int getContainerSize() {
-    return SLOT_COUNT;
-  }
+  public int getContainerSize() { return SLOT_COUNT; }
 
   @Override
-  public boolean isEmpty() {
-    return items.stream().allMatch(ItemStack::isEmpty);
-  }
+  public boolean isEmpty() { return items.stream().allMatch(ItemStack::isEmpty); }
 
   @Override
-  public ItemStack getItem(int slot) {
-    return items.get(slot);
-  }
+  public ItemStack getItem(int slot) { return items.get(slot); }
 
   @Override
   public ItemStack removeItem(int slot, int amount) {
@@ -400,9 +391,7 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
   }
 
   @Override
-  public ItemStack removeItemNoUpdate(int slot) {
-    return ContainerHelper.takeItem(items, slot);
-  }
+  public ItemStack removeItemNoUpdate(int slot) { return ContainerHelper.takeItem(items, slot); }
 
   @Override
   public void setItem(int slot, ItemStack stack) {
@@ -412,39 +401,25 @@ public final class GrillBlockEntity extends BlockEntity implements Container {
   }
 
   @Override
-  public boolean stillValid(Player player) {
-    return Container.stillValidBlockEntity(this, player);
-  }
+  public boolean stillValid(Player player) { return Container.stillValidBlockEntity(this, player); }
 
   @Override
-  public void clearContent() {
-    items.clear();
-  }
+  public void clearContent() { items.clear(); }
 
   @Override
   public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-    CompoundTag tag = super.getUpdateTag(registries);
-    saveAdditional(tag, registries);
-    return tag;
+    return saveWithoutMetadata(registries);
   }
 
   @Override
   public void onLoad() {
     super.onLoad();
-    if (level != null && automationOwner != null)
-      GrillAutomationApi.trackLoadedLease(level, worldPosition);
+    if (level != null && automationOwner != null) GrillAutomationApi.trackLoadedLease(level, worldPosition);
   }
 
   @Override
   public ClientboundBlockEntityDataPacket getUpdatePacket() {
     return ClientboundBlockEntityDataPacket.create(this);
-  }
-
-  @Override
-  public void onDataPacket(
-      Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider registries) {
-    CompoundTag tag = pkt.getTag();
-    if (tag != null) loadAdditional(tag, registries);
   }
 
   public static final class FlipAnimationData {
