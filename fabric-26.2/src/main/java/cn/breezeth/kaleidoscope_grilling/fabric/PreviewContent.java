@@ -3,6 +3,7 @@ package cn.breezeth.kaleidoscope_grilling.fabric;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -28,10 +29,9 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 /**
  * Functional preview content for the Fabric 26.2 port.
  *
- * Preview 3 restores real food components, a first batch of vanilla status
- * effects, placeable equipment/decorative blocks and the original registry IDs.
- * More complex block entities, fluids, grilling state machines and custom
- * Grilling/Cookery effects are still being ported separately.
+ * Preview 4 restores original block-state properties and collision shapes for
+ * the main interactive blocks, adds first-pass interactions for the grill/oil
+ * press/seasoning bottles, and keeps the original registry IDs and food data.
  */
 public final class PreviewContent {
     public static final String MOD_ID = "kaleidoscope_grilling";
@@ -82,9 +82,7 @@ public final class PreviewContent {
         defineFoods();
         registerBlocks();
 
-        // Big Vat is a real block too, but it is not present in ITEM_IDS.
         ITEMS.put("big_vat", registerBlockItem("big_vat", BLOCKS.get("big_vat"), baseProperties("big_vat"), true));
-
         for (String id : ITEM_IDS) {
             ITEMS.put(id, registerPreviewItem(id));
         }
@@ -105,20 +103,32 @@ public final class PreviewContent {
                         .build());
     }
 
+    static Item item(String name) {
+        return ITEMS.get(name);
+    }
+
     private static void registerBlocks() {
-        block("big_vat", BlockBehaviour.Properties.of().strength(2.0F).sound(SoundType.STONE).noOcclusion());
-        block("grill", BlockBehaviour.Properties.of().strength(3.0F).sound(SoundType.METAL).noOcclusion());
-        block("oil_press", BlockBehaviour.Properties.of().strength(2.5F).sound(SoundType.WOOD).noOcclusion());
-        block("advanced_rack", BlockBehaviour.Properties.of().strength(2.0F).sound(SoundType.WOOD).noOcclusion());
-        block("pepper_log", BlockBehaviour.Properties.of().strength(2.0F).sound(SoundType.WOOD));
-        block("pepper_leaves", BlockBehaviour.Properties.of().strength(0.2F).sound(SoundType.GRASS).noOcclusion());
-        block("pepper_sapling", BlockBehaviour.Properties.of().strength(0.0F).sound(SoundType.GRASS).noOcclusion());
-        block("skewer_plate", BlockBehaviour.Properties.of().strength(0.2F).sound(SoundType.WOOD).noOcclusion());
-        block("seasoning_bottle", BlockBehaviour.Properties.of().strength(0.0F).sound(SoundType.GLASS).noOcclusion());
+        block("big_vat", Block::new,
+                BlockBehaviour.Properties.of().strength(2.0F).sound(SoundType.STONE).noOcclusion());
+        block("grill", PreviewBlocks.Grill::new,
+                BlockBehaviour.Properties.of().strength(3.0F).sound(SoundType.METAL).noOcclusion());
+        block("oil_press", PreviewBlocks.OilPress::new,
+                BlockBehaviour.Properties.of().strength(2.5F).sound(SoundType.WOOD).noOcclusion());
+        block("advanced_rack", PreviewBlocks.AdvancedRack::new,
+                BlockBehaviour.Properties.of().strength(2.0F).sound(SoundType.WOOD).noOcclusion());
+        block("pepper_log", Block::new,
+                BlockBehaviour.Properties.of().strength(2.0F).sound(SoundType.WOOD));
+        block("pepper_leaves", Block::new,
+                BlockBehaviour.Properties.of().strength(0.2F).sound(SoundType.GRASS).noOcclusion());
+        block("pepper_sapling", PreviewBlocks.SaplingShape::new,
+                BlockBehaviour.Properties.of().strength(0.0F).sound(SoundType.GRASS).noOcclusion());
+        block("skewer_plate", PreviewBlocks.SkewerPlate::new,
+                BlockBehaviour.Properties.of().strength(0.2F).sound(SoundType.WOOD).noOcclusion());
+        block("seasoning_bottle", PreviewBlocks.SeasoningBottle::new,
+                BlockBehaviour.Properties.of().strength(0.0F).sound(SoundType.GLASS).noOcclusion());
     }
 
     private static void defineFoods() {
-        // Standalone dishes and ingredients from the 1.21.1 source.
         food("secret_skewer", 1, 0.0F);
         food("skewer_plate", 1, 0.0F);
         food("chicken_wing", 2, 0.06F);
@@ -140,7 +150,6 @@ public final class PreviewContent {
         food("sour_spicy_noodles", 10, 0.6F);
         food("ordinary_skewer", 5, 0.46F, true, null, 0);
 
-        // Raw skewers.
         food("raw_beef_skewer", 2, 0.3F);
         food("raw_pork_belly_skewer", 2, 0.3F);
         food("raw_chicken_skin_skewer", 2, 0.25F);
@@ -161,8 +170,6 @@ public final class PreviewContent {
         food("raw_lamb_skewer", 4, 0.8F);
         food("raw_golden_skewer", 6, 1.2F);
 
-        // Grilled skewers. Vanilla effects are restored here; Cookery-specific
-        // effects such as warmth/vigor are handled in a later port stage.
         food("grilled_beef_skewer", 5, 0.6F, false, MobEffects.STRENGTH, 10 * 20);
         food("grilled_pork_belly_skewer", 5, 0.6F);
         food("grilled_chicken_skin_skewer", 4, 0.5F, false, MobEffects.SPEED, 20 * 20);
@@ -198,11 +205,14 @@ public final class PreviewContent {
         FOODS.put(id, new FoodSpec(nutrition, saturation, alwaysEdible, effect, effectTicks));
     }
 
-    private static void block(String name, BlockBehaviour.Properties properties) {
+    private static void block(
+            String name,
+            Function<BlockBehaviour.Properties, ? extends Block> factory,
+            BlockBehaviour.Properties properties) {
         ResourceKey<Block> key = ResourceKey.create(
                 Registries.BLOCK,
                 Identifier.fromNamespaceAndPath(MOD_ID, name));
-        Block block = new Block(properties.setId(key));
+        Block block = factory.apply(properties.setId(key));
         BLOCKS.put(name, Registry.register(BuiltInRegistries.BLOCK, key, block));
     }
 
