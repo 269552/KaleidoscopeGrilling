@@ -4,7 +4,6 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -25,7 +24,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -39,7 +38,7 @@ final class PreviewBlocks {
     static final class Grill extends HorizontalDirectionalBlock {
         static final BooleanProperty LEGGED = BooleanProperty.create("legged");
         static final BooleanProperty LIT = BlockStateProperties.LIT;
-        static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+        static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
 
         private static final VoxelShape FLAT_Z = Block.box(0, 0, 2, 16, 4, 14);
         private static final VoxelShape FLAT_X = Block.box(2, 0, 0, 14, 4, 16);
@@ -65,7 +64,7 @@ final class PreviewBlocks {
         }
 
         @Override
-        protected MapCodec<? extends Block> codec() {
+        protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
             return simpleCodec(Grill::new);
         }
 
@@ -143,7 +142,7 @@ final class PreviewBlocks {
     }
 
     static final class AdvancedRack extends HorizontalDirectionalBlock {
-        static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+        static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
         static final IntegerProperty SPICE_LEVEL = IntegerProperty.create("spice_level", 0, 4);
         private static final VoxelShape NORTH = Block.box(1, 5, 11, 15, 14, 16);
         private static final VoxelShape SOUTH = Block.box(1, 5, 0, 15, 14, 5);
@@ -156,7 +155,7 @@ final class PreviewBlocks {
         }
 
         @Override
-        protected MapCodec<? extends Block> codec() {
+        protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
             return simpleCodec(AdvancedRack::new);
         }
 
@@ -183,7 +182,7 @@ final class PreviewBlocks {
     }
 
     static final class OilPress extends HorizontalDirectionalBlock {
-        static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+        static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
         static final IntegerProperty CAKE_COUNT = IntegerProperty.create("cake_count", 0, 4);
         static final IntegerProperty PRESS_STAGE = IntegerProperty.create("press_stage", 0, 4);
 
@@ -196,7 +195,7 @@ final class PreviewBlocks {
         }
 
         @Override
-        protected MapCodec<? extends Block> codec() {
+        protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
             return simpleCodec(OilPress::new);
         }
 
@@ -241,21 +240,12 @@ final class PreviewBlocks {
         @Override
         protected InteractionResult useWithoutItem(
                 BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-            if (!level.isClientSide()) {
-                player.displayClientMessage(
-                        Component.translatable(
-                                "message.kaleidoscope_grilling.press_status",
-                                state.getValue(CAKE_COUNT),
-                                state.getValue(PRESS_STAGE) * 4,
-                                16),
-                        true);
-            }
             return InteractionResult.SUCCESS;
         }
     }
 
     static final class SkewerPlate extends HorizontalDirectionalBlock {
-        static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+        static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
         private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 7, 15);
 
         SkewerPlate(BlockBehaviour.Properties properties) {
@@ -264,7 +254,7 @@ final class PreviewBlocks {
         }
 
         @Override
-        protected MapCodec<? extends Block> codec() {
+        protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
             return simpleCodec(SkewerPlate::new);
         }
 
@@ -285,7 +275,7 @@ final class PreviewBlocks {
     }
 
     static final class SeasoningBottle extends HorizontalDirectionalBlock {
-        static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+        static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
         static final IntegerProperty COUNT = IntegerProperty.create("count", 1, 4);
         private static final VoxelShape[] SHAPES = {
                 Block.box(5, 0, 5, 11, 12.25, 11),
@@ -300,7 +290,7 @@ final class PreviewBlocks {
         }
 
         @Override
-        protected MapCodec<? extends Block> codec() {
+        protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
             return simpleCodec(SeasoningBottle::new);
         }
 
