@@ -1,0 +1,50 @@
+package cn.breezeth.kaleidoscope_grilling.compat.touhoulittlemaid;
+
+import com.github.tartaricacid.touhoulittlemaid.item.ItemWirelessIO;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+
+public final class MaidGrillingCompat {
+  public static void init(IEventBus modBus) {
+    modBus.addListener(MaidGrillingCompat::registerPayloads);
+    NeoForge.EVENT_BUS.addListener(MaidGrillingCompat::onWirelessIOTooltip);
+  }
+
+  private static void onWirelessIOTooltip(ItemTooltipEvent event) {
+    if (!(event.getItemStack().getItem() instanceof ItemWirelessIO)
+        || !GrillingWirelessIOData.isEnabled(event.getItemStack())) return;
+    if (!event.getToolTip().isEmpty()) {
+      event
+          .getToolTip()
+          .set(
+              0,
+              Component.translatable("item.kaleidoscope_grilling.grilling_wireless_io")
+                  .withStyle(ChatFormatting.GOLD));
+    }
+    event
+        .getToolTip()
+        .add(
+            Component.translatable("tooltip.kaleidoscope_grilling.grilling_wireless_io")
+                .withStyle(ChatFormatting.GRAY));
+    event
+        .getToolTip()
+        .add(
+            Component.translatable("tooltip.kaleidoscope_grilling.grilling_wireless_io.common")
+                .withStyle(ChatFormatting.DARK_GRAY));
+  }
+
+  private static void registerPayloads(RegisterPayloadHandlersEvent event) {
+    event
+        .registrar("1")
+        .playToServer(
+            GrillingWirelessIOModePayload.TYPE,
+            GrillingWirelessIOModePayload.STREAM_CODEC,
+            GrillingWirelessIOModePayload::handle);
+  }
+
+  private MaidGrillingCompat() {}
+}
