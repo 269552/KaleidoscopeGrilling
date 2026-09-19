@@ -1,6 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "category": "food",
-  "ingredients": ["kaleidoscope_cookery:tomato", "minecraft:sugar"],
-  "result": {"id": "kaleidoscope_grilling:sugared_tomato", "count": 1}
-}
