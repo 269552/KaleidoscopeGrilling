@@ -38,9 +38,6 @@ sourceSets {
 
 processResources {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    // Faithful port: package the upstream assets/data instead of generating simplified preview
-    // substitutes. Fabric-specific metadata in src/main/resources remains authoritative.
     from(rootProject.file('common/src/main/resources'))
     from(rootProject.file('neoforge-1.21.1/src/main/resources')) {
         exclude 'META-INF/neoforge.mods.toml'
@@ -51,6 +48,7 @@ processResources {
 tasks.withType(JavaCompile).configureEach {
     options.release = 25
     options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xmaxerrs', '500']
 }
 
 java {
