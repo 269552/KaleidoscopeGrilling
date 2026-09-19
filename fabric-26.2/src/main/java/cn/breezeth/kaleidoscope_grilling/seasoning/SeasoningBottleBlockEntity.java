@@ -1,26 +1,33 @@
 package cn.breezeth.kaleidoscope_grilling.seasoning;
 
+import cn.breezeth.kaleidoscope_grilling.SeasoningAutomationApi;
 import cn.breezeth.kaleidoscope_grilling.registry.ModBlockEntities;
 import cn.breezeth.kaleidoscope_grilling.registry.ModItems;
-import cn.breezeth.kaleidoscope_grilling.SeasoningAutomationApi;
-
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.ContainerHelper;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.ItemStackWithSlot;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
+/**
+ * Stores every bottle as a real ItemStack so pending/finished seasoning data survives stacking,
+ * pickup, world save and client synchronization exactly like the original implementation.
+ */
 public final class SeasoningBottleBlockEntity extends BlockEntity {
   public static final int CAPACITY = 8;
   public static final int MAX_BOTTLES = 4;
+  private static final String BOTTLES = "Items";
+
   private NonNullList<ItemStack> bottles = NonNullList.withSize(MAX_BOTTLES, ItemStack.EMPTY);
 
   public SeasoningBottleBlockEntity(BlockPos pos, BlockState state) {
@@ -39,8 +46,14 @@ public final class SeasoningBottleBlockEntity extends BlockEntity {
     return out;
   }
 
+  public ItemStack bottleAt(int index) {
+    return index >= 0 && index < MAX_BOTTLES ? bottles.get(index) : ItemStack.EMPTY;
+  }
+
   public ItemStack top() {
-    for (int i = MAX_BOTTLES - 1; i >= 0; i--) if (!bottles.get(i).isEmpty()) return bottles.get(i);
+    for (int i = MAX_BOTTLES - 1; i >= 0; i--) {
+      if (!bottles.get(i).isEmpty()) return bottles.get(i);
+    }
     return ItemStack.EMPTY;
   }
 
@@ -61,35 +74,34 @@ public final class SeasoningBottleBlockEntity extends BlockEntity {
   }
 
   public boolean hasBase() {
-    List<String> values = ingredients();
-    return values.contains("kaleidoscope_grilling:green_chili_powder")
-        && values.contains("kaleidoscope_grilling:sichuan_pepper")
-        && values.contains("kaleidoscope_grilling:onion_powder");
+    return hasBase(ingredients());
   }
 
   public boolean canAdd(String id) {
-    net.minecraft.world.item.Item item =
-        net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
-            net.minecraft.resources.ResourceLocation.parse(id));
-    return !isFinished()
+    Item item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(Identifier.parse(id));
+    return item != null
+        && !isFinished()
         && ingredients().size() < CAPACITY
         && SeasoningAutomationApi.isValidIngredient(new ItemStack(item));
   }
 
   public boolean add(String id) {
     if (!canAdd(id)) return false;
-    ItemStack stack = top();
+    int slot = count() - 1;
+    if (slot < 0) return false;
+    ItemStack stack = bottles.get(slot);
     List<String> values = SeasoningData.get(stack);
     values.add(id);
     SeasoningData.set(stack, values);
-    promotePendingIfReady(count() - 1, stack, values);
+    promotePendingIfReady(slot, stack, values);
     sync();
     return true;
   }
 
   public boolean push(ItemStack stack) {
-    if (count() >= MAX_BOTTLES || !isBottle(stack)) return false;
-    bottles.set(count(), stack.copyWithCount(1));
+    int count = count();
+    if (count >= MAX_BOTTLES || !isBottle(stack)) return false;
+    bottles.set(count, stack.copyWithCount(1));
     sync();
     return true;
   }
@@ -124,7 +136,7 @@ public final class SeasoningBottleBlockEntity extends BlockEntity {
 
   private static ItemStack normalizeForPickup(ItemStack stack) {
     List<String> values = SeasoningData.get(stack);
-    if (!stack.is(ModItems.EMPTY_SEASONING_BOTTLE.get()) || !hasBase(values)) return stack;
+    if (!stack.is(ModItems.EMPTY_SEASONING_BOTTLE.get()) || !hasBase(values)) return stack.copy();
     ItemStack pending = new ItemStack(ModItems.PENDING_SEASONING.get());
     SeasoningData.set(pending, values);
     return pending;
@@ -141,60 +153,39 @@ public final class SeasoningBottleBlockEntity extends BlockEntity {
     if (level == null) return;
     int visualCount = Math.max(1, count());
     BlockState state = getBlockState();
-    if (state.getValue(SeasoningBottleBlock.COUNT) != visualCount)
-      level.setBlock(worldPosition, state.setValue(SeasoningBottleBlock.COUNT, visualCount), 3);
-    else if (!level.isClientSide) level.sendBlockUpdated(worldPosition, state, state, 3);
-  }
-
-  @Override
-  protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-    super.saveAdditional(tag, registries);
-    ContainerHelper.saveAllItems(tag, bottles, registries);
-  }
-
-  @Override
-  protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-    super.loadAdditional(tag, registries);
-    bottles = NonNullList.withSize(MAX_BOTTLES, ItemStack.EMPTY);
-    if (tag.contains("Items")) ContainerHelper.loadAllItems(tag, bottles, registries);
-    else loadLegacy(tag);
-  }
-
-  private void loadLegacy(CompoundTag tag) {
-    List<String> ingredients = new ArrayList<>();
-    ListTag list = tag.getList("Ingredients", 8);
-    for (int i = 0; i < list.size(); i++) ingredients.add(list.getString(i));
-    ItemStack stack =
-        new ItemStack(
-            tag.getBoolean("Finished")
-                ? ModItems.SPECIAL_SEASONING.get()
-                : ingredients.isEmpty()
-                    ? ModItems.EMPTY_SEASONING_BOTTLE.get()
-                    : ModItems.PENDING_SEASONING.get());
-    SeasoningData.set(stack, ingredients);
-    if (stack.is(ModItems.SPECIAL_SEASONING.get())) {
-      SeasoningData.setUses(stack, tag.getInt("Damage"));
-      SeasoningData.setVariant(stack, tag.getInt("Variant"));
+    if (state.getValue(SeasoningBottleBlock.COUNT) != visualCount) {
+      level.setBlock(worldPosition, state.setValue(SeasoningBottleBlock.COUNT, visualCount), Block.UPDATE_ALL);
+    } else if (!level.isClientSide()) {
+      level.sendBlockUpdated(worldPosition, state, state, Block.UPDATE_ALL);
     }
-    bottles.set(0, stack);
   }
 
   @Override
-  public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-    CompoundTag tag = super.getUpdateTag(registries);
-    saveAdditional(tag, registries);
-    return tag;
+  protected void saveAdditional(ValueOutput out) {
+    super.saveAdditional(out);
+    ValueOutput.TypedOutputList<ItemStackWithSlot> list = out.list(BOTTLES, ItemStackWithSlot.CODEC);
+    for (int i = 0; i < bottles.size(); i++) {
+      ItemStack stack = bottles.get(i);
+      if (!stack.isEmpty()) list.add(new ItemStackWithSlot(i, stack));
+    }
+  }
+
+  @Override
+  protected void loadAdditional(ValueInput in) {
+    super.loadAdditional(in);
+    bottles = NonNullList.withSize(MAX_BOTTLES, ItemStack.EMPTY);
+    for (ItemStackWithSlot entry : in.listOrEmpty(BOTTLES, ItemStackWithSlot.CODEC)) {
+      if (entry.isValidInContainer(MAX_BOTTLES)) bottles.set(entry.slot(), entry.stack());
+    }
+  }
+
+  @Override
+  public net.minecraft.nbt.CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+    return saveWithoutMetadata(registries);
   }
 
   @Override
   public ClientboundBlockEntityDataPacket getUpdatePacket() {
     return ClientboundBlockEntityDataPacket.create(this);
-  }
-
-  @Override
-  public void onDataPacket(
-      Connection net, ClientboundBlockEntityDataPacket packet, HolderLookup.Provider registries) {
-    CompoundTag tag = packet.getTag();
-    if (tag != null) loadAdditional(tag, registries);
   }
 }
