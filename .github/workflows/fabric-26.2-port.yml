@@ -24,6 +24,10 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
+      - name: Apply semantics-preserving 26.2 source renames
+        if: github.ref_name == 'fabric-26.2-faithful-port'
+        run: python3 tools/prepare_faithful_fabric_source.py
+
       - name: Build Fabric 26.2 module
         run: ./gradlew :fabric-26.2:build --stacktrace --warning-mode all
 
