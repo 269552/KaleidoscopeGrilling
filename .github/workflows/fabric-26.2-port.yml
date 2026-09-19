@@ -2,7 +2,7 @@ name: Fabric 26.2 Port Build
 
 on:
   push:
-    branches: ["fabric-26.2-port"]
+    branches: ["fabric-26.2-port", "fabric-26.2-faithful-port"]
   workflow_dispatch:
 
 jobs:
