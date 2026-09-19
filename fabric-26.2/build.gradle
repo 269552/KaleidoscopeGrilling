@@ -1,8 +1,11 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
 plugins {
     id 'net.fabricmc.fabric-loom' version '1.17.2'
 }
 
-version = '1.1.1-fabric+mc26.2-preview3'
+version = '1.1.1-fabric+mc26.2-preview4'
 group = 'cn.breezeth'
 
 base {
@@ -26,6 +29,7 @@ dependencies {
 }
 
 def generatedPreviewResources = layout.buildDirectory.dir('generated-preview-resources')
+def generatedPortedData = layout.buildDirectory.dir('generated-ported-data')
 
 sourceSets {
     main {
@@ -33,9 +37,9 @@ sourceSets {
             srcDir 'src/main/java'
         }
         resources {
-            // Fabric-specific overrides and safe 26.2 recipes come first.
             srcDir 'src/main/resources'
             srcDir generatedPreviewResources
+            srcDir generatedPortedData
         }
     }
 }
@@ -62,12 +66,62 @@ tasks.register('generatePreviewItemDefinitions') {
     }
 }
 
+tasks.register('generatePortedRecipes') {
+    inputs.dir rootProject.file('common/src/main/resources/data/kaleidoscope_grilling/recipe')
+    outputs.dir generatedPortedData
+
+    doLast {
+        def sourceRoot = rootProject.file('common/src/main/resources/data/kaleidoscope_grilling/recipe')
+        def outRoot = generatedPortedData.get().asFile
+        def acceptedTypes = [
+                'minecraft:crafting_shaped',
+                'minecraft:crafting_shapeless',
+                'minecraft:smelting',
+                'minecraft:smoking',
+                'minecraft:campfire_cooking',
+                'kaleidoscope_cookery:chopping_board',
+                'kaleidoscope_cookery:millstone',
+                'kaleidoscope_cookery:flex_pot',
+                'kaleidoscope_cookery:flex_stockpot',
+                'kaleidoscope_cookery:pot',
+                'kaleidoscope_cookery:stockpot'
+        ] as Set
+        def slurper = new JsonSlurper()
+
+        def ingredient = { value ->
+            if (value instanceof Map) {
+                if (value.item instanceof String) return value.item
+                if (value.tag instanceof String) return '#' + value.tag
+            }
+            return value
+        }
+
+        fileTree(sourceRoot).matching { include '**/*.json' }.files.each { recipeFile ->
+            def recipe = slurper.parse(recipeFile)
+            if (!(recipe instanceof Map) || !acceptedTypes.contains(recipe.type)) return
+
+            if (recipe.containsKey('ingredient')) recipe.ingredient = ingredient(recipe.ingredient)
+            if (recipe.containsKey('carrier')) recipe.carrier = ingredient(recipe.carrier)
+            if (recipe.ingredients instanceof List) {
+                recipe.ingredients = recipe.ingredients.collect { ingredient(it) }
+            }
+            if (recipe.key instanceof Map) {
+                recipe.key = recipe.key.collectEntries { k, v -> [(k): ingredient(v)] }
+            }
+
+            def relative = sourceRoot.toPath().relativize(recipeFile.toPath()).toString()
+            def outFile = new File(outRoot, 'data/kaleidoscope_grilling/recipe/' + relative)
+            outFile.parentFile.mkdirs()
+            outFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(recipe)) + '\n'
+        }
+    }
+}
+
 processResources {
     dependsOn tasks.named('generatePreviewItemDefinitions')
+    dependsOn tasks.named('generatePortedRecipes')
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    // Reuse all upstream art/lang/sounds, but do not load the old 1.21.1
-    // datapack wholesale: custom serializers are not all ported yet.
     from(rootProject.file('common/src/main/resources')) {
         exclude 'data/**'
     }
