@@ -1,11 +1,8 @@
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
-
 plugins {
     id 'net.fabricmc.fabric-loom' version '1.17.2'
 }
 
-version = '1.1.1-fabric+mc26.2-preview4'
+version = '1.1.1-fabric+mc26.2-faithful-dev'
 group = 'cn.breezeth'
 
 base {
@@ -28,9 +25,6 @@ dependencies {
     implementation 'curse.maven:kaleidoscope-cookery-refabricated-1394201:8684828'
 }
 
-def generatedPreviewResources = layout.buildDirectory.dir('generated-preview-resources')
-def generatedPortedData = layout.buildDirectory.dir('generated-ported-data')
-
 sourceSets {
     main {
         java {
@@ -38,92 +32,19 @@ sourceSets {
         }
         resources {
             srcDir 'src/main/resources'
-            srcDir generatedPreviewResources
-            srcDir generatedPortedData
-        }
-    }
-}
-
-tasks.register('generatePreviewItemDefinitions') {
-    inputs.dir rootProject.file('common/src/main/resources/assets/kaleidoscope_grilling/models/item')
-    outputs.dir generatedPreviewResources
-
-    doLast {
-        def modelDir = rootProject.file('common/src/main/resources/assets/kaleidoscope_grilling/models/item')
-        def outRoot = generatedPreviewResources.get().asFile
-        fileTree(modelDir).matching { include '*.json' }.files.each { modelFile ->
-            def id = modelFile.name.substring(0, modelFile.name.length() - 5)
-            def outFile = new File(outRoot, "assets/kaleidoscope_grilling/items/${id}.json")
-            outFile.parentFile.mkdirs()
-            outFile.text = """{
-  \"model\": {
-    \"type\": \"minecraft:model\",
-    \"model\": \"kaleidoscope_grilling:item/${id}\"
-  }
-}
-"""
-        }
-    }
-}
-
-tasks.register('generatePortedRecipes') {
-    inputs.dir rootProject.file('common/src/main/resources/data/kaleidoscope_grilling/recipe')
-    outputs.dir generatedPortedData
-
-    doLast {
-        def sourceRoot = rootProject.file('common/src/main/resources/data/kaleidoscope_grilling/recipe')
-        def outRoot = generatedPortedData.get().asFile
-        def acceptedTypes = [
-                'minecraft:crafting_shaped',
-                'minecraft:crafting_shapeless',
-                'minecraft:smelting',
-                'minecraft:smoking',
-                'minecraft:campfire_cooking',
-                'kaleidoscope_cookery:chopping_board',
-                'kaleidoscope_cookery:millstone',
-                'kaleidoscope_cookery:flex_pot',
-                'kaleidoscope_cookery:flex_stockpot',
-                'kaleidoscope_cookery:pot',
-                'kaleidoscope_cookery:stockpot'
-        ] as Set
-        def slurper = new JsonSlurper()
-
-        def ingredient = { value ->
-            if (value instanceof Map) {
-                if (value.item instanceof String) return value.item
-                if (value.tag instanceof String) return '#' + value.tag
-            }
-            return value
-        }
-
-        fileTree(sourceRoot).matching { include '**/*.json' }.files.each { recipeFile ->
-            def recipe = slurper.parse(recipeFile)
-            if (!(recipe instanceof Map) || !acceptedTypes.contains(recipe.type)) return
-
-            if (recipe.containsKey('ingredient')) recipe.ingredient = ingredient(recipe.ingredient)
-            if (recipe.containsKey('carrier')) recipe.carrier = ingredient(recipe.carrier)
-            if (recipe.ingredients instanceof List) {
-                recipe.ingredients = recipe.ingredients.collect { ingredient(it) }
-            }
-            if (recipe.key instanceof Map) {
-                recipe.key = recipe.key.collectEntries { k, v -> [(k): ingredient(v)] }
-            }
-
-            def relative = sourceRoot.toPath().relativize(recipeFile.toPath()).toString()
-            def outFile = new File(outRoot, 'data/kaleidoscope_grilling/recipe/' + relative)
-            outFile.parentFile.mkdirs()
-            outFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(recipe)) + '\n'
         }
     }
 }
 
 processResources {
-    dependsOn tasks.named('generatePreviewItemDefinitions')
-    dependsOn tasks.named('generatePortedRecipes')
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    from(rootProject.file('common/src/main/resources')) {
-        exclude 'data/**'
+    // Faithful port: package the upstream assets/data instead of generating simplified preview
+    // substitutes. Fabric-specific metadata in src/main/resources remains authoritative.
+    from(rootProject.file('common/src/main/resources'))
+    from(rootProject.file('neoforge-1.21.1/src/main/resources')) {
+        exclude 'META-INF/neoforge.mods.toml'
+        exclude 'META-INF/MANIFEST.MF'
     }
 }
 
