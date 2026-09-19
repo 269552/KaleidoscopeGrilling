@@ -1,11 +1,9 @@
 package cn.breezeth.kaleidoscope_grilling.effect;
 
-import java.util.Set;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.neoforged.neoforge.common.EffectCure;
 
+/** Base effect shared by the Fabric port. Cure filtering is wired through Fabric-side events. */
 public final class GrillingMobEffect extends MobEffect {
   private final boolean curable;
 
@@ -18,8 +16,7 @@ public final class GrillingMobEffect extends MobEffect {
     this.curable = curable;
   }
 
-  @Override
-  public void fillEffectCures(Set<EffectCure> cures, MobEffectInstance effectInstance) {
-    if (curable) super.fillEffectCures(cures, effectInstance);
+  public boolean isCurable() {
+    return curable;
   }
 }
